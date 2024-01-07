@@ -8,10 +8,12 @@ Overview
 ========
 
 Linux wireguard client tools make it simple to start and stop wireguard.
-This is a companion to the wireguard server config tool `wg-tool`_.
+Comes with command line tool, *wg-client*, and a convenient GUI tool which
+uses it.
 
-Provides user option to invoke ssh and create a remote listening port which 
-is connected back to local ssh daemon.
+This is a companion to the wireguard server config tools `wg-tool`_.
+
+Also offers an option to invoke ssh which creates a remote listening port connected back to local ssh daemon.
 
 This can be useful to facilitate remote ssh back to client computer 
 if it's needed.  For example; it can be used to provide access to a git repo

@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "wg-client"
 dynamic = ["version"]
-description = "Wireguard Linux Client - start/stop VPN and ssh with remote listener"
+description = "Wireguard linux client (command line and gui)"
 authors = [{ name = "Gene C", email = "arch@sapience.com" }]
 license = "MIT"
 readme = "README.rst"
