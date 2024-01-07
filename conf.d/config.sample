@@ -1,0 +1,7 @@
+#
+# Sample /etc/wg-client/config
+# max port num is 65k - so keep ssh_pfx 64 or lower.
+#
+iface = 'wgc'                    # wireguard interface (is <iface> in /etc/wireguard/<iface>.conf)
+ssh_server = 'vpn.example.com'   # ssh server hostname to ssh with remote port mapped to local sshd:22
+ssh_pfx = "47"                   # 1 or 2 digit number number or range: "N" or "N-M"

@@ -1,0 +1,40 @@
+#
+# allow wg-quick,wg-fix-dns
+#
+# You can keep all local sudoers in a single file or separate files.
+# If in single file, make this one come after any group wheel ones.
+#
+# then add below sample line replacing USERS whatever user or users are 
+# permitted. (if more than one use comma separated list).
+#
+# If using separete files, then care is need to ensure this entry comes after any 
+# wheel group entries. 
+#
+# Use :
+#   visudo /etc/sudoers.d/100-wireguard
+#
+# visudo should use correct permissions which should be '0440'
+#
+# Quirk: sudo parses entries in lexical order - and last entry wins.
+#        e.g. if you have 2 files wheel and wg-quick then 'wheel' will be parsed last.
+#        If user is in wheel group password required then that entry prevails over wg-quick
+#        if user is in that as well. If wheel has NOPASSWD then its not a problem.
+#        But if wheel requires a password then so would running wg-quick.
+#        That is a bit quirky that can be annoying.
+#
+# So put things in lexical order.
+# For example this scheme:  
+#      001-wheel 010-wireguard
+# guarantees wheel is processed ahead of wireguard entry
+#
+# For sudoers.d/xxx
+
+#
+# wireguard
+# change the users in WGUSERS  or create a wgusers group and use %wgusers instead
+#
+#User_Alias WGUSERS = bob, sally, alice,
+#WGUSERS   ALL = (root) NOPASSWD: /usr/bin/wg-quick
+#WGUSERS   ALL = (root) NOPASSWD: /usr/lib/wg-client/wg-fix-dns
+
+

@@ -1,0 +1,74 @@
+#!/bin/bash
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2023 Gene C
+#
+# installer script for wg-client
+# e.g. Call from PKGBUILD:  
+#   ./do-install ${pkgdir}
+# gene c
+#
+dest="$1"
+self="wg-client"
+self_dir=${self//-/_}
+
+info="README.rst Docs scripts packaging"
+infodir="/usr/share/${self}"
+
+license="Docs/License.rst"
+licensedir="/usr/share/licenses/${self}"
+
+etc='/etc/wg-client/'
+confs='conf.d/config.sample conf.d/sudoers.sample'
+
+icondir='/usr/share/icons/hicolor/scalable/apps/'
+icon='desktop/wg-client.png'
+desktopdir='/usr/share/applications/'
+desktopfile='desktop/wg-client.desktop'
+
+libexec='src/wg_client/wg-fix-dns'
+libexecdir="/usr/lib/${self}"
+
+# list apps without the ".py" or leave empty string
+apps=('wg-client' 'wg-client-gui')
+
+# so can make app link in /usr/bin
+sitedir=$(/usr/bin/python3 -c "import site; print(site.getsitepackages()[0])")
+self_sitedir=${sitedir}/${self//-/_}
+
+
+if [ ! -d "$dest" ] ; then
+    echo 'Missing destination directory'
+    exit 1
+else
+    # shared
+    /usr/bin/rsync --mkpath -a ${info} ${dest}${infodir}
+    /usr/bin/rsync --mkpath -a ${license} ${dest}/${licensedir}/
+
+    # libexec
+    mkdir -p ${dest}/${libexecdir}
+    /usr/bin/ln -sf ${self_sitedir}/${libexec}.py ${dest}/${libexecdir}/${libexec}
+    #/usr/bin/rsync --mkpath -a ${libexec} ${dest}/${libexecdir}/
+
+    # desktop
+    mkdir -p ${dest}/${icondir} ${dest}/${desktopdir}
+    /usr/bin/rsync -a --mkpath ${icon} ${dest}/${icondir}
+    /usr/bin/rsync -a --mkpath ${desktopfile} ${dest}/${desktopdir}
+
+    # /etc/wg-client must be readable by non-priv user
+    mkdir -p ${dest}/${etc}
+    chmod 755 ${dest}/${etc}
+    /usr/bin/rsync -a --mkpath ${confs} ${dest}/${etc}/
+
+    /usr/bin/python -m installer --destdir="$dest" dist/*.whl
+
+    # link(s) in /usr/bin/
+    if [ -v apps ] ; then
+        /usr/bin/mkdir -p "${dest}/usr/bin"
+        for app in ${apps[@]}
+        do
+            /usr/bin/ln -sf ${self_sitedir}/${app}.py ${dest}/usr/bin/${app}
+        done
+    fi
+    exit 0
+fi
+

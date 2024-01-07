@@ -1,0 +1,33 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "wg-client"
+dynamic = ["version"]
+description = "Wireguard Linux Client - start/stop VPN and ssh with remote listener"
+authors = [{ name = "Gene C", email = "arch@sapience.com" }]
+license = "MIT"
+readme = "README.rst"
+keywords = []
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = []
+
+[project.urls]
+#Documentation = ""https://github.com/gene-git/wg-client/Docs"
+#Issues = "https://github.com/gene-git/wg-client/issues"
+#Source = "https://github.com/gene-git/wg-client"
+
+[tool.hatch.version]
+path = "src/wg_client/__about__.py"
+
+[tool.hatch.envs.default.scripts]
+
+[[tool.hatch.envs.all.matrix]]
+python = ["3.10", "3.11", "3.12"]
+[tool.hatch.envs.lint]
+detached = true
