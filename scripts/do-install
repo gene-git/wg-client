@@ -25,7 +25,8 @@ icon='desktop/wg-client.png'
 desktopdir='/usr/share/applications/'
 desktopfile='desktop/wg-client.desktop'
 
-libexec='wg-fix-dns'
+libexec='wg-fix-dns'        # remove once change to c-code
+fix_resolv='wg-fix-resolv'
 libexecdir="/usr/lib/${self}"
 
 # list apps without the ".py" or leave empty string
@@ -46,8 +47,8 @@ else
 
     # libexec
     mkdir -p ${dest}/${libexecdir}
-    /usr/bin/ln -sf ${self_sitedir}/${libexec}.py ${dest}/${libexecdir}/${libexec}
-    #/usr/bin/rsync --mkpath -a ${libexec} ${dest}/${libexecdir}/
+    #/usr/bin/ln -sf ${self_sitedir}/${libexec}.py ${dest}/${libexecdir}/${libexec}
+    /usr/bin/rsync --mkpath -a "src/wg_client/fix-resolv/wg-fix-resolv" ${dest}/${libexecdir}/
 
     # desktop
     mkdir -p ${dest}/${icondir} ${dest}/${desktopdir}

@@ -35,6 +35,5 @@
 #
 #User_Alias WGUSERS = bob, sally, alice,
 #WGUSERS   ALL = (root) NOPASSWD: /usr/bin/wg-quick
-#WGUSERS   ALL = (root) NOPASSWD: /usr/lib/wg-client/wg-fix-dns
 
 

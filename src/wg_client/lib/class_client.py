@@ -25,7 +25,6 @@ from .ssh_state import kill_ssh
 from .class_opts import WgClientOpts
 from .class_logger import MyLog
 from .get_info import is_wg_running
-from .class_resolv import WgResolv
 
 def wg_quick_cmd(test, euid, updn, iface):
     '''
@@ -41,7 +40,7 @@ def wg_quick_cmd(test, euid, updn, iface):
     pargs += ['/usr/bin/wg-quick', updn, iface]
     return pargs
 
-def wg_fix_dns_cmd(test, euid):
+def wg_fix_dns_cmd(test, _euid):
     '''
     consruct pargs for running wg_quick
     if confg is "test-dummy" then prepend /usr/bim/echo
@@ -50,9 +49,7 @@ def wg_fix_dns_cmd(test, euid):
     if test:
         pargs = ['/usr/bin/echo']
 
-    if euid != 0:
-        pargs += ['/usr/bin/sudo']
-    pargs += ['/usr/lib/wg-client/wg-fix-dns']
+    pargs += ['/usr/lib/wg-client/wg-fix-resolv']
     return pargs
 
 class WgClient():
@@ -75,8 +72,6 @@ class WgClient():
         self.mysignals = MySignals()
         self.logger = MyLog('wg-client')
         self.log('wg-client starting')
-
-        self.resolv = WgResolv(log=self.log)
 
     def log(self, msg):
         """ log file """
@@ -146,23 +141,17 @@ class WgClient():
         Call wg-fix-dns
          - if wg is running there will be resolv.conf.wg
            to restore resolv.conf if its been overwritten.
-           Happens sleep / resume where network start makese a new
-           resolv.conf - we put back the vpn one (requires root)
-        ? Should we check wg is running before invoking ?
+           Happens with sleep / resume where network start makese a new
+           resolv.conf - we put back the vpn one (requires root or caps)
         """
         self.log('fix-dns requested')
         if not is_wg_running(self.iface):
             self.log(' wg not running - skipping fix dns resolv')
             return
 
-        if self.euid == 0:
-            if self.resolv.restore_resolv():
-                self.log(' done')
-        else:
-            # use sudo on standalone program
-            pargs = wg_fix_dns_cmd(self.test, self.euid)
-            self.log(f' not root so call: {pargs}')
-            self.runit(pargs)
+        pargs = wg_fix_dns_cmd(self.test, self.euid)
+        self.log(f' calling: {pargs}')
+        self.runit(pargs)
 
     def get_wg_ip(self):
         """

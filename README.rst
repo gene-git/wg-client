@@ -48,6 +48,7 @@ Key features
 New or Interesting
 ==================
 
+  * dns resolv.conf fix now uses capabilities - no sudo needed for that now.
   * wg-client
   * wg-client-gui
   * Sleep/Resume DNS fixup - restore correct /etc/resolv.conf, see `sleep_resume`_.
@@ -176,9 +177,12 @@ Summary of available options for wg-client.
    * (*--fix-dns*)
 
      Restore wireguard dns resolv.conf. Typical use is after sleep resume when the network
-     is set up it can mess up the resolv.conf file - this restored the correct version.
+     is set up it can mess up the resolv.conf file - this restores the correct version.
      
      This will also be done by GUI, if needed, by simply clicking the Start VPN button.
+
+     wg-client relies on *wg-fix-resolv* program which is granted CAP_CHOWN and CAP_DAC_OVERRIDE 
+     capabilities to enable it to restore the right /etc/resolv.conf file.
 
    * (*--show-iface*)  
 
@@ -202,7 +206,7 @@ Summary of available options for wg-client.
 
    * (*--test-mode*)
 
-      Test mode - print what would be done rather than doing it.
+     Test mode - print what would be done rather than doing it.
 
 wg-client-gui application
 =========================
@@ -212,12 +216,12 @@ GUI Usage
 
 The gui is installable using the provided wg-client.desktop file and can be added
 to launchers in the usual way. For example in gnome simply search applications for wg-cliient
-and right click to pin the launcher. The gui ised PyQt6 which in turn relies on Qt6.
+and right click to pin the launcher. The gui uses PyQt6 which in turn relies on Qt6.
 
 The gui has buttons to start and stop wireguard and a button to run ssh to set up the listener 
-host configured in the config file.
+on the host configured in the config file.
 
-The gui should be left running while the vpn is in use. Pressing quit the gui will shutdown wireguard
+The gui should be left running while the vpn is in use. Pressing quit in the gui will shutdown wireguard
 and shutdown the ssh listener as well.
 
 GUI Options
