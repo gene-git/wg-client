@@ -1,6 +1,12 @@
 Changelog
 =========
 
+[4.0.0] ----- 2024-01-08
+ * dns resolv.conf fix now uses c-program with capabilities.  
+   Now sudu is only needed to run wg-quick.  
+   Docs updated with info on new /usr/lib/wg-client/wg-fix-resolv program  
+ * update Docs/Changelog.rst Docs/wg-client.pdf  
+
 [3.7.6] ----- 2024-01-08
  * bump to 3.7.6  
  * update Docs/Changelog.rst Docs/wg-client.pdf  
