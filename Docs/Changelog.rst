@@ -1,7 +1,8 @@
 Changelog
 =========
 
-[head] ----- 2024-01-08
+[3.7.5] ----- 2024-01-08
+ * update Docs/Changelog.rst Docs/wg-client.pdf  
  * update version for installer fix  
  * update Docs/Changelog.rst Docs/wg-client.pdf  
  * installer typo fix  
