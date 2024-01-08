@@ -1,6 +1,10 @@
 Changelog
 =========
 
+[3.7.6] ----- 2024-01-08
+ * bump to 3.7.6  
+ * update Docs/Changelog.rst Docs/wg-client.pdf  
+
 [3.7.5] ----- 2024-01-08
  * update Docs/Changelog.rst Docs/wg-client.pdf  
  * update version for installer fix  
