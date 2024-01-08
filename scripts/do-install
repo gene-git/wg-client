@@ -25,7 +25,7 @@ icon='desktop/wg-client.png'
 desktopdir='/usr/share/applications/'
 desktopfile='desktop/wg-client.desktop'
 
-libexec='src/wg_client/wg-fix-dns'
+libexec='wg-fix-dns'
 libexecdir="/usr/lib/${self}"
 
 # list apps without the ".py" or leave empty string
