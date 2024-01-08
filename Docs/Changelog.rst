@@ -1,6 +1,10 @@
 Changelog
 =========
 
+[3.7.4] ----- 2024-01-08
+ * README - document all the options of wg-client  
+ * update Docs/Changelog.rst Docs/wg-client.pdf  
+
 [3.7.3] ----- 2024-01-07
  * small readme tweak  
  * update Docs/Changelog.rst Docs/wg-client.pdf  
