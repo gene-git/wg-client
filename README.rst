@@ -65,7 +65,7 @@ Usage
 
 To use run from a terminal. For example to start wireguard from a terminal, use:
 
-.. code-block::bash
+.. code-block:: bash
 
    wg-client --wg-up
 
@@ -100,7 +100,7 @@ Configuration
 
 wg-client reads its configuration from 
 
-.. code-block::bash
+.. code-block:: bash
 
    /etc/wg-client/config
 
@@ -132,7 +132,7 @@ The remote ssh host will then listen on *127.0.0.1:<port>*.
 It will also listen on *<remote-ip-address>:<port>*
 provided the remote ssh server permits it by having the sshd option set: 
 
-.. code-block::bash
+.. code-block:: bash
 
     GatewayPorts yes
 
@@ -240,7 +240,7 @@ Log files
 Each application has it's own log file. These are located in users 
 home directory : 
 
-.. code-block::bash
+.. code-block:: bash
 
     ${HOME}/log/wg-client
     ${HOME}/log/wg-client-gui
@@ -259,26 +259,26 @@ If in single file, make this one come after any group wheel ones.
 This is to ensure this one is chosen becuase sudo uses the last
 matching entry.
 
-Simply add this sample line replacing USERS whatever user or users are 
+Simply add this sample line replacing WGUSERS whatever user or users are 
 permitted. If more than one use comma separated list.
 
-.. code-block::bash
+.. code-block:: bash
 
     User_Alias WGUSERS = alice, bob, sally
     WGUSERS   ALL = (root) NOPASSWD: /usr/bin/wg-quick
     WGUSERS   ALL = (root) NOPASSWD: /usr/lib/wg-client/wg-fix-dns
    
 If using separete files, then care is need to ensure this entry comes after any
-wheel group entries. Where USERS is 1 or more usernames or a group such as
+wheel group entries. Where WGUSERS is 1 or more usernames or a group such as
 *%wgusers*.
 
 Then, 
 
-.. code-block::bash
+.. code-block:: bash
 
     visudu /etc/sudoers.d/100-wireguard
     
-Replace *USERS* as above.
+Replace *WGUSERS* as above.
 
 visudo enforces the correct permissions which should be '0440'. If permissions
 are too loose, sudo will ignore the file.
