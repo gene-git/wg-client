@@ -1,6 +1,10 @@
 Changelog
 =========
 
+[4.0.1] ----- 2024-01-08
+ * rst fixes for readme as github ignoring some code-blocks  
+ * update Docs/Changelog.rst Docs/wg-client.pdf  
+
 [4.0.0] ----- 2024-01-08
  * dns resolv.conf fix now uses c-program with capabilities.  
    Now sudu is only needed to run wg-quick.  
