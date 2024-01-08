@@ -155,24 +155,54 @@ Summary of available options for wg-client.
 
      Show this help message and exit
 
-   * (*--wg-up*)  
+   * (*--wg-up*) and (*--wg-dn*)  
 
-     Start wireguard client
+     Start and stop wireguard client
 
-   * (*--wg-dn*)  
-
-     Stop wireguard client
-
-   * (*--ssh-start*)  
+   * (*--ssh-start*) 
 
      ssh to remote server over vpn and listen on remote port.
-
      Port number used is described above in Overview section `config-sect`_.
+
+   * (*--ssh-stop*)
+
+     End ssh to remote server
+
+   * (*--ssh-pfx*)
+
+     Set the ssh port prefix. Can be 2 digits: "nn" or a range "nn-mm". If using a range, then
+     prefix will be randomly drawn from the range
+
+   * (*--fix-dns*)
+
+     Restore wireguard dns resolv.conf. Typical use is after sleep resume when the network
+     is set up it can mess up the resolv.conf file - this restored the correct version.
+     
+     This will also be done by GUI, if needed, by simply clicking the Start VPN button.
 
    * (*--show-iface*)  
 
-     Will show what wireguard interface name will be used.
+     Report wireguard interface name is used.
 
+   * (*--show-ssh-server*)  
+
+     Report the ssh server name
+
+   * (*--show-ssh-running*)  
+
+     Report if ssh is active
+
+   * (*--show-wg-running*)
+
+     Report if wireguard is active
+
+   * (*--show-info*)
+
+     Show all info
+
+   * (*--test-mode*)
+
+      Test mode - print what would be done rather than doing it.
 
 wg-client-gui application
 =========================
