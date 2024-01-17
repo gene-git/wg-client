@@ -1,6 +1,10 @@
 Changelog
 =========
 
+[4.1.0] ----- 2024-01-17
+ * ssh_listener now handles pure IPv6 wg iface to build listening port  
+ * update Docs/Changelog.rst Docs/wg-client.pdf  
+
 [4.0.1] ----- 2024-01-08
  * rst fixes for readme as github ignoring some code-blocks  
  * update Docs/Changelog.rst Docs/wg-client.pdf  
