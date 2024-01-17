@@ -3,6 +3,7 @@
 """
 Parse output of wg-quick and get client wg address
 """
+import netaddr
 import netifaces as ni
 
 def wg_quick_out_to_ip4(wg_quick_output):
@@ -51,6 +52,22 @@ def ip4_to_octet(ip4):
     octet = ip4_split[3]
     octet = int(octet)
     octet = f'{octet:03d}'
+    return octet
+
+def ip_to_octet(ip_str):
+    """ extract trailing octet of addrip """
+    ipadd = netaddr.IPNetwork(ip_str)
+    bits = ipadd.ip.bits()
+    ipadd_str = str(ipadd.ip)
+
+    if netaddr.valid_ipv4(ipadd_str):
+        bits = bits.split('.')[-1]
+    elif netaddr.valid_ipv6(ipadd_str):
+        bits = bits.split(':')[-1]
+        bits = bits[-9:-1]
+
+    octet = int(bits, 2)
+    octet =f'{octet:03d}'
     return octet
 
 def iface_to_ips(iface):

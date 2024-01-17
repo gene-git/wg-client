@@ -4,7 +4,7 @@
 Parse output of wg-quick and get client wg address
 """
 import random
-from .ip_addr import ip4_to_octet
+from .ip_addr import ip_to_octet
 
 def choose_pfx(pfx_range):
     """
@@ -42,7 +42,7 @@ def ssh_listener_args(test, wg_ip, host, pfx_range:[int]):
 
 
     # get last octet
-    octet = ip4_to_octet(wg_ip)
+    octet = ip_to_octet(wg_ip)
 
     port = f'{prefix}{octet}'
     print(f'ssh listening port : {port}')

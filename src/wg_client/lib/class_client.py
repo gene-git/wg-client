@@ -58,6 +58,7 @@ class WgClient():
         self.iface = None
         self.euid = os.geteuid()
         self.wg_ip = None
+        self.wg_ip6 = None
         self.test = False
         self.pid = None         # so we share after looking it up
 
@@ -158,13 +159,14 @@ class WgClient():
         find ip4 for wg iface
         todo: Add support for 3 digit ip6
         """
-        (ips4, _ips6) = iface_to_ips(self.iface)
+        (ips4, ips6) = iface_to_ips(self.iface)
         self.wg_ip = None
         if ips4:
             self.wg_ip = ips4[0]
-        #elif ip6s:
-        #    self.wg_ip = ip6s[0]
-        if not self.wg_ip:
+        elif ips6:
+            self.wg_ip6 = ips6[0]
+
+        if not (self.wg_ip or self.wg_ip6):
             self.log('Err: failed to find wg iface IP')
 
     def wg_dn(self):
@@ -211,7 +213,10 @@ class WgClient():
 
         opts = self.opts
         ssh_server = opts.ssh_server
-        ssh_args = ssh_listener_args(self.test, self.wg_ip, ssh_server, opts.pfx_range)
+        wg_ip = self.wg_ip
+        if not wg_ip:
+            wg_ip = self.wg_ip6
+        ssh_args = ssh_listener_args(self.test, wg_ip, ssh_server, opts.pfx_range)
 
         #
         # Check not already running:
