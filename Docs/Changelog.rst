@@ -1,6 +1,10 @@
 Changelog
 =========
 
+[head] ----- 2024-02-09
+ * Fix typoe  
+ * update Docs/Changelog.rst Docs/wg-client.pdf  
+
 [4.1.1] ----- 2024-02-09
  * Add missing PKGBUILD dependencies as reported on AUR by gwy  
    https://aur.archlinux.org/packages/wg-client#comment-955729  
