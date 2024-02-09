@@ -1,7 +1,11 @@
 Changelog
 =========
 
-[4.1.2, origin/master] ----- 2024-02-09
+[4.1.3] ----- 2024-02-09
+ * Fix github url in PKGBUILD  
+ * update Docs/Changelog.rst Docs/wg-client.pdf  
+
+[4.1.2] ----- 2024-02-09
  * update Docs/Changelog.rst Docs/wg-client.pdf  
  * Fix typoe  
  * update Docs/Changelog.rst Docs/wg-client.pdf  
