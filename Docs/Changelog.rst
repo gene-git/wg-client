@@ -1,6 +1,11 @@
 Changelog
 =========
 
+[4.1.1] ----- 2024-02-09
+ * Add missing PKGBUILD dependencies as reported on AUR by gwy  
+   https://aur.archlinux.org/packages/wg-client#comment-955729  
+ * update Docs/Changelog.rst Docs/wg-client.pdf  
+
 [4.1.0] ----- 2024-01-17
  * ssh_listener now handles pure IPv6 wg iface to build listening port  
  * update Docs/Changelog.rst Docs/wg-client.pdf  
