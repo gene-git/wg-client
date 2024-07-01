@@ -60,7 +60,9 @@ New or Interesting
     This is now done automatically using a daemon which can be started/stopped from command line
     using  the new options *--fix-dns-auto-start* and *--fix-dns-auto-stop*
     
-    The GUI app does this whenever it starts wireguard.
+    The GUI app starts up the monitor daemon when it starts wireguard and so no manual
+    intervention is needed after that.
+
 
   * *--version* 
 
