@@ -7,6 +7,7 @@ Command line Start and Stop Wireguard
 # pylint: disable=too-many-instance-attributes
 import os
 import sys
+import time
 from PyQt6.QtCore import (Qt)
 from PyQt6.QtGui import QGuiApplication,QIcon
 from PyQt6.QtWidgets import (QWidget, QApplication, QPlainTextEdit, QPushButton)
@@ -38,32 +39,43 @@ def _wg_client_cmd():
 class WgClientGui():
     ''' Main Application - GUI'''
     def __init__(self):
-        #super().__init__()
+        #
         # multi-threaded to keep gui responsive
+        #
         self.mysignals = None
         self.runners = None
 
+        #
         # invoke wg-client to do all the 'real' work
+        #
         self.cmd = _wg_client_cmd()
 
+        #
         # each runner has id_num - map it to what it does
+        #
         self.id_num_map = {}
 
+        #
         # gui stuff
+        #
         self.MainWindow = QMainWindow()
 
         self.text = QPlainTextEdit()
         self.text.setReadOnly(True)
 
+        #
         # gui has it's own log file
+        #
         self.logger = MyLog('wg-client-gui')
         self.log('Start GUI Client:')
 
         logfile = self.logger.logfile()
         self.message(f'Info is logged to {logfile}')
 
+        #
         # Get the wireguard interface name
-        # we use it to check if wg is running
+        # uses to check if wg is running
+        #
         self.wg_iface = get_wg_iface(self.log)
         if self.wg_iface:
             self.log(f'wg iface : {self.wg_iface}')
@@ -90,10 +102,7 @@ class WgClientGui():
         mwin.setObjectName('VPN-Client-Window')
         mwin.setWindowTitle('VPN Client')
         mwin.resize(400, 250)
-
-        #width = 400
         btn_width = 100
-        #mwin.setFixedWidth(width)
 
         #
         # Start Stop buttons on top
@@ -146,11 +155,11 @@ class WgClientGui():
 
         mwin.setCentralWidget(widget)
 
+        #
         # worker pool
+        #
         self.mysignals = MySignals()
         self.runners = MyRunners(self.log, self.mysignals)
-
-        # initiate signal handler for MyProc
 
     def message(self, s):
         ''' save message '''
@@ -162,13 +171,16 @@ class WgClientGui():
         if wg_running :
             self.message('vpn already running')
             self.log('vpn_up - vpn already running')
-            # make sure dns resolv hasn't been overwritten after resume
-            self.log(' running wg-fix-dns')
-            self.message('checking dns')
+            #
+            # not needed since --fix-dns-auto-start daemon should be running
+            # wg-client will check on daemon and exit if running
+            #
+            self.log(' Checking wg-fix-dns')
+            self.message(' double checking dns fix')
             pargs = [self.cmd, '--fix-dns']
 
             id_num = self.runners.new_worker(self.complete, pargs)
-            self.id_num_map[id_num] = 'check dns'
+            self.id_num_map[id_num] = 'fix dns'
 
         else :
             self.log('vpn_up - starting vpn')
@@ -177,6 +189,16 @@ class WgClientGui():
 
             id_num = self.runners.new_worker(self.complete, pargs)
             self.id_num_map[id_num] = 'start vpn'
+
+            #
+            #  --fix-dns-auto-start
+            #  Give enough time for wg to start
+            #
+            self.log(' Starting wg-fix-dns-auto-start')
+            self.message(' starting dns auto fix')
+            pargs = [self.cmd, '--fix-dns-auto-start']
+            id_num = self.runners.new_worker(self.complete, pargs)
+            self.id_num_map[id_num] = 'start auto fix dns'
 
     def vpn_dn(self):
         ''' Stop '''
@@ -190,6 +212,14 @@ class WgClientGui():
         else :
             self.log('vpn_dn - vpn not running')
             self.message('vpn not running')
+        #
+        # --fix-dns-auto-stop
+        #
+        self.log(' Stopping fix-dns-auto-start')
+        self.message(' stopping dns auto fix')
+        pargs = [self.cmd, '--fix-dns-auto-stop']
+        id_num = self.runners.new_worker(self.complete, pargs)
+        self.id_num_map[id_num] = 'stop auto fix dns'
 
     def ssh_start(self):
         ''' Start SSH '''

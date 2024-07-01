@@ -4,11 +4,8 @@
 """
 Command line Start and Stop Wireguard
 """
-# pylint: disable=no-name-in-module,invalid-name,too-few-public-methods
-# pylint: disable=too-many-instance-attributes
-#import os
+# pylint: disable=invalid-name
 import sys
-#import pdb
 from lib import MainGui
 
 def main():
@@ -24,7 +21,6 @@ def main():
     where <user> is the user who will be using the tool
 
     """
-    #pdb.set_trace()
     myname = sys.argv[0]
     MainGui(myname)
 

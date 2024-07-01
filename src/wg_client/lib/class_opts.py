@@ -4,6 +4,7 @@
 Command line options handling
 """
 # pylint: disable=too-few-public-methods
+# pylint: disable=too-many-statements
 import os
 import argparse
 import tomllib as toml
@@ -47,23 +48,114 @@ def read_config(opts):
             break
     return okay
 
+def get_avail_options(defaults:dict):
+    """
+    Current supported options
+    """
+    opts = []
+    act = 'action'
+    act_on = 'store_true'
+
+    ohelp = 'Test mode'
+    opt = ['--test', {'help' : ohelp, act : act_on}]
+    opts.append(opt)
+
+    ohelp = 'Turn wireguard on'
+    opt = ['--wg-up', {'help' : ohelp, act : act_on}]
+    opts.append(opt)
+
+    ohelp = 'Turn wireguard off'
+    opt = ['--wg-dn', {'help' : ohelp, act:act_on}]
+    opts.append(opt)
+
+    ohelp = 'Fix wg dns if needed'
+    opt = ['--fix-dns', {'help' : ohelp, act:act_on}]
+    opts.append(opt)
+
+    ohelp = 'Auto fix wg dns if needed - stays running'
+    opt = ['--fix-dns-auto-start', {'help' : ohelp, act:act_on}]
+    opts.append(opt)
+
+    ohelp = 'Auto fix wg dns if needed - stays running'
+    opt = ['--fix-dns-auto-stop', {'help' : ohelp, act:act_on}]
+    opts.append(opt)
+
+    ohelp = 'Run ssh over vpn to create remote listener'
+    opt = ['--ssh-start', {'help' : ohelp, act:act_on}]
+    opts.append(opt)
+
+    ohelp = 'Kill ssh listener if its running'
+    opt = ['--ssh-stop', {'help' : ohelp, act:act_on}]
+    opts.append(opt)
+
+    ohelp = 'ssh port(s). 2 digits: "nn" or "nn-mmm" for range'
+    default = defaults['ssh-pfx']
+    opt = ['--ssh-pfx', {'help' : ohelp, 'default':default}]
+    opts.append(opt)
+
+    ohelp = 'Remote ssh server to set up listening port'
+    default = defaults['ssh-server']
+    opt = ['--ssh-server', {'help' : ohelp, 'default':default}]
+    opts.append(opt)
+
+    ohelp = 'Report the wg interface name'
+    opt = ['--show-iface', {'help' : ohelp, act:act_on}]
+    opts.append(opt)
+
+    ohelp = 'Report the ssh server name'
+    opt = ['--show-ssh-server', {'help' : ohelp, act:act_on}]
+    opts.append(opt)
+
+    ohelp = 'Report if ssh is running'
+    opt = ['--show-ssh-running', {'help' : ohelp, act:act_on}]
+    opts.append(opt)
+
+    ohelp = 'Report if wireguard is running'
+    opt = ['--show-wg-running', {'help' : ohelp, act:act_on}]
+    opts.append(opt)
+
+    ohelp = 'Report if auto fix dnsis running'
+    opt = ['--show-fix-dns-auto', {'help' : ohelp, act:act_on}]
+    opts.append(opt)
+
+    ohelp = 'Report all info'
+    opt = ['--show-info', {'help' : ohelp, act:act_on}]
+    opts.append(opt)
+
+    ohelp = 'Display version'
+    opt = ['--version', {'help' : ohelp, act:act_on}]
+    opts.append(opt)
+
+    ohelp = 'Optional wg interface (or test-dummy for test mode)'
+    default = defaults['iface']
+    opt = ['iface', {'help' : ohelp, 'default':default, 'nargs':'?'}]
+    opts.append(opt)
+
+    return opts
+
+
 class WgClientOpts:
     """
     Client Options
     """
     # pylint: disable=too-many-instance-attributes
     def __init__(self):
-        desc = 'wg-client : manage wireguard client'
+        desc = 'wg-client : manage wireguard peer'
         self.okay = True
         self.wg_up = False
         self.fix_dns = False
+        self.fix_dns_auto_start = False
+        self.fix_dns_auto_stop = False
         self.wg_dn = False
         self.ssh_start = False
+        self.ssh_stop = False
         self.show_iface = False
         self.show_ssh_server = False
         self.show_ssh_running = False
         self.show_wg_running = False
+        self.show_fix_dns_auto = False
         self.show_info = False
+        self.version = False
         self.iface = 'wgc'
         self.ssh_server = None
         self.ssh_pfx = None
@@ -76,33 +168,13 @@ class WgClientOpts:
         if not self.ssh_pfx:
             self.ssh_pfx = '55'
 
-        opts = [
-                ['--test',       {'help' : 'Test mode', 'action' : 'store_true'}],
-                ['--wg-up',      {'help' : 'Turn wireguard on', 'action' : 'store_true'}],
-                ['--wg-dn',      {'help' : 'Turn wireguard off', 'action' : 'store_true'}],
-                ['--ssh-start',  {'help' : 'Run ssh over vpn to create remote listener',
-                                  'action' : 'store_true'}],
-                ['--fix-dns',    {'help' : 'Fix wg dns if needed', 'action' : 'store_true'}],
-                ['--ssh-stop',   {'help' : 'Kill ssh listener if its running',
-                                  'action' : 'store_true'}],
-                ['--ssh-pfx',    {'help' : 'ssh port(s). 2 digits: "nn" or "nn-mmm" for range',
-                                  'default' : self.ssh_pfx}],
-                ['--ssh-server', {'help' : 'Remote ssh server to set up listening port',
-                                  'default' : self.ssh_server}],
-                ['--show-iface',  {'help' : 'Report the wg interface name',
-                                   'action' : 'store_true'}],
-                ['--show-ssh-server', {'help' : 'Report the ssh server name',
-                                       'action' : 'store_true'}],
-                ['--show-ssh-running', {'help' : 'Report the ssh is running',
-                                       'action' : 'store_true'}],
-                ['--show-wg-running', {'help' : 'Report if wireguard is running',
-                                       'action' : 'store_true'}],
-                ['--show-info',        {'help' : 'Show all info',
-                                        'action' : 'store_true'}],
-                ['iface',        {'help' : 'Optional wg interface (test-dummy for test mode)',
-                                  'default' : self.iface,
-                                  'nargs' : '?'}],
-               ]
+        defaults = {'ssh-pfx' : self.ssh_pfx,
+                    'ssh-server' : self.ssh_server,
+                    'iface' : self.iface,
+                   }
+
+        opts = get_avail_options(defaults)
+
         par = argparse.ArgumentParser(description=desc)
         for (opt, kwargs) in opts:
             par.add_argument(opt, **kwargs)

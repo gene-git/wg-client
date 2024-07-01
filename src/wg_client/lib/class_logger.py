@@ -15,18 +15,18 @@ class MyLog:
      - "~/log/wg-client"
      - hopefully thread safe
     """
-    def __init__(self, logfile):
+    def __init__(self, logname):
         home = Path.home()
 
         log_dir = os.path.join(home, 'log')
         os.makedirs(log_dir, exist_ok=True)
-        self.log_path = os.path.join(log_dir, logfile)
+        self.log_path = os.path.join(log_dir, logname)
 
         log_fmt = '%(asctime)s %(message)s'
         dt_fmt = '%Y-%m-%d %H:%M:%S '
         formatter = logging.Formatter(fmt=log_fmt, datefmt=dt_fmt)      #, style='%')
 
-        self.logger = logging.getLogger('wg-client')
+        self.logger = logging.getLogger(logname)
         self.logger.setLevel(logging.INFO)
 
         handler = RotatingFileHandler(self.log_path, maxBytes=10240, backupCount=1)

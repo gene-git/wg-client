@@ -23,7 +23,7 @@ def main():
     """
     Support for linux wg clients
     """
-    fix_dns = WgResolv(log=print)
+    fix_dns = WgResolv()
     if fix_dns.okay:
         fix_dns.restore_resolv()
 

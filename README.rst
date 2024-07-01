@@ -47,11 +47,32 @@ Key features
 
 New or Interesting
 ==================
+    
+  * Auto fix of resolv.conf (new option *--fix-dns-auto-start*)
 
-  * dns resolv.conf fix now uses capabilities - no sudo needed for that now.
-  * wg-client
-  * wg-client-gui
-  * Sleep/Resume DNS fixup - restore correct /etc/resolv.conf, see `sleep_resume`_.
+    Network refresh often happens after sleep/resume (e.g. laptop lid close/open) or 
+    when a DHCP lease expires. If VPN is up and running 
+    when this occurs the /etc/resolv.conf file can be reset and then DNS will no longer use
+    the vpn DNS but will then use whatever resolver DHCP provided by default. 
+    Earlier versions of wg-client offered a manual fix available 
+    by clicking the *VPN Start* button again or by using wg-client on command line.
+
+    This is now done automatically using a daemon which can be started/stopped from command line
+    using  the new options *--fix-dns-auto-start* and *--fix-dns-auto-stop*
+    
+    The GUI app does this whenever it starts wireguard.
+
+  * *--version* 
+
+    Display wg-client version
+
+  * NB version 5 has 2 additional dependencies: 
+
+    - openssl library for wg-fix-resolv.c
+    - python-pynotify library available via `Pynotify Github`_ and `Pynotify AUR`_
+
+  * dns resolv.conf fix now uses capabilities
+
 
 ###############
 Getting Started
@@ -74,24 +95,16 @@ config section `config-sect`_ below.
 
 .. _sleep_resume:
 
-laptop sleep / resume
-----------------------
+DHCP refresh & sleep / resume
+-----------------------------
 
-WHen laptop sleeps, from lid close for example, and then is woken up - the vpn will continue working 
+When laptop sleeps, from lid close for example, and then woken up - the vpn will continue working 
 as normal and likewise the ssh provided the sleep time is not *too long*. However, on wake the
-networking is typically re-initialized and part of that may install the dns */etc/resolve.conf*.
+networking is typically re-initialized and part of that may re-install the dns resolver
+file */etc/resolve.conf*.
 
-When wg-client starts the vpn, it saves the current */etc/resolv.conf* and installs one that
-uses the vpn tunnel and this is what gets broken on resume. 
-
-The simple fix is simply to click *Vpn Start* on GUI or equivalently
-
-.. code-block:: bash
-
-   wg-client --fix-dns
-
-This will check what needs to be done and do it. Could be do nothing, or could start up wireguard
-or in the scenario here, it could just restore the correct resolv.conf file for using the VPN.
+This is handled automatically by the resolv monitor daemon. See the option *--fix-dns-auto-start* 
+for more information.
 
 .. _config-sect:
 
@@ -176,6 +189,8 @@ Summary of available options for wg-client.
 
    * (*--fix-dns*)
 
+     This has been automated by the monitor daemon. See *--fix-dns-auto-start*
+
      Restore wireguard dns resolv.conf. Typical use is after sleep resume when the network
      is set up it can mess up the resolv.conf file - this restores the correct version.
      
@@ -183,6 +198,38 @@ Summary of available options for wg-client.
 
      wg-client relies on *wg-fix-resolv* program which is granted CAP_CHOWN and CAP_DAC_OVERRIDE 
      capabilities to enable it to restore the right /etc/resolv.conf file.
+
+   * (*--fix-dns-auto-start*)
+
+      Auto fix of resolv.conf
+
+      Network refresh happens after sleep/resume (e.g. laptop lid close/open) or 
+      when a DHCP lease expires. If VPN is up and running 
+      when this occurs the /etc/resolv.conf file can be reset and then DNS will no longer use
+      the vpn DNS. Earlier versions of wg-client offered a manual fix available 
+      by clicking the *VPN Start* button again or by using wg-client on command line.
+
+      When wg-client starts the vpn, it saves the current */etc/resolv.conf* and installs one that
+      uses the vpn tunnel and this is what gets broken on resume. 
+
+      This is now done automatically using a daemon which can be started/stopped from command line
+      using  the new options *--fix-dns-auto-start* and *--fix-dns-auto-stop*
+    
+      The GUI app does this whenever it starts wireguard.
+
+      The monitor daemon watches */etc/resolv.conf* and auto restores the correct
+      one when needed. It uses inotify whereby the kernel notifes us when the 
+      file changes - this is very efficient and allows the monitor to sleep waiting for the
+      kernel to wake it up when there's something to do.
+
+      Wireguard will continue to work even if the laptop is taken to a new wifi location.
+      The monitor checks and saves any newly found resolv.conf and restores the wireguard one.
+      Of course on closing down, the original saved resolv.conf is restored as well.
+      Note that ssh will not survive changing networks but it can easily be restarted.
+
+   * (*--fix-dns-auto-stop*)
+
+     Stops the monitor daemon.
 
    * (*--show-iface*)  
 
@@ -200,9 +247,9 @@ Summary of available options for wg-client.
 
      Report if wireguard is active
 
-   * (*--show-info*)
+   * (*--show-info, --status*)
 
-     Show all info
+     Report all info
 
    * (*--test-mode*)
 
@@ -384,6 +431,8 @@ Created by Gene C. and licensed under the terms of the MIT license.
 
 .. _Github: https://github.com/gene-git/wg-client
 .. _Archlinux AUR: https://aur.archlinux.org/packages/wg-client
+.. _Pynotify AUR: https://aur.archlinux.org/packages/python-pynotify
+.. _Pynotify Github: https:://github.com/gene-git/python-pynotify
 
 .. [1] https://github.com/google/googletest  
 .. [2] https://abseil.io/about/philosophy#upgrade-support

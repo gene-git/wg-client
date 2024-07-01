@@ -12,8 +12,9 @@ Class for Start, Stop Wireguard client on linux
  username   ALL=NOPASSWD: SETENV: /usr/bin/wg-quick
 """
 # pylint disable=no-name-in-module,invalid-name,too-few-public-methods
-# pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-instance-attributes,too-many-branches
 import os
+import time
 from .class_proc import MyProc
 from .class_proc import MySignals
 from .ip_addr import iface_to_ips
@@ -25,6 +26,8 @@ from .ssh_state import kill_ssh
 from .class_opts import WgClientOpts
 from .class_logger import MyLog
 from .get_info import is_wg_running
+from .class_resolv import WgResolv
+from .version import version
 
 def wg_quick_cmd(test, euid, updn, iface):
     '''
@@ -40,21 +43,10 @@ def wg_quick_cmd(test, euid, updn, iface):
     pargs += ['/usr/bin/wg-quick', updn, iface]
     return pargs
 
-def wg_fix_dns_cmd(test, _euid):
-    '''
-    consruct pargs for running wg_quick
-    if confg is "test-dummy" then prepend /usr/bim/echo
-    '''
-    pargs = []
-    if test:
-        pargs = ['/usr/bin/echo']
-
-    pargs += ['/usr/lib/wg-client/wg-fix-resolv']
-    return pargs
-
 class WgClient():
     """ Primary Class (no gui) """
     def __init__(self):
+        self.okay = True
         self.iface = None
         self.euid = os.geteuid()
         self.wg_ip = None
@@ -70,9 +62,16 @@ class WgClient():
         self.ssh_proc = None
         self.run_proc = None
 
+        self.resolv = WgResolv()
+
         self.mysignals = MySignals()
         self.logger = MyLog('wg-client')
         self.log('wg-client starting')
+
+        if self.opts.version:
+            # tall main to quit
+            print(version())
+            self.okay = False
 
     def log(self, msg):
         """ log file """
@@ -150,9 +149,69 @@ class WgClient():
             self.log(' wg not running - skipping fix dns resolv')
             return
 
-        pargs = wg_fix_dns_cmd(self.test, self.euid)
-        self.log(f' calling: {pargs}')
-        self.runit(pargs)
+        # Skip if auto fix is running
+        if not self.resolv.check_already_running():
+            pargs = self.resolv.fix_resolv_cmd()
+            self.log(f' calling: {pargs}')
+            self.runit(pargs)
+        else:
+            self.log(' fix_dns skipped as auto fix running')
+
+    def start_resolv_monitor(self):
+        """
+        Runs resolv monitor daemon which 
+        monitors /etc/resolv.conf and restores wireguard version
+        if its changed.
+        this process intentionally runs in forefround 
+          - command line can contr-C
+          - gui will kill it when it exits
+          - simple enough to make it daemon process if need arises
+        """
+        self.log('starting resolv monitor')
+
+        #
+        # Can take time for wg to actually start so handle that
+        # GUI fires up wg and immediately starts the monitor
+        # We give it a little time in case it was started and not yet up
+        #
+        timeout = 0.5
+        max_time = 5.0
+        timer = timeout
+        wg_running = False
+        while timer <= max_time:
+            self.log(f' wg run check timer {timer}')
+            time.sleep(timer)
+            if is_wg_running(self.iface):
+                wg_running = True
+                break
+            timer += timeout
+
+        if wg_running:
+            self.log(' wg is running - starting monitor')
+            self.resolv.monitor_resolv()
+        else:
+            self.log(' wg not running - skipping')
+
+    def kill_resolv_monitor(self):
+        """
+        Kill any running resolv monitor
+        """
+        self.log(' Terminate resolv monitor')
+        self.resolv.kill_monitor()
+
+    def check_resolv_monitor(self):
+        """
+        check if resolv monitor is running
+        """
+        self.log(' check resolv monitor')
+        check = self.resolv.check_already_running()
+        return check
+
+    def show_resolv_monitor(self):
+        """ show state of any resolv monitor """
+        check = self.check_resolv_monitor()
+        print(f'{check}')
+        self.log(f'resolv-monitor: {check}')
 
     def get_wg_ip(self):
         """
@@ -172,9 +231,14 @@ class WgClient():
     def wg_dn(self):
         """
         wg-quick dn
+         - before shutting dwon wg make sure the resolv monitor daemon is killed
         """
-        pargs = wg_quick_cmd(self.test, self.euid, 'down', self.iface)
+        # kill any resolv monitor
         self.log('wg-dn requested')
+        self.kill_resolv_monitor()
+
+        self.log(' shutting down wireguard')
+        pargs = wg_quick_cmd(self.test, self.euid, 'down', self.iface)
         self.runit(pargs)
 
     def stop_ssh_listener(self):
@@ -267,11 +331,16 @@ class WgClient():
         print(f'{"ssh_running":>15s} : ', end='')
         self.show_ssh_running()
 
+        print(f'{"resolv_monitor":>15s} : ', end='')
+        self.show_resolv_monitor()
 
     def do_all(self):
         """
         Perform the requested tasks
         """
+        #
+        # Show options
+        #
         if self.opts.show_iface:
             self.show_iface()
 
@@ -284,18 +353,39 @@ class WgClient():
         if self.opts.show_wg_running:
             self.show_wg_running()
 
+        if self.opts.show_fix_dns_auto:
+            self.show_resolv_monitor()
+
+        if self.opts.show_wg_running:
+            self.show_wg_running()
+
         if self.opts.show_info:
             self.show_info()
 
+        #
+        # dns fix
+        #
         if self.opts.fix_dns:
             self.fix_dns()
 
+        if self.opts.fix_dns_auto_start:
+            self.start_resolv_monitor()
+
+        if self.opts.fix_dns_auto_stop:
+            self.kill_resolv_monitor()
+
+        #
+        # wg up/dn
+        #
         if self.opts.wg_up:
             self.wg_up()
 
         if self.opts.wg_dn:
             self.wg_dn()
 
+        #
+        # ssh
+        #
         if self.opts.ssh_start:
             self.ssh_listener()
 

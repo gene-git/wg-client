@@ -20,7 +20,8 @@ def main():
     """
     client = WgClient()
 
-    client.do_all()
+    if client.okay:
+        client.do_all()
 
 # -----------------------------------------------------
 if __name__ == '__main__':

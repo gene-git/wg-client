@@ -43,13 +43,10 @@ def kill_process(pid):
     kill process starting gently
     """
     if is_pid_valid(pid):
-        #print('kill')
         os.kill(pid, signal.Signals.SIGHUP)
         if is_pid_valid(pid):
-            #print('term')
             os.kill(pid, signal.Signals.SIGTERM)
             if is_pid_valid(pid):
-                #print('kill')
                 os.kill(pid, signal.Signals.SIGKILL)
 
 def signal_catcher(sighandler):

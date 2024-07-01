@@ -3,9 +3,9 @@
 """
 Project wg-client
 """
-__version__ = "4.2.0"
-__date__ = "2024-04-17"
-__reldev__ = "released"
+__version__ = "5.0.1"
+__date__ = "2024-07-01"
+__reldev__ = "release"
 
 def version() -> str:
     """ report version and release date """
