@@ -6,7 +6,7 @@ Parse output of wg-quick and get client wg address
 import random
 from .ip_addr import ip_to_octet
 
-def choose_pfx(pfx_range):
+def get_ssh_port_prefix(pfx_range:[str]) -> int|None:
     """
     Pick 2 digit num from range
     """
@@ -22,7 +22,7 @@ def choose_pfx(pfx_range):
     return num
 
 
-def ssh_listener_args(test, wg_ip, host, pfx_range:[int]):
+def ssh_listener_args(test, wg_ip, host, prefix):
     """
     Run ssh to create remote listening port
      - remote port: YYxxx with xxx the 3 digit from last ip octet
@@ -35,11 +35,11 @@ def ssh_listener_args(test, wg_ip, host, pfx_range:[int]):
      i.e. this call will 'hang' until it is killed by Ctrl-C of main or if called
      from another program when that program exits.
     """
-    prefix = choose_pfx(pfx_range)
+    pargs = []
+    #prefix = choose_pfx(pfx_range)
     if not (host and prefix and wg_ip):
         print('Err: Missing wg_server, wg_ip or port prefix for ssh listener')
-        return (None, None, None)
-
+        return pargs
 
     # get last octet
     octet = ip_to_octet(wg_ip)
@@ -52,7 +52,6 @@ def ssh_listener_args(test, wg_ip, host, pfx_range:[int]):
     pargs = []
     if test:
         pargs += ['/usr/bin/echo']
-    pargs += ['/usr/bin/ssh']
-    pargs += ['-R', rfwd, '-N',  host]
+    pargs += ['/usr/bin/ssh', '-R', rfwd, '-N',  host]
 
     return pargs

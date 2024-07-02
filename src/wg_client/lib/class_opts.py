@@ -118,8 +118,12 @@ def get_avail_options(defaults:dict):
     opt = ['--show-fix-dns-auto', {'help' : ohelp, act:act_on}]
     opts.append(opt)
 
-    ohelp = 'Report all info'
+    ohelp = 'Report all info - alias for --status'
     opt = ['--show-info', {'help' : ohelp, act:act_on}]
+    opts.append(opt)
+
+    ohelp = 'Report all info'
+    opt = ['--status', {'help' : ohelp, act:act_on}]
     opts.append(opt)
 
     ohelp = 'Display version'
@@ -155,6 +159,7 @@ class WgClientOpts:
         self.show_wg_running = False
         self.show_fix_dns_auto = False
         self.show_info = False
+        self.status = False
         self.version = False
         self.iface = 'wgc'
         self.ssh_server = None

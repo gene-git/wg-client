@@ -11,18 +11,14 @@ Class for Start, Stop Wireguard client on linux
  /etc/sudoers.d/wg-quick
  username   ALL=NOPASSWD: SETENV: /usr/bin/wg-quick
 """
-# pylint disable=no-name-in-module,invalid-name,too-few-public-methods
 # pylint: disable=too-many-instance-attributes,too-many-branches
 import os
 import time
 from .class_proc import MyProc
 from .class_proc import MySignals
 from .ip_addr import iface_to_ips
-from .ssh_listener import ssh_listener_args
-from .ssh_state import read_ssh_pid
-from .ssh_state import write_ssh_pid
-from .ssh_state import check_ssh_pid
-from .ssh_state import kill_ssh
+from .ssh_listener import (get_ssh_port_prefix, ssh_listener_args)
+from .ssh_state import (read_ssh_pid, write_ssh_pid, check_ssh_pid, kill_ssh)
 from .class_opts import WgClientOpts
 from .class_logger import MyLog
 from .get_info import is_wg_running
@@ -52,7 +48,7 @@ class WgClient():
         self.wg_ip = None
         self.wg_ip6 = None
         self.test = False
-        self.pid = None         # so we share after looking it up
+        self.ssh_pid = None         # so we share after looking it up
 
         self.opts = WgClientOpts()
         self.iface = self.opts.iface
@@ -61,6 +57,7 @@ class WgClient():
 
         self.ssh_proc = None
         self.run_proc = None
+        self.ssh_args = None
 
         self.resolv = WgResolv()
 
@@ -73,58 +70,28 @@ class WgClient():
             print(version())
             self.okay = False
 
+        #
+        # ssh port = prefix + 2 digits from wireguard ip
+        #  - We dont know the port until wireguard is running
+        #  - prefix can be random if prefix range is used
+        #  - establish the prefix once and save.
+        #
+        self.ssh_pfx = get_ssh_port_prefix(self.opts.pfx_range)
+        if not self.ssh_pfx:
+            self.log(' Warning: unable to find ssh port prefix')
+
     def log(self, msg):
         """ log file """
         self.logger.log(msg)
-
-    def show_iface(self):
-        """
-        Simply print/log the wg iface that would be used
-        """
-        print(f'{self.iface}')
-        self.log(f'wg-iface: {self.iface}')
-
-    def show_ssh_server(self):
-        """
-        Simply print/log the ssh_server that would be used
-        """
-        ssh_server = self.opts.ssh_server
-        if not ssh_server:
-            ssh_server = 'None'
-        print(f'{ssh_server}')
-        self.log(f'ssh server: {ssh_server}')
-
-    def show_ssh_running(self):
-        """
-        Simply print/log the wg iface that would be used
-        """
-        ssh_running = self.is_ssh_running()
-        print(f'{ssh_running}')
-        self.log(f'ssh_running: {ssh_running}')
-
-    def show_ssh_pfx(self):
-        """
-        Simply print/log the wg iface that would be used
-        """
-        print(f'{self.opts.ssh_pfx}')
-        self.log(f'ssh_pfx: {self.opts.ssh_pfx}')
-
-    def show_wg_running(self):
-        """
-        Simply print/log the wg iface that would be used
-        """
-        wg_running = is_wg_running(self.iface)
-        print(f'{wg_running}')
-        self.log(f'wg_running: {wg_running}')
 
     def is_ssh_running(self):
         """
         Check saved PID and check if running
          - if ssh_server missing, we'll check pid is valid
         """
-        self.pid = read_ssh_pid()
+        self.ssh_pid = read_ssh_pid()
         ssh_server = self.opts.ssh_server
-        is_running = check_ssh_pid(self.pid, ssh_server)
+        is_running = check_ssh_pid(self.ssh_pid, ssh_server)
         return is_running
 
     def wg_up(self):
@@ -159,10 +126,10 @@ class WgClient():
 
     def start_resolv_monitor(self):
         """
-        Runs resolv monitor daemon which 
+        Runs resolv monitor daemon which
         monitors /etc/resolv.conf and restores wireguard version
         if its changed.
-        this process intentionally runs in forefround 
+        this process intentionally runs in forefround
           - command line can contr-C
           - gui will kill it when it exits
           - simple enough to make it daemon process if need arises
@@ -199,20 +166,6 @@ class WgClient():
         self.log(' Terminate resolv monitor')
         self.resolv.kill_monitor()
 
-    def check_resolv_monitor(self):
-        """
-        check if resolv monitor is running
-        """
-        self.log(' check resolv monitor')
-        check = self.resolv.check_already_running()
-        return check
-
-    def show_resolv_monitor(self):
-        """ show state of any resolv monitor """
-        check = self.check_resolv_monitor()
-        print(f'{check}')
-        self.log(f'resolv-monitor: {check}')
-
     def get_wg_ip(self):
         """
         find ip4 for wg iface
@@ -241,17 +194,31 @@ class WgClient():
         pargs = wg_quick_cmd(self.test, self.euid, 'down', self.iface)
         self.runit(pargs)
 
+    def ssh_listener_pargs(self):
+        """
+        Establish how to start ssh if possible
+        """
+        ssh_server = self.opts.ssh_server
+        wg_ip = self.wg_ip
+        if not wg_ip:
+            wg_ip = self.wg_ip6
+
+        self.ssh_args = ssh_listener_args(self.test, wg_ip, ssh_server, self.ssh_pfx)
+        if not self.ssh_args:
+            self.log(' Warning: unable to set up ssh args - ssh not available')
+        return self.ssh_args
+
     def stop_ssh_listener(self):
         """
         kill based on saved pid
-         - is running check fills self.pid
+         - is running check fills self.ssh_pid
         """
         is_running = self.is_ssh_running()
         if is_running:
             if self.test:
-                print(f'test: kill({self.pid}) server {self.opts.ssh_server}')
+                print(f'test: kill({self.ssh_pid}) server {self.opts.ssh_server}')
             else:
-                kill_ssh(self.pid, self.opts.ssh_server)
+                kill_ssh(self.ssh_pid, self.opts.ssh_server)
         else:
             self.log('ssh not running - nothing to stop')
 
@@ -275,33 +242,31 @@ class WgClient():
             self.log('No ssh_server provided')
             return
 
-        opts = self.opts
-        ssh_server = opts.ssh_server
-        wg_ip = self.wg_ip
-        if not wg_ip:
-            wg_ip = self.wg_ip6
-        ssh_args = ssh_listener_args(self.test, wg_ip, ssh_server, opts.pfx_range)
+        self.ssh_args = self.ssh_listener_pargs()
+        if not self.ssh_args:
+            #self.log(' Warning: unable to set up ssh args - ssh not available')
+            self.log('Cant start ssh listener missing input to do so')
+            return
 
         #
-        # Check not already running:
+        # Check if already running:
         #
         ssh_running = self.is_ssh_running()
         if ssh_running:
-            self.log(f'ssh {ssh_server} already running with pid = {self.pid}')
-            print(f'ssh to {ssh_server} already running')
+            self.log(f'ssh {self.opts.ssh_server} already running with pid = {self.ssh_pid}')
+            print(f'ssh to {self.opts.ssh_server} already running')
             return
-
         #
         # open up pipe to ssh and wait for it to finish
         # child pid will be saved via write_ssh_pid and
         # set to "-1" when child exits normaly
         #
         if self.test:
-            arg_str = ' '.join(ssh_args)
+            arg_str = ' '.join(self.ssh_args)
             print(f'test: {arg_str}')
         else:
             self.ssh_proc = MyProc(self.mysignals)
-            self.ssh_proc.popen(ssh_args, logger=self.log, pid_saver=write_ssh_pid)
+            self.ssh_proc.popen(self.ssh_args, logger=self.log, pid_saver=write_ssh_pid)
 
     def runit(self, pargs):
         """
@@ -314,26 +279,6 @@ class WgClient():
         self.run_proc = MyProc(self.mysignals)
         (_ret, _outs, _errs) = self.run_proc.popen(pargs, logger=self.log, pid_saver=write_ssh_pid)
 
-    def show_info(self):
-        """ show iface, ssh running and wg running """
-        print(f'{"wg iface":>15s} : ', end='')
-        self.show_iface()
-
-        print(f'{"wg_running":>15s} : ', end='')
-        self.show_wg_running()
-
-        print(f'{"ssh_server":>15s} : ', end='')
-        self.show_ssh_server()
-
-        print(f'{"ssh_pfx":>15s} : ', end='')
-        self.show_ssh_pfx()
-
-        print(f'{"ssh_running":>15s} : ', end='')
-        self.show_ssh_running()
-
-        print(f'{"resolv_monitor":>15s} : ', end='')
-        self.show_resolv_monitor()
-
     def do_all(self):
         """
         Perform the requested tasks
@@ -342,25 +287,22 @@ class WgClient():
         # Show options
         #
         if self.opts.show_iface:
-            self.show_iface()
+            _show_status(self, 'wg_iface')
 
         if self.opts.show_ssh_server:
-            self.show_ssh_server()
+            _show_status(self, 'ssh_server')
 
         if self.opts.show_ssh_running:
-            self.show_ssh_running()
+            _show_status(self, 'ssh_running')
 
         if self.opts.show_wg_running:
-            self.show_wg_running()
+            _show_status(self, 'wg_running')
 
         if self.opts.show_fix_dns_auto:
-            self.show_resolv_monitor()
+            _show_status(self, 'resolv_monitor')
 
-        if self.opts.show_wg_running:
-            self.show_wg_running()
-
-        if self.opts.show_info:
-            self.show_info()
+        if self.opts.status or self.opts.show_info:
+            _show_status(self, 'status')
 
         #
         # dns fix
@@ -391,3 +333,33 @@ class WgClient():
 
         if self.opts.ssh_stop:
             self.stop_ssh_listener()
+
+def _show_status(client:WgClient, which:str) -> None:
+    """
+    Display status
+    """
+    items = {}
+
+    if which in ('wg_iface', 'status')  :
+        items['wg_iface'] = client.iface
+
+    if which in ('wg_running', 'status')  :
+        items['wg_running'] = is_wg_running(client.iface)
+
+    if which in ('ssh_server', 'status')  :
+        items['ssh_server'] = client.opts.ssh_server
+
+    if which in ('ssh_pfx', 'status')  :
+        items['ssh_pfx'] = client.ssh_pfx
+
+    if which in ('ssh_running', 'status')  :
+        items['ssh_running'] = client.is_ssh_running()
+
+    if which in ('resolv_monitor', 'status')  :
+        items['resolv_monitor'] = client.resolv.check_already_running()
+
+    for (key, val) in items.items():
+        if which == 'status':
+            print(f'{key:>15s} : ', end='')
+        print(val)
+        client.log(f'{key} : {val}')

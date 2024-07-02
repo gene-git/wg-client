@@ -17,6 +17,7 @@
 #include <sys/param.h>
 #include <sys/capability.h>
 #include <openssl/evp.h>
+#include <openssl/err.h>
 
 #define OPENSSL_ENGINE NULL
 #define BUFSZ 10240
@@ -31,14 +32,15 @@ struct file_data {
     const char *pathname ;
     unsigned char *data ;
     unsigned int data_len ;
-    unsigned char digest[EVP_MAX_MD_SIZE];
+    const char *digest_algo;
+    unsigned char *digest;
     unsigned int digest_len ;
     bool good_file ;
 };
 
 #if defined(TESTING)
 //
-// testing tool : print digest it in standard hex form
+// testing tool : print digest in standard hex form
 //
 static void print_digest(struct file_data *fdata)
 {
@@ -86,43 +88,89 @@ static int check_permissions(struct perms *perms)
 }
 
 //
-// Compute file hash
+// Compute digest of the file data 
 //  - use openssl crypto lib to do the work
 //
-static const int sha_hash(struct file_data *fdata)
+static const int compute_digest(struct file_data *fdata)
 {
-    EVP_MD_CTX *ctx = EVP_MD_CTX_new();
+    EVP_MD_CTX *ctx = NULL;
+    EVP_MD *md = NULL;
+    int ret = 0;
 
     if (fdata == NULL || fdata->data == NULL || fdata->data_len < 1){
-        printf("Hash: missing input\n") ;
-        return(-1) ;
+        printf("Digest error: missing input\n") ;
+        ret = -1;
+        goto clean_up;
     }
     fdata->digest_len = 0 ;
 
-    if (EVP_DigestInit_ex(ctx, EVP_sha256(), OPENSSL_ENGINE) < 0) {
-        printf("Hash: Error Digest init\n");
-        EVP_MD_CTX_free(ctx);
-        return(-1) ;
+    //
+    // which algorithm
+    //
+    if (fdata->digest_algo == NULL) {
+        fdata->digest_algo = "SHA384";
     }
 
-    // Hash data into the digest context ctx
+    //
+    // Make new md and ctx
+    //
+    md = EVP_MD_fetch(NULL, fdata->digest_algo, NULL);
+    if (md == NULL){
+        printf("Digest error: failed allocate md\n");
+        ret = -1;
+        goto clean_up;
+    }
+
+    ctx = EVP_MD_CTX_new();
+    if (ctx == NULL) {
+        printf("Digest error: failed allocate ctx\n");
+        ret = -1;
+        goto clean_up;
+    }
+
+    if (EVP_DigestInit_ex(ctx, md, OPENSSL_ENGINE) < 0) {
+        printf("Digest errir: Digest init\n");
+        ret = -1;
+        goto clean_up;
+    }
+
+    //
+    // Pass data into the digest context ctx
+    //
     if (EVP_DigestUpdate(ctx, fdata->data, fdata->data_len) < 0) {
-        printf("Hash: digest update failed\n");
-        EVP_MD_CTX_free(ctx);
-        return(-1) ;
+        printf("Digest error: update failed\n");
+        ret = -1;
+        goto clean_up;
     }
 
-    // retrieve digest value from ctx and save into provided digest buffer
+    //
+    // Make space for digest output
+    //
+    fdata->digest = OPENSSL_malloc(EVP_MD_get_size(md));
+    if (fdata->digest == NULL) {
+        printf("Digest error: memory alloc failed\n");
+        ret = -1;
+        goto clean_up;
+    }
+
+    //
+    // Calculate digest value and save into allocated digest buffer
+    //
     if (EVP_DigestFinal_ex(ctx, fdata->digest, &fdata->digest_len) < 0) {
         printf("Hash: digest finalization failed.\n");
         EVP_MD_CTX_free(ctx);
         return(-1) ;
     }
 
-    // clean up
-    EVP_MD_CTX_free(ctx);
+clean_up:
+    if (ctx != NULL)
+        EVP_MD_CTX_free(ctx);
+    if (md != NULL)
+        EVP_MD_free(md);
+    if (ret != 0)
+        ERR_print_errors_fp(stderr);
 
-    return(0);
+    return(ret);
 }
 
 //
@@ -130,7 +178,7 @@ static const int sha_hash(struct file_data *fdata)
 // resolv.conf is small typically < 5K so its fine to read all into memory before writing.
 // After successful read:
 //  - Data is saved in fdata->data
-//  - Data is hashed into fdata->digest using sha_hash()
+//  - Data is hashed into fdata->digest using compute_digest()
 // Returns:
 //    0 = success
 //   -1 = error
@@ -191,17 +239,18 @@ static int read_file(struct file_data *fdata)
     //
     // All good - compute the hash 
     //
-    ret = sha_hash(fdata);
+    ret = compute_digest(fdata);
     if (ret < 0) {
-        printf("Failed to generae digest : %s\n", fdata->pathname);
+        printf("Failed to calculate digest : %s\n", fdata->pathname);
         return(-1);
     }
     return(0);
 }
 
 //
-// Write data from fdata->data to pathname  
+// Write fdata->data to file : pathname  
 // Returns 0 on success and -1 on error
+// fdata->data and fdata->data_len should be valid
 //
 static int write_file(struct file_data *fdata, const char *pathname)
 {
@@ -209,6 +258,14 @@ static int write_file(struct file_data *fdata, const char *pathname)
     char path_tmp[MAXPATHLEN];
     pid_t pid ;
 
+    if (fdata->data == NULL || fdata->data_len <= 0){
+        printf("No data to write to : %s\n", pathname);
+        return(-1) ;
+    }
+
+    //
+    // Sufficient for our temp file - simpler than mkstemp
+    //
     pid = getpid();
     snprintf(path_tmp, MAXPATHLEN, "%s.%X", fdata->pathname, (unsigned int)pid);
 
@@ -274,6 +331,20 @@ static int file_compare(struct file_data *fd1, struct file_data *fd2){
 }
 
 //
+// Clean up allocated memory
+//
+static void clean_mem(struct file_data *fdata)
+{
+    if (fdata->data != NULL) {
+        free((void *)fdata->data) ;
+    }
+    if (fdata->digest != NULL) {
+        OPENSSL_free(fdata->digest);
+        fdata->digest_len = 0;
+    }
+}
+
+//
 // App to manage resolv.conf file and ensure 
 // wireguard version is in /etc/resolv.conf
 // While VPN is running networking tools (e.g. dhcp)
@@ -287,6 +358,7 @@ int main(int argc, char **argv) {
     int ret = -1 ;
     struct perms perms ;
     struct file_data fdata_wg, fdata_save, fdata_resolv ;
+    const char *digest_algo = "SHA384" ;
 
     memset((void *)&fdata_wg, 0, sizeof(fdata_wg)) ;
     memset((void *)&fdata_save, 0, sizeof(fdata_save)) ;
@@ -295,6 +367,10 @@ int main(int argc, char **argv) {
     fdata_wg.pathname = "/etc/resolv.conf.wg" ;
     fdata_save.pathname = "/etc/resolv.conf.saved" ;
     fdata_resolv.pathname = "/etc/resolv.conf" ;
+
+    fdata_wg.digest_algo  = digest_algo;
+    fdata_save.digest_algo  = digest_algo;
+    fdata_resolv.digest_algo  = digest_algo;
 
     check_permissions(&perms);
     if (perms.cap_dac_override == false) {
@@ -360,15 +436,18 @@ int main(int argc, char **argv) {
         }
     } 
 
-    free((void *)fdata_wg.data) ;
-    free((void *)fdata_resolv.data) ;
-    free((void *)fdata_save.data) ;
-
     //
     // chown to root if needed and permitted
     //  - leave saved and wg files alone
     //
     chown_root(&perms, fdata_resolv.pathname) ;
+
+    //
+    // Clean up mem
+    //
+    clean_mem(&fdata_wg);
+    clean_mem(&fdata_resolv);
+    clean_mem(&fdata_save);
 
     return(0);
 }
