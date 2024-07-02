@@ -325,7 +325,7 @@ static int file_compare(struct file_data *fd1, struct file_data *fd2){
     } else if (fd1->digest_len > fd2->digest_len) {
         comp = 1 ;
     } else {
-        comp = strncmp(digest1, digest2, EVP_MAX_MD_SIZE) ;
+        comp = strncmp(digest1, digest2, fd1->digest_len) ;
     }
     return (comp) ;
 }
@@ -413,8 +413,9 @@ int main(int argc, char **argv) {
     //
     if (file_compare(&fdata_resolv, &fdata_wg) != 0) {
         //
-        // resolv.conf doesn't match wireguard version so replace it.
+        // resolv.conf changed and doesn't match wireguard version so replace it.
         //
+        printf("Updating : %s\n", fdata_resolv.pathname);
         ret = write_file(&fdata_wg, fdata_resolv.pathname) ;
         if (ret < 0) {
             return(-1);
