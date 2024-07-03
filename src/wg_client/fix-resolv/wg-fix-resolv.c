@@ -317,24 +317,21 @@ static int chown_root(struct perms *perms, const char *pathname) {
 }
 
 //
-// compare 2 files 
+// compare data of 2 files 
+// Return true if same else return false
 //
-static int file_compare(struct file_data *fd1, struct file_data *fd2){
-    int comp ;
-    const char *digest1 = (const char *)fd1->digest ;
-    const char *digest2 = (const char *)fd2->digest ;
-
+static bool files_same(struct file_data *fd1, struct file_data *fd2){
     //
-    // check length first then digest
+    // check data length first then check digest
+    // Both digests use same algo and are same length
     //
-    if (fd1->digest_len < fd2->digest_len) {
-        comp = -1 ;
-    } else if (fd1->digest_len > fd2->digest_len) {
-        comp = 1 ;
-    } else {
-        comp = strncmp(digest1, digest2, fd1->digest_len) ;
-    }
-    return (comp) ;
+    if (fd1->data_len != fd2->data_len) {
+        return (false);
+    } 
+    else if (strncmp((const char *)fd1->digest, (const char *)fd2->digest, fd1->digest_len) == 0) {
+        return (true);
+    } 
+    return (false);
 }
 
 //
@@ -419,7 +416,7 @@ int main(int argc, char **argv) {
     //   make sure it is same as resolv.conf.wg
     //   chown root if permitted any newly written file.
     //
-    if (file_compare(&fdata_resolv, &fdata_wg) != 0) {
+    if (!files_same(&fdata_resolv, &fdata_wg)) {
         //
         // resolv.conf changed and doesn't match wireguard version so replace it.
         //
@@ -435,7 +432,7 @@ int main(int argc, char **argv) {
         //   check the new resolv.conf is same as saved and update saved if not same
         //   Probably only happens after changing network location with different default resolver
         //
-        if (!fdata_save.good_file || file_compare(&fdata_resolv, &fdata_save) != 0){
+        if (!fdata_save.good_file || !files_same(&fdata_resolv, &fdata_save)){
             printf("Updating : %s\n", fdata_save.pathname);
             ret = write_file(&fdata_resolv, fdata_save.pathname);
             if (ret < 0) {
