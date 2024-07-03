@@ -1,10 +1,15 @@
 /*
  * Restore /etc/resolv.con by copying from saved /etc/resolv.conf.wg
- * Requires cap_chown and cap_dac_override if not run as root.
+ * Also keep any newly found file as resolv.conf.save. This handles
+ * the case when machine is sleep/resumed or dhcp lease is refreshed or
+ * even a new wifi location - each leading to a new resolv.conf - if its different
+ * than current saveed version then it replaces it.
  *
- * Uses 
- *      - openssl to compute file hash for fast compare
- * Since resolv.conf are always tiny we read them all into memory.
+ * Requires :
+ *  - cap_chown and cap_dac_override if not run as root.
+ * - openssl to compute file hash for fast compare
+ *
+ * Since resolv.conf are tiny we read them into memory.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,12 +27,14 @@
 #define OPENSSL_ENGINE NULL
 #define BUFSZ 10240
 
+// track permissions / capabilities
 struct perms {
     uid_t   euid ;
     bool cap_chown ;
     bool cap_dac_override;
 };
 
+// file information including a hash used for fast compare
 struct file_data {
     const char *pathname ;
     unsigned char *data ;
@@ -300,7 +307,7 @@ static int write_file(struct file_data *fdata, const char *pathname)
 //
 static int chown_root(struct perms *perms, const char *pathname) {
 
-    if (perms->euid == 0 || (perms->euid != 0 && perms->cap_chown == true)) {
+    if (perms->euid == 0 || perms->cap_chown == true) {
         if (chown(pathname, 0, 0)) {
             printf("Failed chown root : %s\n", pathname);
             return(-1);
@@ -410,6 +417,7 @@ int main(int argc, char **argv) {
     //
     // Check resolv.conf :
     //   make sure it is same as resolv.conf.wg
+    //   chown root if permitted any newly written file.
     //
     if (file_compare(&fdata_resolv, &fdata_wg) != 0) {
         //
@@ -420,28 +428,23 @@ int main(int argc, char **argv) {
         if (ret < 0) {
             return(-1);
         }
+        chown_root(&perms, fdata_resolv.pathname) ;
 
         //
         // resolv.conf.saved
-        //   check the changed resolv.conf is same as saved
-        //   if not, then updated saved
-        //   Should only happen if moved to new network location with different default resolver
+        //   check the new resolv.conf is same as saved and update saved if not same
+        //   Probably only happens after changing network location with different default resolver
         //
-        if (!fdata_save.good_file || 
-            file_compare(&fdata_resolv, &fdata_save) != 0){
+        if (!fdata_save.good_file || file_compare(&fdata_resolv, &fdata_save) != 0){
             printf("Updating : %s\n", fdata_save.pathname);
             ret = write_file(&fdata_resolv, fdata_save.pathname);
             if (ret < 0) {
                 return(-1);
             }
+            chown_root(&perms, fdata_save.pathname) ;
         }
     } 
 
-    //
-    // chown to root if needed and permitted
-    //  - leave saved and wg files alone
-    //
-    chown_root(&perms, fdata_resolv.pathname) ;
 
     //
     // Clean up mem
