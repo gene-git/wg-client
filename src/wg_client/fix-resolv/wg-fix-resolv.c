@@ -165,8 +165,8 @@ static const int compute_digest(struct file_data *fdata)
     //
     if (EVP_DigestFinal_ex(ctx, fdata->digest, &fdata->digest_len) < 0) {
         printf("Hash: digest finalization failed.\n");
-        EVP_MD_CTX_free(ctx);
-        return(-1) ;
+        ret = -1;
+        goto clean_up;
     }
 
 clean_up:
@@ -206,16 +206,16 @@ static unsigned char *mem_alloc(unsigned char *curr_mem, ssize_t bytes)
 }
 
 //
-// Read File"
-//   fdata->pathname and return allocated buffer of contents.
-//   resolv.conf is small typically < 5K so its fine to read all into memory before writing.
+// Read File
+//   read fdata->pathname and return allocated buffer of contents.
+//   resolv.conf is small (typically << 5K) so keep in memory
 // After successful read:
 //  - Data is saved in fdata->data
 //  - Data is hashed into fdata->digest using compute_digest()
 // Returns:
 //    0 = success
 //   -1 = error
-// Caller should free buffer fdata->data
+// Caller responsibility: free up data : free(fdata->data)
 //
 static int read_file(struct file_data *fdata)
 {
@@ -228,7 +228,7 @@ static int read_file(struct file_data *fdata)
     fdata->data_is_good = true ;
 
     //
-    // Read file in BUFSZ chunks
+    // Read file in chunks (BUFSZ) - size chosen to typically complete in one read
     //
     fdin = open(fdata->pathname, O_RDONLY) ;
     if (fdin < 0) {
@@ -237,6 +237,9 @@ static int read_file(struct file_data *fdata)
         return(-1);
     }
 
+    //
+    // Allocate space
+    //
     bytes_total = BUFSZ ;
     fdata->data = mem_alloc(fdata->data, bytes_total);
     if (fdata->data == NULL) {
@@ -253,7 +256,7 @@ static int read_file(struct file_data *fdata)
         }
         fdata->data_len += (unsigned int)bytes;
 
-        if (bytes == 0 || bytes < BUFSZ) {
+        if (bytes < BUFSZ) {
             // all done all good
             break ;
         } else {
@@ -267,7 +270,7 @@ static int read_file(struct file_data *fdata)
     } while(bytes > 0);
 
     //
-    // free up mem we dont need
+    // Resize down to free up unused mem
     //
     bytes = fdata->data_len ;
     fdata->data = mem_alloc(fdata->data, bytes);
@@ -327,7 +330,7 @@ static int write_file(struct file_data *fdata, const char *pathname)
     close(fdout) ;
 
     //
-    // All is well - Rename tmp file 
+    // All well - Rename tmp file 
     //
     ret = rename((const char *)path_tmp, pathname) ;
     if (ret < 0) {
@@ -358,7 +361,7 @@ static int chown_root(struct perms *perms, const char *pathname) {
 static bool files_same(struct file_data *fd1, struct file_data *fd2){
     //
     // check data length first then check digest
-    // Both digests use same algo and are same length
+    // Both digests from same algo and are same length
     //
     if (fd1->data_len != fd2->data_len) {
         return (false);
@@ -384,13 +387,15 @@ static void clean_mem(struct file_data *fdata)
 }
 
 //
-// App to manage resolv.conf file and ensure 
+// Program to manage resolv.conf file and ensure 
 // wireguard version is in /etc/resolv.conf
-// While VPN is running networking tools (e.g. dhcp)
-// may replace it.
+// While VPN is running, some events lead  networking tools 
+// (e.g. dhcp) to replace it.
+//
 // Requires capabilities : CAP_CHOWN, CAP_DAC_OVERRIDE
 //  - caps are needed to write /etc/resolv.conf
-// Hard code pathnames to minimize attack surface.
+//  or owner has appropriate file permissions.
+// Hard code pathnames to minimize any attack surface.
 // NB: any change to binary will cause caps to be dropped
 //
 int main(int argc, char **argv) {
@@ -422,15 +427,17 @@ int main(int argc, char **argv) {
     //
     ret = read_file(&fdata_wg);
     if (ret < 0) {
+        printf("Error : missing file %s\n", fdata_wg.pathname);
         return(-1);
     }
 
     //
-    // Read resolv
+    // Read resolv.conf
     //
     ret = read_file(&fdata_resolv);
     if (ret < 0) {
         // If Missing resolv.conf then replace with wg version
+        printf("Restoring missing file %s\n", fdata_resolv.pathname);
         ret = write_file(&fdata_wg, fdata_resolv.pathname) ;
         if (ret < 1) {
             return(-1);
@@ -439,11 +446,11 @@ int main(int argc, char **argv) {
     }
 
     //
-    // Check resolv.conf == resolv.conf.save
+    // Read resolv.conf.saved
     //
     ret = read_file(&fdata_save);
     if (ret < 0) {
-        printf("Failed read : %s\n", fdata_save.pathname);
+        printf("Warning: Unable to read : %s\n", fdata_save.pathname);
     } 
     
     //
