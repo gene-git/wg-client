@@ -1,15 +1,15 @@
 /*
  * Restore /etc/resolv.con by copying from saved /etc/resolv.conf.wg
- * Also keep any newly found file as resolv.conf.save. This handles
+ * Save any newly found version of file as resolv.conf.save. This handles
  * the case when machine is sleep/resumed or dhcp lease is refreshed or
  * even a new wifi location - each leading to a new resolv.conf - if its different
  * than current saveed version then it replaces it.
  *
  * Requires :
  *  - cap_chown and cap_dac_override if not run as root.
- * - openssl to compute file hash for fast compare
+ *  - openssl to compute file hash for fast compare
  *
- * Since resolv.conf are tiny we read them into memory.
+ * Since resolv.conf files are tiny they are read into memory.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,10 +39,10 @@ struct file_data {
     const char *pathname ;
     unsigned char *data ;
     unsigned int data_len ;
+    bool data_is_good ;
     const char *digest_algo;
     unsigned char *digest;
     unsigned int digest_len ;
-    bool good_file ;
 };
 
 #if defined(TESTING)
@@ -180,9 +180,35 @@ clean_up:
     return(ret);
 }
 
+
 //
-// Read fdata->pathname and return allocated buffer of contents.
-// resolv.conf is small typically < 5K so its fine to read all into memory before writing.
+// mem_alloc helper func
+//  - if curr_mem NULL then calloc() else realloc()
+//  - for convenience bytes is ssize_t
+//
+static unsigned char *mem_alloc(unsigned char *curr_mem, ssize_t bytes)
+{
+    unsigned char *mem = NULL ;
+    const char *which = "";
+
+    if (curr_mem == NULL) {
+        mem = (unsigned char *) calloc(1, (size_t)bytes);
+    } 
+    else {
+        which = "re";
+        mem = (unsigned char *) realloc((void *) curr_mem, (size_t)bytes) ;
+    }
+
+    if (mem == NULL) {
+        printf("Error %sallocating %zd bytes: %s\n", which, bytes, strerror(errno));
+    }
+    return (mem);
+}
+
+//
+// Read File"
+//   fdata->pathname and return allocated buffer of contents.
+//   resolv.conf is small typically < 5K so its fine to read all into memory before writing.
 // After successful read:
 //  - Data is saved in fdata->data
 //  - Data is hashed into fdata->digest using compute_digest()
@@ -193,13 +219,13 @@ clean_up:
 //
 static int read_file(struct file_data *fdata)
 {
-    unsigned int bytes = -1 ;
-    size_t chunk = 0;
+    ssize_t bytes = -1 ;
+    ssize_t bytes_total = 0;
     int fdin = 0, ret ;
 
     fdata->data = NULL ;
     fdata->data_len = 0 ;
-    fdata->good_file = true ;
+    fdata->data_is_good = true ;
 
     //
     // Read file in BUFSZ chunks
@@ -207,15 +233,14 @@ static int read_file(struct file_data *fdata)
     fdin = open(fdata->pathname, O_RDONLY) ;
     if (fdin < 0) {
         printf("Failed to open file %s : %s\n", fdata->pathname, strerror(errno));
-        fdata->good_file = false ;
+        fdata->data_is_good = false ;
         return(-1);
     }
 
-    chunk = BUFSZ ;
-    fdata->data = (unsigned char *) calloc(1, chunk);
+    bytes_total = BUFSZ ;
+    fdata->data = mem_alloc(fdata->data, bytes_total);
     if (fdata->data == NULL) {
-        printf("Failed to allocate mem : %s\n", strerror(errno));
-        fdata->good_file = false ;
+        fdata->data_is_good = false ;
         return(-1);
     }
 
@@ -223,23 +248,33 @@ static int read_file(struct file_data *fdata)
         bytes = read(fdin, &(fdata->data[fdata->data_len]), BUFSZ) ;
         if (bytes < 0) {
             printf("Error reading %s : %s\n", fdata->pathname, strerror(errno));
-            fdata->good_file = false ;
+            fdata->data_is_good = false ;
             return(-1);
         }
-        fdata->data_len += bytes;
-        if (bytes == 0) {
+        fdata->data_len += (unsigned int)bytes;
+
+        if (bytes == 0 || bytes < BUFSZ) {
+            // all done all good
             break ;
         } else {
-            chunk += BUFSZ ;
-            fdata->data = (unsigned char *)realloc((void *) fdata->data, chunk) ;
+            bytes_total += BUFSZ ;
+            fdata->data = mem_alloc(fdata->data, bytes_total);
             if (fdata->data == NULL) {
-                printf("Failed to reellocate mem : %s\n", strerror(errno));
-                fdata->good_file = false ;
+                fdata->data_is_good = false ;
                 return(-1);
             }
         }
-        fdata->data[fdata->data_len] = 0;
     } while(bytes > 0);
+
+    //
+    // free up mem we dont need
+    //
+    bytes = fdata->data_len ;
+    fdata->data = mem_alloc(fdata->data, bytes);
+    if (fdata->data == NULL) {
+        fdata->data_is_good = false ;
+        return(-1);
+    }
 
     close(fdin) ;
 
@@ -248,7 +283,7 @@ static int read_file(struct file_data *fdata)
     //
     ret = compute_digest(fdata);
     if (ret < 0) {
-        printf("Failed to calculate digest : %s\n", fdata->pathname);
+        printf("Failed to compute digest : %s\n", fdata->pathname);
         return(-1);
     }
     return(0);
@@ -432,7 +467,7 @@ int main(int argc, char **argv) {
         //   check the new resolv.conf is same as saved and update saved if not same
         //   Probably only happens after changing network location with different default resolver
         //
-        if (!fdata_save.good_file || !files_same(&fdata_resolv, &fdata_save)){
+        if (!fdata_save.data_is_good || !files_same(&fdata_resolv, &fdata_save)){
             printf("Updating : %s\n", fdata_save.pathname);
             ret = write_file(&fdata_resolv, fdata_save.pathname);
             if (ret < 0) {
