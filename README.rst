@@ -48,6 +48,8 @@ Key features
 New or Interesting
 ==================
     
+  * As root *--status* now shows ssh/resolv for all users if they have ssh/resolv monitor
+
   * Auto fix of resolv.conf (new option *--fix-dns-auto-start*)
 
     Network refresh often happens after sleep/resume (e.g. laptop lid close/open) or 

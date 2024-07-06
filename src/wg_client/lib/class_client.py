@@ -24,6 +24,7 @@ from .class_logger import MyLog
 from .get_info import is_wg_running
 from .class_resolv import WgResolv
 from .version import version
+from .users import who_logged_in
 
 def wg_quick_cmd(test, euid, updn, iface):
     '''
@@ -84,14 +85,15 @@ class WgClient():
         """ log file """
         self.logger.log(msg)
 
-    def is_ssh_running(self):
+    def is_ssh_running(self, user:str=None):
         """
         Check saved PID and check if running
          - if ssh_server missing, we'll check pid is valid
+        Optional user requires root user is not process owner
         """
-        self.ssh_pid = read_ssh_pid()
+        self.ssh_pid = read_ssh_pid(user)
         ssh_server = self.opts.ssh_server
-        is_running = check_ssh_pid(self.ssh_pid, ssh_server)
+        is_running = check_ssh_pid(self.ssh_pid, ssh_server,user=user)
         return is_running
 
     def wg_up(self):
@@ -340,6 +342,9 @@ def _show_status(client:WgClient, which:str) -> None:
     """
     items = {}
 
+    #
+    # Current user
+    #
     if which in ('wg_iface', 'status')  :
         items['wg_iface'] = client.iface
 
@@ -363,3 +368,24 @@ def _show_status(client:WgClient, which:str) -> None:
             print(f'{key:>15s} : ', end='')
         print(val)
         client.log(f'{key} : {val}')
+
+    #
+    # Other users
+    #
+    if client.euid != 0:
+        return
+
+    #
+    # Get list of any other users
+    #
+    users = who_logged_in(with_self=False)
+    if not users:
+        return
+
+    for user in users:
+        ssh_running = client.is_ssh_running(user)
+        resolv_monitor = client.resolv.check_already_running(user)
+        if ssh_running or resolv_monitor:
+            print(f'user: {user}')
+            print(f'{"ssh_running":>15s} : {ssh_running}')
+            print(f'{"resolv_monitor":>15s} : {resolv_monitor}')

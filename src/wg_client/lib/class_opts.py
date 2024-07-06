@@ -118,11 +118,11 @@ def get_avail_options(defaults:dict):
     opt = ['--show-fix-dns-auto', {'help' : ohelp, act:act_on}]
     opts.append(opt)
 
-    ohelp = 'Report all info - alias for --status'
+    ohelp = 'Display status - alias for --status'
     opt = ['--show-info', {'help' : ohelp, act:act_on}]
     opts.append(opt)
 
-    ohelp = 'Report all info'
+    ohelp = 'Display status'
     opt = ['--status', {'help' : ohelp, act:act_on}]
     opts.append(opt)
 

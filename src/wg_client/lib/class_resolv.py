@@ -93,19 +93,20 @@ class WgResolv():
         """ save pid to pidfile """
         write_pid(self.pid, self.pidfile_tag)
 
-    def read_pidfile(self):
+    def read_pidfile(self, user:str=None):
         """ save pid to pidfile """
-        pid = read_pid(self.pidfile_tag)
+        pid = read_pid(self.pidfile_tag, user=user)
         return pid
 
-    def check_already_running(self) -> bool:
+    def check_already_running(self, user:str=None) -> bool:
         """
         Check if monitor already running by this user.
-        We require only user at a time but dont check.
+        If no user given then user is process owner.
+        Only root can query other users
         """
-        pid = read_pid(self.pidfile_tag)
+        pid = read_pid(self.pidfile_tag, user=user)
         pargs = ['--fix-dns-auto-start']
-        pid_valid = check_pid(pid, pargs)
+        pid_valid = check_pid(pid, pargs, user=user)
 
         return pid_valid
 

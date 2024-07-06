@@ -5,11 +5,10 @@ App stuff
 """
 import os
 import signal
-from pathlib import Path
-import pwd
 from collections.abc import Collection
 import psutil
 from .utils import open_file
+from .users import process_owner
 
 def all_in(col1:Collection, col2:Collection):
     """ return true if every element of col1 is in col2 """
@@ -17,7 +16,7 @@ def all_in(col1:Collection, col2:Collection):
     s_col2 = set(col2)
     return s_col1.intersection(s_col2) == s_col1
 
-def is_pid_running(pid:str, pargs:[str]=None, check_user:bool=True) -> bool:
+def is_pid_running(pid:str, pargs:[str]=None, check_user:bool=True, user:str=None) -> bool:
     """
     Check if pid is active
        - check username, cmd and args to be cautious of pid rollover
@@ -31,8 +30,10 @@ def is_pid_running(pid:str, pargs:[str]=None, check_user:bool=True) -> bool:
     if not pid_exists:
         return False
 
-    uid = os.geteuid()
-    username = pwd.getpwuid(uid)[0]
+    if user:
+        username = user
+    else:
+        username = process_owner()
 
     process = psutil.Process(pid)
     attribs = process.as_dict(attrs=['username', 'exe', 'cmdline'])
@@ -52,17 +53,24 @@ def is_pid_running(pid:str, pargs:[str]=None, check_user:bool=True) -> bool:
                 return False
     return True
 
-def homedir():
-    """ return user home dir """
-    return Path.home()
+def homedir(user:str=None):
+    """
+    return user home dir
+    If no user given, then self (process owner)
+    """
+    if not user:
+        upath = '~'
+    else:
+        upath = f'~{user}'
+    hdir = os.path.expanduser(upath)
+    return hdir
 
-def get_appdir():
+def get_appdir(user:str=None):
     """
     Place we save state
     """
-    home = homedir()
+    home = homedir(user)
     app_dir = os.path.join(home, '.local/share/state/wg-client')
-    os.makedirs(app_dir, exist_ok=True)
     return app_dir
 
 def read_pidfile(fpath):
@@ -94,45 +102,52 @@ def write_pidfile(pid, fpath):
         fobj.write(pid)
         fobj.close()
 
-def pid_filename(tag:str) -> str:
+def pid_filename(tag:str, user:str=None) -> str:
     """
     full path for pid file
       <app_dir>/<tag>.pid
     """
-    app_dir = get_appdir()
+    app_dir = get_appdir(user)
     pidfile = os.path.join(app_dir, f'{tag}.pid')
     return pidfile
 
-def read_pid(tag:str) -> int:
+def read_pid(tag:str, user:str=None) -> int:
     """
     Read pid of last ssh
+    Requires root if pidfile not readable by process owner
+    If insufficient perm to read pidfile pid is set to None
     """
-    pidfile = pid_filename(tag)
+    pidfile = pid_filename(tag, user)
     pid = read_pidfile(pidfile)
     return pid
 
-def check_pid(pid, pargs:[str], check_user:bool=True):
+def check_pid(pid, pargs:[str], check_user:bool=True, user:str=None):
     """
     Check pid is valid
      - we write pid = -1 when child process terminates cleanly
+     - root permitted to read pidfile
     """
     if not pid or int(pid) < 0:
         return False
 
-    pid_is_valid = is_pid_running(pid, pargs=pargs, check_user=check_user)
+    pid_is_valid = is_pid_running(pid, pargs=pargs, check_user=check_user, user=user)
     return pid_is_valid
 
 def write_pid(pid:str, tag:str) -> None:
     """
     Save pid to pidfile
+    only owner can write pidfile
     """
     pidfile = pid_filename(tag)
+    app_dir = os.path.dirname(pidfile)
+    os.makedirs(app_dir, exist_ok=True)
     write_pidfile(pid, pidfile)
 
 def kill_program(pid:str, pargs:[str]) -> None:
     """
     kill processs with pid and program given by pargs
      - check its valid
+     - only owner allowed to kill
     """
     pid_is_valid = is_pid_running(pid, pargs=pargs)
     if pid_is_valid:

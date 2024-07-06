@@ -5,14 +5,14 @@ Ssh application process managerment
 """
 from .state import (kill_program, read_pid, write_pid, check_pid)
 
-def read_ssh_pid():
+def read_ssh_pid(user:str=None):
     """
     Read pid of last ssh
     """
-    pid = read_pid('ssh')
+    pid = read_pid('ssh', user)
     return pid
 
-def check_ssh_pid(pid, host):
+def check_ssh_pid(pid, host, user:str=None):
     """
     Check pid is valid
      - we write pid = -1 when child process terminates cleanly
@@ -21,7 +21,7 @@ def check_ssh_pid(pid, host):
     if host:
         pargs += [host]
 
-    pid_is_valid = check_pid(pid, pargs)
+    pid_is_valid = check_pid(pid, pargs, user=user)
     return pid_is_valid
 
 def write_ssh_pid(pid):
