@@ -4,15 +4,13 @@
 # Uses libcap, openssl
 # Gene C 
 #
-CF = -Wall --std=c11
+CF = -march=x86-64-v3 -mtune=generic -mshstk -O2 -pipe -fno-plt -fexceptions -Wp,-D_FORTIFY_SOURCE=3 -Wformat -Werror=format-security -fstack-clash-protection -fcf-protection -std=gnu18 -Wall
+LF = -Wl,-z,now,-z,shstk,-z,cet-report=error
 LIBS = -lcap -lcrypto -lc
-.PHONY: wg-fix-resolv
 
-# Uncomment when in kernel (clang) and glibc (not available as of 2.39+r52)
-# shadow_stack = '-fsanitize=shadow-call-stack'
-shadow_stack = 
+.PHONY: wg-fix-resolv
 
 wg-fix-resolv: wg-fix-resolv.c
 	@echo "On install: sudo setcap cap_chown,cap_dac_override=ep $@"
-	gcc $(CF) $(shadow_stack) $(LIBS)  -Wl,--no-as-needed -Wl,-z,now -o $@ $<
+	gcc $(CF) $(LF) $(LIBS)  -o $@ $<
 
