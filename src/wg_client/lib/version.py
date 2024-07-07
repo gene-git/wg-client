@@ -3,11 +3,11 @@
 """
 Project wg-client
 """
-__version__ = "5.7.0"
-__date__ = "2024-07-06"
+__version__ = "5.8.1"
+__date__ = "2024-07-07"
 __reldev__ = "release"
 
 def version() -> str:
     """ report version and release date """
-    vers = f'wg-tool: version {__version__} ({__reldev__}, {__date__})'
+    vers = f'wg-client: version {__version__} ({__reldev__}, {__date__})'
     return vers

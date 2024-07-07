@@ -13,7 +13,8 @@ uses it.
 
 This is a companion to the wireguard server config tools `wg-tool`_.
 
-Also offers an option to invoke ssh which creates a remote listening port connected back to local ssh daemon.
+Also provides an option to invoke ssh which creates a remote listening port 
+connected back to local ssh daemon.
 
 This can be useful to facilitate remote ssh back to client computer 
 if it's needed.  For example; it can be used to provide access to a git repo
@@ -62,9 +63,7 @@ New or Interesting
     This is now done automatically using a daemon which can be started/stopped from command line
     using  the new options *--fix-dns-auto-start* and *--fix-dns-auto-stop*
     
-    The GUI app starts up the monitor daemon when it starts wireguard and so no manual
-    intervention is needed after that.
-
+    NB: The GUI app calls *wg-client* to start the monitor daemon when it starts up wireguard. 
 
   * *--version* 
 
