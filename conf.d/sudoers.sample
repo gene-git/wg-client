@@ -1,5 +1,5 @@
 #
-# allow wg-quick,wg-fix-dns
+# Allow wg-quick to be run for users listed in WGUSERS.
 #
 # You can keep all local sudoers in a single file or separate files.
 # If in single file, make this one come after any group wheel ones.

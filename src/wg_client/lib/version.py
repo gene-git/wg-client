@@ -3,8 +3,8 @@
 """
 Project wg-client
 """
-__version__ = "5.9.0"
-__date__ = "2024-07-07"
+__version__ = "5.9.1"
+__date__ = "2024-09-07"
 __reldev__ = "release"
 
 def version() -> str:
