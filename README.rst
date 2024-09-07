@@ -159,14 +159,17 @@ Options
 
 Summary of available options for wg-client.
 
-* Positional argument : Optional  
+**Positional argument** : Optional  
 
-  wireguard client interface name.   
-  Default taken from 'iface' in config file.
-  The config is looked for first in *./etc/wg-client/config* (for development purposes)
+* wireguard client interface name
+
+  Default interface is taken from *iface* in config file.
+  The config file is chosen by first checking for *./etc/wg-client/config* [#]_ 
   and then in */etc/wg-client/config*.  If not found the wg interface defaults to *wgc*
 
-* Options:
+.. [#] Useful during development and testing
+
+**Options**:
 
  * (*-h, --help*)
 
@@ -204,59 +207,59 @@ Summary of available options for wg-client.
 
  * (*--fix-dns-auto-start*)
 
-    Auto fix of resolv.conf
+   Auto fix of resolv.conf
 
-    Network refresh happens after sleep/resume (e.g. laptop lid close/open) or 
-     when a DHCP lease expires. If VPN is up and running 
-     when this occurs the /etc/resolv.conf file can be reset and then DNS will no longer use
-     the vpn DNS. Earlier versions of wg-client offered a manual fix available 
-     by clicking the *VPN Start* button again or by using wg-client on command line.
+   Network refresh happens after sleep/resume (e.g. laptop lid close/open) or 
+   when a DHCP lease expires. If VPN is up and running 
+   when this occurs the /etc/resolv.conf file can be reset and then DNS will no longer use
+   the vpn DNS. Earlier versions of wg-client offered a manual fix available 
+   by clicking the *VPN Start* button again or by using wg-client on command line.
 
-     When wg-client starts the vpn, it saves the current */etc/resolv.conf* and installs one that
-     uses the vpn tunnel and this is what gets broken on resume. 
+   When wg-client starts the vpn, it saves the current */etc/resolv.conf* and installs one that
+   uses the vpn tunnel and this is what gets broken on resume. 
 
-     This is now done automatically using a daemon which can be started/stopped from command line
-     using  the new options *--fix-dns-auto-start* and *--fix-dns-auto-stop*
+   This is now done automatically using a daemon which can be started/stopped from command line
+   using  the new options *--fix-dns-auto-start* and *--fix-dns-auto-stop*
     
-     The GUI app does this whenever it starts wireguard.
+   The GUI app does this whenever it starts wireguard.
 
-     The monitor daemon watches */etc/resolv.conf* and auto restores the correct
-     one when needed. It uses inotify whereby the kernel notifes us when the 
-     file changes - this is very efficient and allows the monitor to sleep waiting for the
-     kernel to wake it up when there's something to do.
+   The monitor daemon watches */etc/resolv.conf* and auto restores the correct
+   one when needed. It uses inotify whereby the kernel notifes us when the 
+   file changes - this is very efficient and allows the monitor to sleep waiting for the
+   kernel to wake it up when there's something to do.
 
-     Wireguard will continue to work even if the laptop is taken to a new wifi location.
-     The monitor checks and saves any newly found resolv.conf and restores the wireguard one.
-     Of course on closing down, the original saved resolv.conf is restored as well.
-     Note that ssh will not survive changing networks but it can easily be restarted.
+   Wireguard will continue to work even if the laptop is taken to a new wifi location.
+   The monitor checks and saves any newly found resolv.conf and restores the wireguard one.
+   Of course on closing down, the original saved resolv.conf is restored as well.
+   Note that ssh will not survive changing networks but it can easily be restarted.
 
-  * (*--fix-dns-auto-stop*)
+ * (*--fix-dns-auto-stop*)
 
-    Stops the monitor daemon.
+   Stops the monitor daemon.
 
-  * (*--show-iface*)  
+ * (*--show-iface*)  
 
-    Report wireguard interface name is used.
+   Report wireguard interface name is used.
 
-  * (*--show-ssh-server*)  
+ * (*--show-ssh-server*)  
 
-    Report the ssh server name
+   Report the ssh server name
 
-  * (*--show-ssh-running*)  
+ * (*--show-ssh-running*)  
 
-    Report if ssh is active
+   Report if ssh is active
 
-  * (*--show-wg-running*)
+ * (*--show-wg-running*)
 
-    Report if wireguard is active
+   Report if wireguard is active
 
-  * (*--show-info, --status*)
+ * (*--show-info, --status*)
 
-    Report all info
+   Report all info
 
-  * (*--test-mode*)
+ * (*--test-mode*)
 
-    Test mode - print what would be done rather than doing it.
+   Test mode - print what would be done rather than doing it.
 
 wg-client-gui application
 =========================
@@ -389,28 +392,27 @@ When running as non-root then set root\_dest a user writable directory
 Dependencies
 ============
 
-* Run Time :
+**Run Time** :
 
-  * python              (3.11 or later)
-  * netifaces
-  * PyQt6 / Qt6         (for gui)
-  * hicolor-icon-theme 
-  * psutil              (aka python-psutil)
+* python              (3.11 or later)
+* netifaces
+* hicolor-icon-theme 
+* psutil              (aka python-psutil)
+* PyQt6 / Qt6         (for gui)
 
-* Building Package:
+**Building Package**:
 
-  * git
-  * hatch (aka python-hatch)
-  * wheel (aka python-wheel)
-  * build (aka python-build)
-  * installer (aka python-installer)
-  * rsync
+* git
+* hatch (aka python-hatch)
+* wheel (aka python-wheel)
+* build (aka python-build)
+* installer (aka python-installer)
+* rsync
 
-* Optional for building docs:
-
-  * sphinx
-  * myst-parser
-  * texlive-latexextra  (archlinux packaguing of texlive tools)
+**Optional for building docs**:
+* sphinx
+* myst-parser
+* texlive-latexextra  (archlinux packaguing of texlive tools)
 
 Philosophy
 ==========
@@ -418,7 +420,7 @@ Philosophy
 We follow the *live at head commit* philosophy. This means we recommend using the
 latest commit on git master branch.
 
-This approach is also taken by Google [1]_ [2]_.
+This approach is also taken by Google [#]_ [#]_.
 
 License
 ========
@@ -433,5 +435,5 @@ Created by Gene C. and licensed under the terms of the MIT license.
 .. _Pynotify AUR: https://aur.archlinux.org/packages/python-pynotify
 .. _Pynotify Github: https:://github.com/gene-git/python-pynotify
 
-.. [1] https://github.com/google/googletest  
-.. [2] https://abseil.io/about/philosophy#upgrade-support
+.. [#] https://github.com/google/googletest  
+.. [#] https://abseil.io/about/philosophy#upgrade-support
