@@ -3,7 +3,7 @@
 """
 Parse output of wg-quick and get client wg address
 """
-import netaddr
+import ipaddress
 import netifaces as ni
 
 def wg_quick_out_to_ip4(wg_quick_output):
@@ -37,37 +37,25 @@ def wg_quick_out_to_ip4(wg_quick_output):
             break
     return ip4
 
-def ip4_to_octet(ip4):
-    """
-    Strip of trailing octet for end of ssh listen port
-    """
-    octet = None
-    if not ip4:
-        return octet
+def get_host_bits(ip:str, prefix:int=24):
+    '''
+    Gets the host bits from an IP address given the netmask
+    '''
+    ipa = ipaddress.ip_address(ip)
+    net = ipaddress.ip_network(ip)
+    netpfx = net.supernet(new_prefix=prefix)
 
-    ip4_split = ip4.split('.')
-    if len(ip4_split) < 4:
-        return octet
+    hostmask = netpfx.hostmask
+    host_bits = int(ipa) & int(hostmask)
 
-    octet = ip4_split[3]
-    octet = int(octet)
-    octet = f'{octet:03d}'
-    return octet
+    return host_bits
 
 def ip_to_octet(ip_str):
-    """ extract trailing octet of addrip """
-    ipadd = netaddr.IPNetwork(ip_str)
-    bits = ipadd.ip.bits()
-    ipadd_str = str(ipadd.ip)
-
-    if netaddr.valid_ipv4(ipadd_str):
-        bits = bits.split('.')[-1]
-    elif netaddr.valid_ipv6(ipadd_str):
-        bits = bits.split(':')[-1]
-        bits = bits[-9:-1]
-
-    octet = int(bits, 2)
-    octet =f'{octet:03d}'
+    '''
+    extract trailing octet of addrip
+    '''
+    host_bits = get_host_bits(ip_str, prefix=24)
+    octet =f'{host_bits:03d}'
     return octet
 
 def iface_to_ips(iface):
