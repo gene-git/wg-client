@@ -49,6 +49,20 @@ Key features
 New or Interesting
 ==================
     
+* ssh listener is now auto restarted if it exits unexpectedly.
+  There are normal, quite common situations where ssh process can exit prematurely.
+  For example:
+
+   * After sleep/resume (longer than tcp timeout)
+   * if remote server sshd restarts (reboot for example)
+   * changing IP address (happens when location changes. e.g. Move from hotel to starbucks)
+
+  Code now detects this and automatically restarts the ssh listener. 
+
+  This is now much more convenient for the user. wireguard it self is robust
+  against the same changes since it uses udp, and now just start vpn and start ssh
+  and the app will handle keeping everything running.
+
 * As root *--status* now shows ssh/resolv for all users if they have ssh/resolv monitor
 
 * Auto fix of resolv.conf (new option *--fix-dns-auto-start*)

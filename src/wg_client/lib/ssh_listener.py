@@ -6,12 +6,13 @@ Parse output of wg-quick and get client wg address
 import random
 from .ip_addr import ip_to_octet
 
-def get_ssh_port_prefix(pfx_range:[str]) -> int|None:
+def get_ssh_port_prefix(pfx_range:[str]) -> int:
     """
     Pick 2 digit num from range
+     - default 45 
     """
     if not pfx_range:
-        return None
+        return 45
 
     # make sure we got ints
     pfx_range = [int(num) for num in pfx_range]
@@ -20,6 +21,22 @@ def get_ssh_port_prefix(pfx_range:[str]) -> int|None:
 
     num = random.randint(pfx_range[0], pfx_range[1])
     return num
+
+def ssh_args(wg_ip, server, prefix) -> (str, str, str, str):
+    '''
+    returns:
+        (server, remote_port, local_ip, local_port)
+    '''
+    if not (server and prefix and wg_ip):
+        print('ssh_args Error Need wg_server, wg_ip and port prefix')
+        return (None, None, None, None)
+
+    octet = ip_to_octet(wg_ip)
+    remote_port = f'{prefix}{octet}'
+    local_port = '22'
+    local_ip = '127.0.0.1'
+
+    return (server, remote_port, local_ip, local_port)
 
 
 def ssh_listener_args(test, wg_ip, host, prefix):
@@ -36,22 +53,17 @@ def ssh_listener_args(test, wg_ip, host, prefix):
      from another program when that program exits.
     """
     pargs = []
-    #prefix = choose_pfx(pfx_range)
-    if not (host and prefix and wg_ip):
-        print('Err: Missing wg_server, wg_ip or port prefix for ssh listener')
+    (server, remote_port, local_ip, local_port) = ssh_args(wg_ip, host, prefix)
+    if not server:
         return pargs
 
-    # get last octet
-    octet = ip_to_octet(wg_ip)
+    print(f'ssh listening port : {remote_port}')
 
-    port = f'{prefix}{octet}'
-    print(f'ssh listening port : {port}')
-
-    rfwd = f'{port}:127.0.0.1:22'
+    rfwd = f'{remote_port}:{local_ip}:{local_port}'
 
     pargs = []
     if test:
         pargs += ['/usr/bin/echo']
-    pargs += ['/usr/bin/ssh', '-R', rfwd, '-N',  host]
+    pargs += ['/usr/bin/ssh', '-R', rfwd, '-N',  server]
 
     return pargs

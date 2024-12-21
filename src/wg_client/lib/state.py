@@ -5,53 +5,77 @@ App stuff
 """
 import os
 import signal
-from collections.abc import Collection
+from typing import Iterable
 import psutil
 from .utils import open_file
 from .users import process_owner
 
-def all_in(col1:Collection, col2:Collection):
+def all_in(col1:Iterable, col2:Iterable):
     """ return true if every element of col1 is in col2 """
     s_col1 = set(col1)
     s_col2 = set(col2)
     return s_col1.intersection(s_col2) == s_col1
 
-def is_pid_running(pid:str, pargs:[str]=None, check_user:bool=True, user:str=None) -> bool:
+def _get_process(pid:str, pargs:[str]=None, user:str=None) -> psutil.Process|None:
     """
-    Check if pid is active
-       - check username, cmd and args to be cautious of pid rollover
-       - unlikely but conceivable in a 64 bit world
+    Return psutil.process for given (pid, pargs, user)
+    or None
     """
     # pylint: disable=too-many-return-statements
     if not pid or int(pid) < 0:
-        return False
+        return None
 
     pid_exists = psutil.pid_exists(pid)
     if not pid_exists:
-        return False
+        return None
 
     if user:
         username = user
     else:
         username = process_owner()
 
-    process = psutil.Process(pid)
+    try:
+        process = psutil.Process(pid)
+    except psutil.Error:
+        return None
+
     attribs = process.as_dict(attrs=['username', 'exe', 'cmdline'])
 
     p_username = attribs['username']
     p_cmdline = attribs['cmdline']
 
-    if check_user and username != p_username:
-        # not our process
-        return False
+    if username and username != p_username:
+        # wrong user's process
+        return None
     #
     # Care is needed - for program running with shebang p_exe will be the shell
     #
     if pargs and pargs[0]:
         if p_cmdline and len(p_cmdline) > 0:
             if not all_in(pargs, p_cmdline):
-                return False
-    return True
+                return None
+    return process
+
+def is_pid_running(pid:str, pargs:[str]=None, user:str=None) -> bool:
+    """
+    Check if pid is active
+       - check username, cmd and args to be cautious of pid rollover
+       - unlikely but conceivable in a 64 bit world
+    """
+    process = _get_process(pid, pargs, user)
+    if process:
+        return True
+    return False
+
+def get_parent_pid(pid:str, pargs:[str]=None, user:str=None) -> int:
+    '''
+    Find parent pid of process 
+    '''
+    ppid = -1
+    process = _get_process(pid, pargs, user)
+    if process:
+        ppid = process.ppid()
+    return ppid
 
 def homedir(user:str=None):
     """
@@ -121,7 +145,7 @@ def read_pid(tag:str, user:str=None) -> int:
     pid = read_pidfile(pidfile)
     return pid
 
-def check_pid(pid, pargs:[str], check_user:bool=True, user:str=None):
+def check_pid(pid, pargs:[str], user:str=None):
     """
     Check pid is valid
      - we write pid = -1 when child process terminates cleanly
@@ -130,7 +154,7 @@ def check_pid(pid, pargs:[str], check_user:bool=True, user:str=None):
     if not pid or int(pid) < 0:
         return False
 
-    pid_is_valid = is_pid_running(pid, pargs=pargs, check_user=check_user, user=user)
+    pid_is_valid = is_pid_running(pid, pargs=pargs, user=user)
     return pid_is_valid
 
 def write_pid(pid:str, tag:str) -> None:

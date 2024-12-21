@@ -3,7 +3,7 @@
 """
 Ssh application process managerment
 """
-from .state import (kill_program, read_pid, write_pid, check_pid)
+from .state import (get_parent_pid, kill_program, read_pid, write_pid, check_pid)
 
 def read_ssh_pid(user:str=None):
     """
@@ -30,9 +30,21 @@ def write_ssh_pid(pid):
     """
     write_pid(pid, 'ssh')
 
-def kill_ssh(pid, host):
+def kill_ssh(pid, server):
     """
-    kill the ssh pid - with command match /usr/bin/ssh ... host
+    Since ssh is started by wg-client which will auto restart ssh if it dies
+    we first stop the parent wg-client process then ssh if its not dead
+     1 - kill wg-client
+     2 - kill ssh if alive
     """
-    pargs = ['/usr/bin/ssh', host]
+    if pid < 0:
+        return
+
+    pargs = ['/usr/bin/ssh', server]
+    ppid = get_parent_pid(pid, pargs)
+    if ppid > 0:
+        ppargs = ['/usr/bin/wg-client', '--ssh-start']
+        kill_program(ppid, ppargs)
+
+    pargs = ['/usr/bin/ssh', server]
     kill_program(pid, pargs)

@@ -14,17 +14,21 @@ Class for Start, Stop Wireguard client on linux
 # pylint: disable=too-many-instance-attributes,too-many-branches
 import os
 import time
+from typing import Callable
+
 from .class_proc import MyProc
 from .class_proc import MySignals
 from .ip_addr import iface_to_ips
-from .ssh_listener import (get_ssh_port_prefix, ssh_listener_args)
-from .ssh_state import (read_ssh_pid, write_ssh_pid, check_ssh_pid, kill_ssh)
+
+from .ssh_listener import (get_ssh_port_prefix, ssh_args)
+
 from .class_opts import WgClientOpts
 from .class_logger import MyLog
 from .get_info import is_wg_running
 from .class_resolv import WgResolv
 from .version import version
 from .users import who_logged_in
+from .class_ssh import SshMgr
 
 def wg_quick_cmd(test, euid, updn, iface):
     '''
@@ -49,17 +53,14 @@ class WgClient():
         self.wg_ip = None
         self.wg_ip6 = None
         self.test = False
-        self.ssh_pid = None         # so we share after looking it up
 
         self.opts = WgClientOpts()
         self.iface = self.opts.iface
         if self.opts.test or self.iface == 'test-dummy' :
             self.test = True
 
-        self.ssh_proc = None
-        self.run_proc = None
-        self.ssh_args = None
 
+        self.run_proc = None
         self.resolv = WgResolv()
 
         self.mysignals = MySignals()
@@ -71,15 +72,15 @@ class WgClient():
             print(version())
             self.okay = False
 
-        #
-        # ssh port = prefix + 2 digits from wireguard ip
-        #  - We dont know the port until wireguard is running
-        #  - prefix can be random if prefix range is used
-        #  - establish the prefix once and save.
-        #
-        self.ssh_pfx = get_ssh_port_prefix(self.opts.pfx_range)
-        if not self.ssh_pfx:
-            self.log(' Warning: unable to find ssh port prefix')
+        self.ssh_server = None         # so we share after looking it up
+        self.ssh_rport : str = ''
+        self.ssh_lip : str = ''
+        self.ssh_lport : str = ''
+        self.ssh_args = None
+        self.ssh_pfx = -1
+        self.ssh_mgr = None
+        self.ssh_mgr = SshMgr(self.opts.test, log=self.log)
+        #self.ssh_init()
 
     def log(self, msg):
         """ log file """
@@ -91,9 +92,7 @@ class WgClient():
          - if ssh_server missing, we'll check pid is valid
         Optional user requires root user is not process owner
         """
-        self.ssh_pid = read_ssh_pid(user)
-        ssh_server = self.opts.ssh_server
-        is_running = check_ssh_pid(self.ssh_pid, ssh_server,user=user)
+        is_running = self.ssh_mgr.is_running(user=user)
         return is_running
 
     def wg_up(self):
@@ -177,7 +176,7 @@ class WgClient():
         self.wg_ip = None
         if ips4:
             self.wg_ip = ips4[0]
-        elif ips6:
+        if ips6:
             self.wg_ip6 = ips6[0]
 
         if not (self.wg_ip or self.wg_ip6):
@@ -196,33 +195,49 @@ class WgClient():
         pargs = wg_quick_cmd(self.test, self.euid, 'down', self.iface)
         self.runit(pargs)
 
-    def ssh_listener_pargs(self):
-        """
-        Establish how to start ssh if possible
-        """
-        ssh_server = self.opts.ssh_server
-        wg_ip = self.wg_ip
-        if not wg_ip:
-            wg_ip = self.wg_ip6
+    def ssh_init(self):
+        '''
+        Gather whats needed to manage ssh
+        '''
+        if not is_wg_running(self.iface):
+            # not ready
+            return
 
-        self.ssh_args = ssh_listener_args(self.test, wg_ip, ssh_server, self.ssh_pfx)
-        if not self.ssh_args:
-            self.log(' Warning: unable to set up ssh args - ssh not available')
-        return self.ssh_args
+        self.get_wg_ip()
+        wg_ip = self.wg_ip if self.wg_ip else self.wg_ip6
+        if not wg_ip:
+            self.log(f' Failed to get wg ip even tho {self.iface} exists')
+            return
+
+        ssh_server = self.opts.ssh_server
+        #
+        # ssh port = prefix + 2 digits from wireguard ip
+        #  - We dont know the port until wireguard is running
+        #  - prefix can be random if prefix range is used
+        #  - establish the prefix once and save.
+        #
+        self.ssh_pfx = get_ssh_port_prefix(self.opts.pfx_range)
+        if not self.ssh_pfx:
+            self.log(' Warning: unable to find ssh port prefix')
+
+        (ssh_server, ssh_rport, ssh_lip, ssh_lport) = ssh_args(wg_ip, ssh_server, self.ssh_pfx)
+        self.ssh_server = ssh_server
+        self.ssh_rport = ssh_rport
+        self.ssh_lip = ssh_lip
+        self.ssh_lport = ssh_lport
+
+        if ssh_server:
+            self.ssh_mgr.set_info(ssh_server, ssh_rport, ssh_lip, ssh_lport)
+        else:
+            self.log('Warning - ssh info missing: Cant start ssh listener')
 
     def stop_ssh_listener(self):
         """
         kill based on saved pid
          - is running check fills self.ssh_pid
         """
-        is_running = self.is_ssh_running()
-        if is_running:
-            if self.test:
-                print(f'test: kill({self.ssh_pid}) server {self.opts.ssh_server}')
-            else:
-                kill_ssh(self.ssh_pid, self.opts.ssh_server)
-        else:
-            self.log('ssh not running - nothing to stop')
+        self.ssh_init()
+        self.ssh_mgr.stop()
 
     def ssh_listener(self):
         """
@@ -233,7 +248,8 @@ class WgClient():
         """
         self.log('ssh-listener requested')
         self.get_wg_ip()
-        if not self.wg_ip:
+        #if not self.wg_ip:
+        if not is_wg_running(self.iface):
             self.log('VPN not running : can\'t start ssh')
             if not self.test:
                 return
@@ -244,33 +260,15 @@ class WgClient():
             self.log('No ssh_server provided')
             return
 
-        self.ssh_args = self.ssh_listener_pargs()
-        if not self.ssh_args:
-            #self.log(' Warning: unable to set up ssh args - ssh not available')
-            self.log('Cant start ssh listener missing input to do so')
-            return
+        #
+        # This will block until its stopped
+        # and will restart ssh if it dies (usually network drops, lid closed, server reboot etc)
+        # Can be stopped from another wg-client
+        #
+        self.ssh_init()
+        self.ssh_mgr.start()
 
-        #
-        # Check if already running:
-        #
-        ssh_running = self.is_ssh_running()
-        if ssh_running:
-            self.log(f'ssh {self.opts.ssh_server} already running with pid = {self.ssh_pid}')
-            print(f'ssh to {self.opts.ssh_server} already running')
-            return
-        #
-        # open up pipe to ssh and wait for it to finish
-        # child pid will be saved via write_ssh_pid and
-        # set to "-1" when child exits normaly
-        #
-        if self.test:
-            arg_str = ' '.join(self.ssh_args)
-            print(f'test: {arg_str}')
-        else:
-            self.ssh_proc = MyProc(self.mysignals)
-            self.ssh_proc.popen(self.ssh_args, logger=self.log, pid_saver=write_ssh_pid)
-
-    def runit(self, pargs):
+    def runit(self, pargs, pid_saver:Callable=None):
         """
         run a program via subprocess.run
             - used for wg-quick up/down
@@ -279,7 +277,7 @@ class WgClient():
         if not pargs:
             return
         self.run_proc = MyProc(self.mysignals)
-        (_ret, _outs, _errs) = self.run_proc.popen(pargs, logger=self.log, pid_saver=write_ssh_pid)
+        (_ret, _outs, _errs) = self.run_proc.popen(pargs, logger=self.log, pid_saver=pid_saver)
 
     def do_all(self):
         """
