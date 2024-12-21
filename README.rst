@@ -62,6 +62,7 @@ New or Interesting
   This is now much more convenient for the user. wireguard it self is robust
   against the same changes since it uses udp, and now just start vpn and start ssh
   and the app will handle keeping everything running.
+  If ssh cannot reconnect, it waits a while and tries again.
 
 * As root *--status* now shows ssh/resolv for all users if they have ssh/resolv monitor
 

@@ -98,10 +98,11 @@ class SshMgr:
         # Open up a pipe and wait for it to exit
         # the ssh (child) pid will be saved via write_ssh_pid
         # and set to "-1" when exited
+        # In case ssh cannot be restarted we wait and try again.
+        # Should we slowly increase the timeout in this case?
         #
         self.proc = MyProc(self.mysignals)
         delay_time = 30
-        delay_time = 10
         while True:
             start_time = time.time()
             self.log('ssh:start')
