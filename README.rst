@@ -59,7 +59,7 @@ New or Interesting
 
   Code now detects this and automatically restarts the ssh listener. 
 
-  This is now much more convenient for the user. wireguard it self is robust
+  This is now much more convenient for the user. wireguard itself is robust
   against the same changes since it uses udp, and now just start vpn and start ssh
   and the app will handle keeping everything running.
   If ssh cannot reconnect, it waits a while and tries again.
@@ -198,6 +198,17 @@ Summary of available options for wg-client.
 
   ssh to remote server over vpn and listen on remote port.
   Port number used is described above in Overview section `config-sect`_.
+
+  This blocks waiting for ssh. To stop ssh, simply make a separate 
+  invovation of *wg-client -ssh-stop*. If using the GUI tool, simply click the *Stop Ssh* button. 
+
+  In the event that ssh connection is dropped, it will automatically be restarted.
+  There are normal, quite common situations where ssh process can exit prematurely.
+  For example:
+
+   * After sleep/resume (longer than tcp timeout)
+   * if remote server sshd restarts (reboot for example)
+   * changing IP address (e.g. happens when location changes. e.g. Move from hotel to starbucks)
 
 * (*--ssh-stop*)
 

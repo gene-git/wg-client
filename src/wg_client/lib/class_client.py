@@ -286,6 +286,7 @@ class WgClient():
         #
         # Show options
         #
+        self.ssh_pfx = get_ssh_port_prefix(self.opts.pfx_range)
         if self.opts.show_iface:
             _show_status(self, 'wg_iface')
 
