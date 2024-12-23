@@ -30,8 +30,10 @@ def run_prog(pargs,input_str=None,stdout=PIPE, stderr=PIPE):
         errors = str(ret.stderr, 'utf-8', errors='ignore')
     return [retc, output, errors]
 
-def is_pid_valid(pid):
+def is_pid_valid(pid:int):
     """ Check For the existence of a unix pid. """
+    if not pid or pid < 0:
+        return False
     try:
         os.kill(pid, 0)
     except OSError:

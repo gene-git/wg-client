@@ -97,11 +97,11 @@ def get_appdir(user:str=None):
     app_dir = os.path.join(home, '.local/share/state/wg-client')
     return app_dir
 
-def read_pidfile(fpath):
+def read_pidfile(fpath) -> int:
     """
     Read file with PID
     """
-    pid = None
+    pid = -1
     if not os.path.exists(fpath):
         return pid
 
@@ -112,7 +112,7 @@ def read_pidfile(fpath):
         pid = int(data.strip())
     return pid
 
-def write_pidfile(pid, fpath):
+def write_pidfile(pid:int, fpath:str):
     """
     write
      - caller ensurs basedir exists
@@ -145,7 +145,7 @@ def read_pid(tag:str, user:str=None) -> int:
     pid = read_pidfile(pidfile)
     return pid
 
-def check_pid(pid, pargs:[str], user:str=None):
+def check_pid(pid, pargs:[str], user:str=None) -> bool:
     """
     Check pid is valid
      - we write pid = -1 when child process terminates cleanly
