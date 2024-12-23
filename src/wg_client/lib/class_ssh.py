@@ -57,12 +57,17 @@ class SshMgr:
 
     def is_running(self, user:str=None):
         ''' check if running '''
-        self.pid = read_ssh_pid(self.user)
-        if self.pid < 0:
-            return False
+        user_to_check = user
         if not user:
-            user = self.user
-        running = check_ssh_pid(self.pid, self.server, user=user)
+            user_to_check = self.user
+
+        pid = read_ssh_pid(user)
+        if not user or user == self.user:
+            self.pid = pid
+
+        if pid < 0:
+            return False
+        running = check_ssh_pid(pid, self.server, user=user)
         return running
 
     def stop(self):

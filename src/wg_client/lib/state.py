@@ -16,13 +16,13 @@ def all_in(col1:Iterable, col2:Iterable):
     s_col2 = set(col2)
     return s_col1.intersection(s_col2) == s_col1
 
-def _get_process(pid:str, pargs:[str]=None, user:str=None) -> psutil.Process|None:
+def _get_process(pid:int, pargs:[str]=None, user:str=None) -> psutil.Process|None:
     """
     Return psutil.process for given (pid, pargs, user)
     or None
     """
     # pylint: disable=too-many-return-statements
-    if not pid or int(pid) < 0:
+    if not pid or pid < 0:
         return None
 
     pid_exists = psutil.pid_exists(pid)
