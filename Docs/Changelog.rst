@@ -1,6 +1,12 @@
 Changelog
 =========
 
+**[6.4.0] ----- 2024-12-23** ::
+
+	    Fix bug with root checking whether non-root users have ssh running
+	    update Docs/Changelog.rst Docs/wg-client.pdf
+
+
 **[6.3.0] ----- 2024-12-23** ::
 
 	    Make sure pid is always int (fixes bug where reading pid returned None)
