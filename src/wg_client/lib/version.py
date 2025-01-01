@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: MIT
-# SPDX-FileCopyrightText: © {{year}}-present  {{author}} <{{email}}>
+# SPDX-FileCopyrightText: © 2023-present  Gene C <arch@sapience.com>
 """
 Project wg-client
 """
-__version__ = "6.4.0"
-__date__ = "2024-12-23"
+__version__ = "6.5.0"
+__date__ = "2024-12-31"
 __reldev__ = "release"
 
 def version() -> str:

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # SPDX-License-Identifier: MIT
-# SPDX-FileCopyrightText: © 2022-present  Gene C <arch@sapience.com>
+# SPDX-FileCopyrightText: © 2023-present  Gene C <arch@sapience.com>
 """
 When using linux as a client, there are 2 ways to bring up wg.
 If using wg-tool postup script : wg-peer-updn

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-# Copyright (c) 2023 Gene C
+# SPDX-FileCopyrightText: © 2023-present  Gene C <arch@sapience.com>
 """
 Class for Start, Stop Wireguard client on linux
  - handles wg-quick up/dn
