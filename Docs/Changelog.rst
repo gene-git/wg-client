@@ -1,6 +1,15 @@
 Changelog
 =========
 
+**[6.5.0] ----- 2024-12-31** ::
+
+	    Git tags are now signed.
+	    Update SPDX tags
+	    Add git signing key to Arch Package
+	    Bump python vers
+	    update Docs/Changelog.rst Docs/wg-client.pdf
+
+
 **[6.4.0] ----- 2024-12-23** ::
 
 	    Fix bug with root checking whether non-root users have ssh running
