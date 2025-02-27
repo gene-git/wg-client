@@ -12,6 +12,7 @@ from .class_proc import MySignals
 
 from .ssh_state import (read_ssh_pid, write_ssh_pid, check_ssh_pid, kill_ssh)
 from .users import process_owner
+from .utils import relative_time_string
 
 class SshMgr:
     '''
@@ -61,7 +62,7 @@ class SshMgr:
         if not user:
             user_to_check = self.user
 
-        pid = read_ssh_pid(user)
+        pid = read_ssh_pid(user_to_check)
         if not user or user == self.user:
             self.pid = pid
 
@@ -110,11 +111,18 @@ class SshMgr:
         delay_time = 30
         while True:
             start_time = time.time()
-            self.log('ssh:start')
+            self.log('ssh:start - connecting')
+
             self.proc.popen(self.pargs, logger=self.log, pid_saver=write_ssh_pid)
-            self.log('ssh:start - exited')
 
             end_time = time.time()
-            delta = end_time - start_time
-            if delta < delay_time:
-                time.sleep(delay_time - delta)
+            secs = end_time - start_time
+            delta_str = relative_time_string(secs)
+
+            self.log(f'ssh:start - exited after {delta_str}')
+
+            #
+            # always wait before trying again
+            #   - whether exited right away or after running for some time
+            #
+            time.sleep(delay_time)

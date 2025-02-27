@@ -191,6 +191,10 @@ class WgClient():
         self.log('wg-dn requested')
         self.kill_resolv_monitor()
 
+        # kill ssh listener if running
+        self.stop_ssh_listener()
+
+        # shut down wireguard 
         self.log(' shutting down wireguard')
         pargs = wg_quick_cmd(self.test, self.euid, 'down', self.iface)
         self.runit(pargs)

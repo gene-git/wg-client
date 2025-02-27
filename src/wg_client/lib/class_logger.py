@@ -29,7 +29,7 @@ class MyLog:
         self.logger = logging.getLogger(logname)
         self.logger.setLevel(logging.INFO)
 
-        handler = RotatingFileHandler(self.log_path, maxBytes=10240, backupCount=1)
+        handler = RotatingFileHandler(self.log_path, maxBytes=102400, backupCount=5)
         handler.setFormatter(formatter)
         self.logger.addHandler(handler)
 
