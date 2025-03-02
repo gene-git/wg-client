@@ -27,6 +27,11 @@ a GUI program (*wg-client-gui*) which is available via a *.desktop* file.
 The graphical tool invokes the command line tool, and the command line tool does
 all the real work. The GUI provides user convenience.
 
+All git tags are signed with arch@sapience.com key which is available via WKD
+or download from https://www.sapience.com/tech. Add the key to your package builder gpg keyring.
+The key is included in the Arch package and the source= line with *?signed* at the end can be used
+to verify the git tag.  You can also manually verify the signature
+
 Why I made wg-client
 ====================
 
@@ -49,10 +54,8 @@ Key features
 New or Interesting
 ==================
     
-* All git tags are signed with arch@sapience.com key which is available via WKD
-  or download from https://www.sapience.com/tech. Add the key to your package builder gpg keyring.
-  The key is included in the Arch package and the source= line with *?signed* at the end can be used
-  to verify the git tag.  You can also manually verify the signature
+* Improve logging when ssh listener exits. Nicer format for how long ssh has been running
+  when it is auto restarted.
 
 * ssh listener is now auto restarted if it exits unexpectedly.
   There are normal, quite common situations where ssh process can exit prematurely.

@@ -32,6 +32,8 @@ class SshMgr:
         self.user : str = process_owner()
         self.log = log
         self.test : bool = test
+        self.start_time : int = -1
+        self.end_time : int = -1
 
         self.mysignals : MySignals = MySignals()
 
@@ -79,12 +81,21 @@ class SshMgr:
         '''
         is_running = self.is_running()
         if is_running:
+            self.log(f'ssh:stop - terminating ssh process')
             if self.test:
                 print(f'test: kill({self.pid}) server {self.server}')
             else:
                 kill_ssh(self.pid, self.server)
         else:
             self.log(' ssh:stop: ssh not running')
+
+    def running_time(self) -> str:
+        '''
+        Returns human readable time most recent ssh has been running
+        '''
+        secs = self.end_time - self.start_time
+        delta_str = relative_time_string(secs)
+        return delta_str
 
     def start(self):
         ''' run it '''
@@ -110,16 +121,17 @@ class SshMgr:
         self.proc = MyProc(self.mysignals)
         delay_time = 30
         while True:
-            start_time = time.time()
-            self.log('ssh:start - connecting')
+            re = ''
+            if self.start_time > 0:
+                re = 're-'
+            self.log(f'ssh:start - {re}connecting')
 
+            self.start_time = time.time()
             self.proc.popen(self.pargs, logger=self.log, pid_saver=write_ssh_pid)
+            self.end_time = time.time()
 
-            end_time = time.time()
-            secs = end_time - start_time
-            delta_str = relative_time_string(secs)
-
-            self.log(f'ssh:start - exited after {delta_str}')
+            delta_str = self.running_time()
+            self.log(f'ssh: exited after {delta_str}')
 
             #
             # always wait before trying again
