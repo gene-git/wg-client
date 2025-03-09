@@ -114,7 +114,7 @@ def get_avail_options(defaults:dict):
     opt = ['--show-wg-running', {'help' : ohelp, act:act_on}]
     opts.append(opt)
 
-    ohelp = 'Report if auto fix dnsis running'
+    ohelp = 'Report if auto fix dns is running'
     opt = ['--show-fix-dns-auto', {'help' : ohelp, act:act_on}]
     opts.append(opt)
 

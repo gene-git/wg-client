@@ -40,7 +40,10 @@ def kill_ssh(pid, server):
     if pid < 0:
         return
 
-    pargs = ['/usr/bin/ssh', server]
+    pargs = ['/usr/bin/ssh']
+    if server:
+        pargs += [server]
+
     ppid = get_parent_pid(pid, pargs)
     if ppid > 0:
         ppargs = ['/usr/bin/wg-client', '--ssh-start']

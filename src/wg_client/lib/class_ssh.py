@@ -81,7 +81,7 @@ class SshMgr:
         '''
         is_running = self.is_running()
         if is_running:
-            self.log(f'ssh:stop - terminating ssh process')
+            self.log('ssh:stop - terminating ssh process')
             if self.test:
                 print(f'test: kill({self.pid}) server {self.server}')
             else:
@@ -121,9 +121,7 @@ class SshMgr:
         self.proc = MyProc(self.mysignals)
         delay_time = 30
         while True:
-            re = ''
-            if self.start_time > 0:
-                re = 're-'
+            re = 're-' if self.start_time > 0 else ''
             self.log(f'ssh:start - {re}connecting')
 
             self.start_time = time.time()

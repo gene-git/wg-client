@@ -11,7 +11,9 @@ from .utils import open_file
 from .users import process_owner
 
 def all_in(col1:Iterable, col2:Iterable):
-    """ return true if every element of col1 is in col2 """
+    '''
+    return true if every element of collection col1 is in col2
+    '''
     s_col1 = set(col1)
     s_col2 = set(col2)
     return s_col1.intersection(s_col2) == s_col1
@@ -19,7 +21,7 @@ def all_in(col1:Iterable, col2:Iterable):
 def _get_process(pid:int, pargs:[str]=None, user:str=None) -> psutil.Process|None:
     """
     Return psutil.process for given (pid, pargs, user)
-    or None
+    or None if not found
     """
     # pylint: disable=too-many-return-statements
     if not pid or pid < 0:
@@ -97,35 +99,6 @@ def get_appdir(user:str=None):
     app_dir = os.path.join(home, '.local/share/state/wg-client')
     return app_dir
 
-def read_pidfile(fpath) -> int:
-    """
-    Read file with PID
-    """
-    pid = -1
-    if not os.path.exists(fpath):
-        return pid
-
-    fobj = open_file(fpath, 'r')
-    if fobj:
-        data = fobj.read()
-        fobj.close()
-        pid = int(data.strip())
-    return pid
-
-def write_pidfile(pid:int, fpath:str):
-    """
-    write
-     - caller ensurs basedir exists
-    """
-    if not pid:
-        return
-
-    fobj = open_file(fpath, 'w')
-    if fobj:
-        pid = str(pid)
-        fobj.write(pid)
-        fobj.close()
-
 def pid_filename(tag:str, user:str=None) -> str:
     """
     full path for pid file
@@ -134,6 +107,55 @@ def pid_filename(tag:str, user:str=None) -> str:
     app_dir = get_appdir(user)
     pidfile = os.path.join(app_dir, f'{tag}.pid')
     return pidfile
+
+def read_file(fpath) -> str:
+    """
+    Read file with and return contents as str
+    return None if file doesn't exist
+    """
+    contents = None
+    if not os.path.exists(fpath):
+        return contents
+
+    fobj = open_file(fpath, 'r')
+    if fobj:
+        contents = fobj.read()
+        fobj.close()
+    return contents
+
+def write_file(contents:str, fpath:str):
+    """
+    write contents to file
+     - caller ensures basedir exists
+    """
+    if not contents:
+        return
+
+    fobj = open_file(fpath, 'w')
+    if fobj:
+        fobj.write(contents)
+        fobj.close()
+
+def read_pidfile(fpath) -> int:
+    """
+    Read file with PID
+    """
+    pid = -1
+    contents = read_file(fpath)
+    if contents:
+        pid = int(contents.strip())
+    return pid
+
+def write_pidfile(pid:int, fpath:str):
+    """
+    write
+     - caller ensures basedir exists
+    """
+    if not pid:
+        return
+
+    contents = str(pid)
+    write_file(contents, fpath)
 
 def read_pid(tag:str, user:str=None) -> int:
     """

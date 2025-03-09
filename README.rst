@@ -72,8 +72,6 @@ New or Interesting
   and the app will handle keeping everything running.
   If ssh cannot reconnect, it waits a while and tries again.
 
-* As root *--status* now shows ssh/resolv for all users if they have ssh/resolv monitor
-
 * Auto fix of resolv.conf (new option *--fix-dns-auto-start*)
 
   Network refresh often happens after sleep/resume (e.g. laptop lid close/open) or 
@@ -88,16 +86,12 @@ New or Interesting
     
   NB: The GUI app calls *wg-client* to start the monitor daemon when it starts up wireguard. 
 
-* *--version* 
-
-  Display wg-client version
-
 * NB version 5 has 2 additional dependencies: 
 
   - openssl library for wg-fix-resolv.c
   - python-pynotify library available via `Pynotify Github`_ and `Pynotify AUR`_
 
-* dns resolv.conf fix now uses capabilities
+* dns resolv.conf fix now uses capabilities. 
 
 
 ###############
@@ -127,7 +121,7 @@ DHCP refresh & sleep / resume
 When laptop sleeps, from lid close for example, and then woken up - the vpn will continue working 
 as normal and likewise the ssh provided the sleep time is not *too long*. However, on wake the
 networking is typically re-initialized and part of that may re-install the dns resolver
-file */etc/resolve.conf*.
+file */etc/resolv.conf*.
 
 This is handled automatically by the resolv monitor daemon. See the option *--fix-dns-auto-start* 
 for more information.
@@ -144,6 +138,14 @@ wg-client reads its configuration from
    /etc/wg-client/config
 
 Please copy the sample config and edit appropriately. The format is in *TOML* format.
+
+.. code-block:: 
+
+   # Sample
+   iface = 'wgc'
+   ssh_server = 'vpn.example.com'
+   ssh_pfx = '47'
+
 This config file provides:
 
 * iface - required
@@ -158,12 +160,14 @@ This config file provides:
 
 * ssh_pfx - used with ssh_server
 
-  1 or 2 digit number to be used as ssh listening port number prefix.
+  1 or 2 digit number, 65 or smaller, to be used as ssh listening port number prefix.
   The port number is of the form PPxxx, with *PP* the prefix and
   *xxx* is taken from the last octet of the wireguard vpn internal IP address.
 
   The prefix can also be given as a range of numbers (*'n-m'*). 
   In this case the prefix used is randomly chosen from that range
+
+  Keep in mind that the largest port number is 65535, which limits *ssh_pfx* to be 65 or lower.
 
 The port number chosen will be written to the log file.
 
@@ -208,7 +212,7 @@ Summary of available options for wg-client.
   Port number used is described above in Overview section `config-sect`_.
 
   This blocks waiting for ssh. To stop ssh, simply make a separate 
-  invovation of *wg-client -ssh-stop*. If using the GUI tool, simply click the *Stop Ssh* button. 
+  invocation of *wg-client -ssh-stop*. If using the GUI tool, simply click the *Stop Ssh* button. 
 
   In the event that ssh connection is dropped, it will automatically be restarted.
   There are normal, quite common situations where ssh process can exit prematurely.
@@ -218,6 +222,9 @@ Summary of available options for wg-client.
    * if remote server sshd restarts (reboot for example)
    * changing IP address (e.g. happens when location changes. e.g. Move from hotel to starbucks)
 
+  While attempting to reconnect ssh there is a waiting period between each attempt. 
+  Currently the wait time is 30 seconds.
+
 * (*--ssh-stop*)
 
   End ssh to remote server
@@ -225,7 +232,12 @@ Summary of available options for wg-client.
 * (*--ssh-pfx*)
 
   Set the ssh port prefix. Can be 2 digits: "nn" or a range "nn-mm". If using a range, then
-  prefix will be randomly drawn from the range
+  prefix will be randomly drawn from the range. Maximum value is 65. This can also be set in 
+  the config file.
+
+* (*--ssh-server*) <server>
+
+  Remote ssh server to set up listening port. This is usually set in the config file.
 
 * (*--fix-dns*)
 
@@ -265,15 +277,21 @@ Summary of available options for wg-client.
   Wireguard will continue to work even if the laptop is taken to a new wifi location.
   The monitor checks and saves any newly found resolv.conf and restores the wireguard one.
   Of course on closing down, the original saved resolv.conf is restored as well.
-  Note that ssh will not survive changing networks but it can easily be restarted.
+  Note that ssh will not survive changing networks but it can easily be restarted and the code
+  will automatically reconnect if possible.
 
 * (*--fix-dns-auto-stop*)
 
   Stops the monitor daemon.
 
+* (*--show-info, --status*)
+
+  Report all info. If run as root then it additionally shows staus of any ssh/resolv monitor 
+  for all users.
+
 * (*--show-iface*)  
 
-  Report wireguard interface name is used.
+  Report wireguard interface name used.
 
 * (*--show-ssh-server*)  
 
@@ -287,13 +305,18 @@ Summary of available options for wg-client.
 
   Report if wireguard is active
 
-* (*--show-info, --status*)
+* (*--show-fix-dns-auto*)
 
-  Report all info
+  Report if auto fix dns is running
 
-* (*--test-mode*)
+* (*--test*)
 
   Test mode - print what would be done rather than doing it.
+
+* *--version* 
+
+  Display wg-client version
+
 
 wg-client-gui application
 =========================
@@ -346,8 +369,8 @@ If in single file, make this one come after any group wheel ones.
 This is to ensure this one is chosen becuase sudo uses the last
 matching entry.
 
-Simply add this sample line replacing WGUSERS whatever user or users are 
-permitted. If more than one use comma separated list.
+Simply add this sample line adjusting WGUSERS to list whatever user(s) are 
+permitted to run wireguard. If more than one use comma separated list as shown below.
 
 .. code-block:: bash
 
@@ -365,7 +388,7 @@ Then,
 
     visudu /etc/sudoers.d/100-wireguard
     
-Replace *WGUSERS* as above.
+Edit *WGUSERS* as above.
 
 visudo enforces the correct permissions which should be '0440'. If permissions
 are too loose, sudo will ignore the file.
@@ -379,12 +402,12 @@ where the wheel entry requires a password for members of group wheel.
 Now if user listed in wg-quick is also a member of *wheel* group, since wg-quick
 is first and wheel is second (files are treated in lexical order) the *wheel* one
 will prevail and user will be prompted for a password when running *sudo /usr/bin/wg-quick*.
-Not what we want. To fix this I use numbers ahead of the sudoers filenames. So in this
+Not what we want. To fix this use numbers to prefix the sudoers filenames. So in this
 example it would be:
 
 .. code-block:: bash
 
-   /etc/sudoers.d/001-wheel
+   /etc/sudoers.d/010-wheel
    /etc/sudoers.d/100-wg-client
 
 thereby ensuring that wg-client entries follow the wheel ones.
@@ -433,6 +456,12 @@ Dependencies
 * hicolor-icon-theme 
 * psutil              (aka python-psutil)
 * PyQt6 / Qt6         (for gui)
+* hicolor-icon-theme
+* dateutil
+* netifaces
+* licap
+* pynotify
+* openssl               (3.0 or later)
 
 **Building Package**:
 
