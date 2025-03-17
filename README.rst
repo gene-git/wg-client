@@ -54,6 +54,13 @@ Key features
 New or Interesting
 ==================
     
+* Change wg-fix-resolv: Ignore comments when comparing resolv.conf files. 
+  More efficient/correct when only change is a commented time stamp for example.
+
+* resolv monitor: Increase maximum time to wait for wireguard to start before running the monitor.
+  No reported issues with 5 seconds - no harm in being able to wait a bit longer if needed
+  for some reason.
+
 * Improve logging when ssh listener exits. Nicer format for how long ssh has been running
   when it is auto restarted.
 
@@ -253,16 +260,74 @@ Summary of available options for wg-client.
 
 * (*--fix-dns-auto-start*)
 
-  Auto fix of resolv.conf
+  Auto fix of resolv.conf.
+
+  Please note that this is *always* run by the GUI program. This option is only relevant
+  when not using the GUI.
 
   Network refresh happens after sleep/resume (e.g. laptop lid close/open) or 
-  when a DHCP lease expires. If VPN is up and running 
-  when this occurs the /etc/resolv.conf file can be reset and then DNS will no longer use
-  the vpn DNS. Earlier versions of wg-client offered a manual fix available 
-  by clicking the *VPN Start* button again or by using wg-client on command line.
+  when a DHCP lease expires or when changing network locations (such as moving from hotel to starbucks). 
 
-  When wg-client starts the vpn, it saves the current */etc/resolv.conf* and installs one that
-  uses the vpn tunnel and this is what gets broken on resume. 
+  If VPN is running when this occurs the /etc/resolv.conf file can be reset and then DNS will no longer use
+  the vpn DNS. 
+  
+  (While older versions of wg-client provided a manual fix available 
+  by clicking the *VPN Start* button again or by using wg-client on command line, current
+  versions monitor and fix resolv.conf automatically)
+
+  **N.B.** We must coordinate with wireguard config treatment of /etc/resolv.conf when it is started
+  and stopped.
+
+  There are 3 relevant files :
+
+  - /etc/resolv.conf
+
+    When wireguard is not running it the usual one. When wireguard is running it is the 
+    one installed by wireguard PostUp configuration so that DNS requests use the vpn tunnel.
+
+  - /etc/resolv.conf.wg
+
+    When wireguard starts, PostUp must save a copy of the resolv.conf to be used while
+    wireguard is running.
+
+ - /etc/resolv.conf.saved
+
+    This is a copy of the usual resolv.conf to be used when wireguard is not running.
+
+  **wireguard responsibility**
+
+  When wg-client starts wireguard, wireguard itself must save the current */etc/resolv.conf* 
+  and install one that uses the vpn tunnel. 
+
+  We expect wireguard PostUp and PostDown scripts configured to do the following:
+
+   - save existing /etc/resolv.conf as /etc/resolv.conf.saved
+   - install wireguard /etc/resolv.conf and also save into /etc/resolv.conf.wg
+
+  This is what *wg-tool* does in the default configuration. 
+  
+  With that in mind *wg-client*
+  will monitor /etc/resolv.conf while wireguard is running, and if it changes 
+  (typically network tools can do this when DHCP renews or if changing networks etc.),
+  then the monitor daemon copes that new resolv.conf into resolv.conf.saved. This 
+  resolv.conf is what is needed when wireguard is not running. When wireguard is stopped,
+  it's PostDown script will restore /etc/resolv.conf from the saved version. So it's
+  important to keep that saved version current so networking works normally after
+  wireguard is stopped.
+
+  Similarly, when /etc/resolv.conf is replaced by networking tools, it is the
+  wrong one to use for wireguard - so monitor copies /etc/resolv.conf.wg into /etc/resolv.conf
+  to ensure the correct resolv.conf is used while wireguard is running.
+
+  **wg-client responsibility**
+
+  With that all said, this is what the dns auto fix tool is responsible for while 
+  wireguard is running:
+
+   - if /etc/resolv.conf changes - save it to /etc/resolv.conf.saved
+   - restore /etc/resolv.conf from /etc/resolv.conf.wg
+
+
 
   This is now done automatically using a daemon which can be started/stopped from command line
   using  the new options *--fix-dns-auto-start* and *--fix-dns-auto-stop*

@@ -152,6 +152,7 @@ class WgResolv():
         # save pid so wg-client can safely restore resolv.conf
         # without undoing it
         #
+        self.log('monitor_resolv: start')
         if self.check_already_running():
             self.log(' resolv monitor already running')
             return

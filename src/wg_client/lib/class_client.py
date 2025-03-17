@@ -143,7 +143,7 @@ class WgClient():
         # We give it a little time in case it was started and not yet up
         #
         timeout = 0.5
-        max_time = 5.0
+        max_time = 10.0
         timer = timeout
         wg_running = False
         while timer <= max_time:
@@ -155,7 +155,7 @@ class WgClient():
             timer += timeout
 
         if wg_running:
-            self.log(' wg is running - starting monitor')
+            self.log(' wg is up -> starting resolv monitor')
             self.resolv.monitor_resolv()
         else:
             self.log(' wg not running - skipping')

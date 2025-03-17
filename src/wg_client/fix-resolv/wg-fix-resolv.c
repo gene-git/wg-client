@@ -212,6 +212,7 @@ static unsigned char *mem_alloc(unsigned char *curr_mem, ssize_t bytes)
 // After successful read:
 //  - Data is saved in fdata->data
 //  - Data is hashed into fdata->digest using compute_digest()
+//  - comments are stripped (any line starting with '#')
 // Returns:
 //    0 = success
 //   -1 = error
@@ -268,6 +269,11 @@ static int read_file(struct file_data *fdata)
             }
         }
     } while(bytes > 0);
+
+    //
+    // Strip out any comments
+    //
+
 
     //
     // Resize down to free up unused mem
@@ -392,6 +398,11 @@ static void clean_mem(struct file_data *fdata)
 // While VPN is running, some events lead  networking tools 
 // (e.g. dhcp) to replace it.
 //
+// When wireguard exits it restores the original resolv.conf
+// using PostDown wireguard config.
+//
+// Our job is to keep the correct wireguard resolv.conf
+//
 // Requires capabilities : CAP_CHOWN, CAP_DAC_OVERRIDE
 //  - caps are needed to write /etc/resolv.conf
 //  or owner has appropriate file permissions.
@@ -436,8 +447,10 @@ int main(int argc, char **argv) {
     //
     ret = read_file(&fdata_resolv);
     if (ret < 0) {
+        //
         // If Missing resolv.conf then replace with wg version
-        printf("Restoring missing file %s\n", fdata_resolv.pathname);
+        //
+        printf("Restoring missing %s from wg version %s\n", fdata_resolv.pathname, fdata_wg.pathname);
         ret = write_file(&fdata_wg, fdata_resolv.pathname) ;
         if (ret < 1) {
             return(-1);
