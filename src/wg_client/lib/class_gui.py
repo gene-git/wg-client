@@ -201,6 +201,19 @@ class WgClientGui():
 
     def vpn_dn(self):
         ''' Stop '''
+        #
+        # 1) Stop resolv monitor
+        #    do before stopping vpn so that wg can restore the correct resolv.conf
+        #
+        self.log(' Stopping fix-dns-auto-start')
+        self.message(' stopping dns auto fix')
+        pargs = [self.cmd, '--fix-dns-auto-stop']
+        id_num = self.runners.new_worker(self.complete, pargs)
+        self.id_num_map[id_num] = 'stop auto fix dns'
+
+        #
+        # 2) stop wireguard
+        #
         wg_running = is_wg_running(self.wg_iface)
         if wg_running:
             self.log('vpn_dn - stopping vpn')
@@ -211,14 +224,6 @@ class WgClientGui():
         else :
             self.log('vpn_dn - vpn not running')
             self.message('vpn not running')
-        #
-        # --fix-dns-auto-stop
-        #
-        self.log(' Stopping fix-dns-auto-start')
-        self.message(' stopping dns auto fix')
-        pargs = [self.cmd, '--fix-dns-auto-stop']
-        id_num = self.runners.new_worker(self.complete, pargs)
-        self.id_num_map[id_num] = 'stop auto fix dns'
 
     def ssh_start(self):
         ''' Start SSH '''
