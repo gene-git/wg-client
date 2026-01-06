@@ -1,5 +1,6 @@
 .mypy_cache/
-/Docs/_build/
+Docs/_build/latex/
+Docs/_build/doctrees/
 __pycache__/
 src/c-code/fix-resolv/
 

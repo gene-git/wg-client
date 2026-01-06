@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>wg-client &#8212; wg-client 7.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <script src="_static/documentation_options.js?v=efe5be6f"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="License" href="License/License.html" />
+    <link rel="prev" title="wg-client documentation" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="wg-client">
+<h1>wg-client<a class="headerlink" href="#wg-client" title="Link to this heading">¶</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
+<p>Linux wireguard client tools make it simple to start and stop wireguard.
+Comes with command line program, <em>wg-client</em>, and a convenient GUI tool which
+depends on it.</p>
+<p>This is a companion to the wireguard server config tools <a class="reference external" href="https://github.com/gene-git/wg_tool">wg-tool</a>.</p>
+<p>Also provides an option to invoke ssh which creates a remote listening port
+connected back to local ssh daemon.</p>
+<p>This can be useful to facilitate remote ssh back to client computer
+if it’s needed.  For example; it can be used to provide access to a git repo
+on the client, or for remote backups of laptop, or even for admin to login to client
+should the need arise.</p>
+<p>There is a command line program (<em>wg-client</em>) and for user convenience there is
+a GUI program (<em>wg-client-gui</em>) which is available via a <em>.desktop</em> file.</p>
+<p>The graphical tool invokes the command line tool, and the command line tool does
+all the real work. The GUI provides user convenience.</p>
+<p>All git tags are signed with <a class="reference external" href="mailto:arch&#37;&#52;&#48;sapience&#46;com">arch<span>&#64;</span>sapience<span>&#46;</span>com</a> key which is available via WKD
+or download from <a class="reference external" href="https://www.sapience.com/tech">https://www.sapience.com/tech</a>. Add the key to your package builder gpg keyring.
+The key is included in the Arch package and the source= line with <em>?signed</em> at the end can be used
+to verify the git tag.  You can also manually verify the signature</p>
+</section>
+<section id="why-i-made-wg-client">
+<h2>Why I made wg-client<a class="headerlink" href="#why-i-made-wg-client" title="Link to this heading">¶</a></h2>
+<p>After building <a class="reference external" href="https://github.com/gene-git/wg_tool">wg-tool</a> which simplified administering wireguard servers, I needed
+a simple way for non-tech users to connect their laptops to the server.</p>
+<p>Thus wg-client was born.  The gui client makes it simple for non-tech users,
+though I find it convenient too.</p>
+</section>
+<section id="key-features">
+<h2>Key features<a class="headerlink" href="#key-features" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Graphical tool makes it simple for any user to get VPN running.</p></li>
+<li><p>Standalone tool makes it easy to test and also keeps sudo outside of gui to minimize any
+security implications. The gui relies on command line to do the real work.</p></li>
+</ul>
+</section>
+<section id="new-or-interesting">
+<h2>New or Interesting<a class="headerlink" href="#new-or-interesting" title="Link to this heading">¶</a></h2>
+<p><strong>7.0.0</strong></p>
+<ul class="simple">
+<li><p>Code Reorg</p></li>
+<li><p>Switch packaging from hatch to uv</p></li>
+<li><p>Add source checks for C-code as well as python</p></li>
+<li><p>Testing to confirm all working correctly on python 3.14.2</p></li>
+<li><p>C-code (wg-fix-resolve): Use more ‘const’ pointer to structs to improve security.</p></li>
+<li><p>Modern coding standards: PEP-8, PEP-257 and PEP-484 style and type annotations</p></li>
+<li><p>Use pyconcurrent module (additional dependency)</p></li>
+</ul>
+<p><strong>Older</strong></p>
+<ul>
+<li><p>Change wg-fix-resolv: Ignore comments when comparing resolv.conf files.
+More efficient/correct when only change is a commented time stamp for example.</p></li>
+<li><p>resolv monitor: Increase maximum time to wait for wireguard to start before running the monitor.
+No reported issues with 5 seconds - no harm in being able to wait a bit longer if needed
+for some reason.</p></li>
+<li><p>Improve logging when ssh listener exits. Nicer format for how long ssh has been running
+when it is auto restarted.</p></li>
+<li><p>ssh listener is now auto restarted if it exits unexpectedly.
+There are normal, quite common situations where ssh process can exit prematurely.
+For example:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>After sleep/resume (longer than tcp timeout)</p></li>
+<li><p>if remote server sshd restarts (reboot for example)</p></li>
+<li><p>changing IP address (happens when location changes. e.g. Move from hotel to starbucks)</p></li>
+</ul>
+</div></blockquote>
+<p>Code now detects this and automatically restarts the ssh listener.</p>
+<p>This is now much more convenient for the user. wireguard itself is robust
+against the same changes since it uses udp, and now just start vpn and start ssh
+and the app will handle keeping everything running.
+If ssh cannot reconnect, it waits a while and tries again.</p>
+</li>
+<li><p>Auto fix of resolv.conf (new option <em>–fix-dns-auto-start</em>)</p>
+<p>Network refresh often happens after sleep/resume (e.g. laptop lid close/open) or
+when a DHCP lease expires. If VPN is up and running
+when this occurs the /etc/resolv.conf file can be reset and then DNS will no longer use
+the vpn DNS but will then use whatever resolver DHCP provided by default.
+Earlier versions of wg-client offered a manual fix available
+by clicking the <em>VPN Start</em> button again or by using wg-client on command line.</p>
+<p>This is now done automatically using a daemon which can be started/stopped from command line
+using  the new options <em>–fix-dns-auto-start</em> and <em>–fix-dns-auto-stop</em></p>
+<p>NB: The GUI app calls <em>wg-client</em> to start the monitor daemon when it starts up wireguard.</p>
+</li>
+<li><p>NB version 5 has 2 additional dependencies:</p>
+<ul class="simple">
+<li><p>openssl library for wg-fix-resolv.c</p></li>
+<li><p>python-pynotify library available via <a class="reference external" href="https:://github.com/gene-git/python-pynotify">Pynotify Github</a> and <a class="reference external" href="https://aur.archlinux.org/packages/python-pynotify">Pynotify AUR</a></p></li>
+</ul>
+</li>
+<li><p>dns resolv.conf fix now uses capabilities.</p></li>
+</ul>
+</section>
+</section>
+<section id="getting-started">
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">¶</a></h1>
+<section id="wg-client-application">
+<h2>wg-client application<a class="headerlink" href="#wg-client-application" title="Link to this heading">¶</a></h2>
+<section id="usage">
+<h3>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h3>
+<p>To use run from a terminal. For example to start wireguard from a terminal, use:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wg-client<span class="w"> </span>--wg-up
+</pre></div>
+</div>
+<p>To get a list of options run it with <em>-h</em>. Options are also documented in
+config section <a class="reference internal" href="#config-sect">config-sect</a> below.</p>
+</section>
+<section id="dhcp-refresh-sleep-resume">
+<span id="sleep-resume"></span><h3>DHCP refresh &amp; sleep / resume<a class="headerlink" href="#dhcp-refresh-sleep-resume" title="Link to this heading">¶</a></h3>
+<p>When laptop sleeps, from lid close for example, and then woken up - the vpn will continue working
+as normal and likewise the ssh provided the sleep time is not <em>too long</em>. However, on wake the
+networking is typically re-initialized and part of that may re-install the dns resolver
+file <em>/etc/resolv.conf</em>.</p>
+<p>This is handled automatically by the resolv monitor daemon. See the option <em>–fix-dns-auto-start</em>
+for more information.</p>
+</section>
+<section id="configuration">
+<span id="config-sect"></span><h3>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">¶</a></h3>
+<p>wg-client reads its configuration from</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>/etc/wg-client/config
+</pre></div>
+</div>
+<p>Please copy the sample config and edit appropriately. The format is in <em>TOML</em> format.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Sample</span>
+<span class="n">iface</span> <span class="o">=</span> <span class="s1">&#39;wgc&#39;</span>
+<span class="n">ssh_server</span> <span class="o">=</span> <span class="s1">&#39;vpn.example.com&#39;</span>
+<span class="n">ssh_pfx</span> <span class="o">=</span> <span class="s1">&#39;47&#39;</span>
+</pre></div>
+</div>
+<p>This config file provides:</p>
+<ul>
+<li><p>iface - required</p>
+<p>Wireguard interface; defaults to <em>wgc</em>. It is <em>&lt;iface&gt;</em> of <em>/etc/wireguard/&lt;iface&gt;.conf</em></p>
+</li>
+<li><p>ssh_server - optional</p>
+<p>Hostname of the remote ssh server accessible over the vpn;
+this is where the ssh listening port is run.
+Hostname must be accessible over the wg vpn.</p>
+</li>
+<li><p>ssh_pfx - used with ssh_server</p>
+<p>1 or 2 digit number, 65 or smaller, to be used as ssh listening port number prefix.
+The port number is of the form PPxxx, with <em>PP</em> the prefix and
+<em>xxx</em> is taken from the last octet of the wireguard vpn internal IP address.</p>
+<p>The prefix can also be given as a range of numbers (<em>‘n-m’</em>).
+In this case the prefix used is randomly chosen from that range</p>
+<p>Keep in mind that the largest port number is 65535, which limits <em>ssh_pfx</em> to be 65 or lower.</p>
+</li>
+</ul>
+<p>The port number chosen will be written to the log file.</p>
+<p>The remote ssh host will then listen on <em>127.0.0.1:&lt;port&gt;</em>.
+It will also listen on <em>&lt;remote-ip-address&gt;:&lt;port&gt;</em>
+provided the remote ssh server permits it by having the sshd option set:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>GatewayPorts<span class="w"> </span>yes
+</pre></div>
+</div>
+</section>
+<section id="options">
+<h3>Options<a class="headerlink" href="#options" title="Link to this heading">¶</a></h3>
+<p>Summary of available options for wg-client.</p>
+<p><strong>Positional argument</strong> : Optional</p>
+<ul>
+<li><p>wireguard client interface name</p>
+<p>Default interface is taken from <em>iface</em> in config file.
+The config file is chosen by first checking for <em>./etc/wg-client/config</em> <a class="footnote-reference brackets" href="#id2" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>
+and then in <em>/etc/wg-client/config</em>.  If not found the wg interface defaults to <em>wgc</em></p>
+</li>
+</ul>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id2" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>Useful during development and testing</p>
+</aside>
+</aside>
+<p><strong>Options</strong>:</p>
+<ul>
+<li><p>(<em>-h, –help</em>)</p>
+<p>Show this help message and exit</p>
+</li>
+<li><p>(<em>–wg-up</em>) and (<em>–wg-dn</em>)</p>
+<p>Start and stop wireguard client</p>
+</li>
+<li><p>(<em>–ssh-start</em>)</p>
+<p>ssh to remote server over vpn and listen on remote port.
+Port number used is described above in Overview section <a class="reference internal" href="#config-sect">config-sect</a>.</p>
+<p>This blocks waiting for ssh. To stop ssh, simply make a separate
+invocation of <em>wg-client -ssh-stop</em>. If using the GUI tool, simply click the <em>Stop Ssh</em> button.</p>
+<p>In the event that ssh connection is dropped, it will automatically be restarted.
+There are normal, quite common situations where ssh process can exit prematurely.
+For example:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>After sleep/resume (longer than tcp timeout)</p></li>
+<li><p>if remote server sshd restarts (reboot for example)</p></li>
+<li><p>changing IP address (e.g. happens when location changes. e.g. Move from hotel to starbucks)</p></li>
+</ul>
+</div></blockquote>
+<p>While attempting to reconnect ssh there is a waiting period between each attempt.
+Currently the wait time is 30 seconds.</p>
+</li>
+<li><p>(<em>–ssh-stop</em>)</p>
+<p>End ssh to remote server</p>
+</li>
+<li><p>(<em>–ssh-pfx</em>)</p>
+<p>Set the ssh port prefix. Can be 2 digits: “nn” or a range “nn-mm”. If using a range, then
+prefix will be randomly drawn from the range. Maximum value is 65. This can also be set in
+the config file.</p>
+</li>
+<li><p>(<em>–ssh-server</em>) &lt;server&gt;</p>
+<p>Remote ssh server to set up listening port. This is usually set in the config file.</p>
+</li>
+<li><p>(<em>–fix-dns</em>)</p>
+<p>This has been automated by the monitor daemon. See <em>–fix-dns-auto-start</em></p>
+<p>Restore wireguard dns resolv.conf. Typical use is after sleep resume when the network
+is set up it can mess up the resolv.conf file - this restores the correct version.</p>
+<p>This will also be done by GUI, if needed, by simply clicking the Start VPN button.</p>
+<p>wg-client relies on <em>wg-fix-resolv</em> program which is granted CAP_CHOWN and CAP_DAC_OVERRIDE
+capabilities to enable it to restore the right /etc/resolv.conf file.</p>
+</li>
+<li><p>(<em>–fix-dns-auto-start</em>)</p>
+<p>Auto fix of resolv.conf.</p>
+<p>Please note that this is <em>always</em> run by the GUI program. This option is only relevant
+when not using the GUI.</p>
+<p>Network refresh happens after sleep/resume (e.g. laptop lid close/open) or
+when a DHCP lease expires or when changing network locations (such as moving from hotel to starbucks).</p>
+<p>If VPN is running when this occurs the /etc/resolv.conf file can be reset and then DNS will no longer use
+the vpn DNS.</p>
+<p>(While older versions of wg-client provided a manual fix available
+by clicking the <em>VPN Start</em> button again or by using wg-client on command line, current
+versions monitor and fix resolv.conf automatically)</p>
+<p><strong>N.B.</strong> We must coordinate with wireguard config treatment of /etc/resolv.conf when it is started
+and stopped.</p>
+<p>There are 3 relevant files :</p>
+<ul>
+<li><p>/etc/resolv.conf</p>
+<p>When wireguard is not running it the usual one. When wireguard is running it is the
+one installed by wireguard PostUp configuration so that DNS requests use the vpn tunnel.</p>
+</li>
+<li><p>/etc/resolv.conf.wg</p>
+<p>When wireguard starts, PostUp must save a copy of the resolv.conf to be used while
+wireguard is running.</p>
+</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<div><ul>
+<li><p>/etc/resolv.conf.saved</p>
+<blockquote>
+<div><p>This is a copy of the usual resolv.conf to be used when wireguard is not running.</p>
+</div></blockquote>
+</li>
+</ul>
+<blockquote>
+<div><p><strong>wireguard responsibility</strong></p>
+<p>When wg-client starts wireguard, wireguard itself must save the current <em>/etc/resolv.conf</em>
+and install one that uses the vpn tunnel.</p>
+<p>We expect wireguard PostUp and PostDown scripts configured to do the following:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>save existing /etc/resolv.conf as /etc/resolv.conf.saved</p></li>
+<li><p>install wireguard /etc/resolv.conf and also save into /etc/resolv.conf.wg</p></li>
+</ul>
+</div></blockquote>
+<p>This is what <em>wg-tool</em> does in the default configuration.</p>
+<p>With that in mind <em>wg-client</em>
+will monitor /etc/resolv.conf while wireguard is running, and if it changes
+(typically network tools can do this when DHCP renews or if changing networks etc.),
+then the monitor daemon copes that new resolv.conf into resolv.conf.saved. This
+resolv.conf is what is needed when wireguard is not running. When wireguard is stopped,
+it’s PostDown script will restore /etc/resolv.conf from the saved version. So it’s
+important to keep that saved version current so networking works normally after
+wireguard is stopped.</p>
+<p>Similarly, when /etc/resolv.conf is replaced by networking tools, it is the
+wrong one to use for wireguard - so monitor copies /etc/resolv.conf.wg into /etc/resolv.conf
+to ensure the correct resolv.conf is used while wireguard is running.</p>
+<p><strong>wg-client responsibility</strong></p>
+<p>With that all said, this is what the dns auto fix tool is responsible for while
+wireguard is running:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>if /etc/resolv.conf changes - save it to /etc/resolv.conf.saved</p></li>
+<li><p>restore /etc/resolv.conf from /etc/resolv.conf.wg</p></li>
+</ul>
+</div></blockquote>
+<p>This is now done automatically using a daemon which can be started/stopped from command line
+using  the new options <em>–fix-dns-auto-start</em> and <em>–fix-dns-auto-stop</em></p>
+<p>The GUI app does this whenever it starts wireguard.</p>
+<p>The monitor daemon watches <em>/etc/resolv.conf</em> and auto restores the correct
+one when needed. It uses inotify whereby the kernel notifes us when the
+file changes - this is very efficient and allows the monitor to sleep waiting for the
+kernel to wake it up when there’s something to do.</p>
+<p>Wireguard will continue to work even if the laptop is taken to a new wifi location.
+The monitor checks and saves any newly found resolv.conf and restores the wireguard one.
+Of course on closing down, the original saved resolv.conf is restored as well.
+Note that ssh will not survive changing networks but it can easily be restarted and the code
+will automatically reconnect if possible.</p>
+</div></blockquote>
+</div></blockquote>
+<ul>
+<li><p>(<em>–fix-dns-auto-stop</em>)</p>
+<p>Stops the monitor daemon.</p>
+</li>
+<li><p>(<em>–show-info, –status</em>)</p>
+<p>Report all info. If run as root then it additionally shows staus of any ssh/resolv monitor
+for all users.</p>
+</li>
+<li><p>(<em>–show-iface</em>)</p>
+<p>Report wireguard interface name used.</p>
+</li>
+<li><p>(<em>–show-ssh-server</em>)</p>
+<p>Report the ssh server name</p>
+</li>
+<li><p>(<em>–show-ssh-running</em>)</p>
+<p>Report if ssh is active</p>
+</li>
+<li><p>(<em>–show-wg-running</em>)</p>
+<p>Report if wireguard is active</p>
+</li>
+<li><p>(<em>–show-fix-dns-auto</em>)</p>
+<p>Report if auto fix dns is running</p>
+</li>
+<li><p>(<em>–test</em>)</p>
+<p>Test mode - print what would be done rather than doing it.</p>
+</li>
+<li><p><em>–version</em></p>
+<p>Display wg-client version</p>
+</li>
+</ul>
+</section>
+</section>
+<section id="wg-client-gui-application">
+<h2>wg-client-gui application<a class="headerlink" href="#wg-client-gui-application" title="Link to this heading">¶</a></h2>
+<section id="gui-usage">
+<h3>GUI Usage<a class="headerlink" href="#gui-usage" title="Link to this heading">¶</a></h3>
+<p>The gui is installable using the provided wg-client.desktop file and can be added
+to launchers in the usual way. For example in gnome simply search applications for wg-cliient
+and right click to pin the launcher. The gui uses PyQt6 which in turn relies on Qt6.</p>
+<p>The gui has buttons to start and stop wireguard and a button to run ssh to set up the listener
+on the host configured in the config file.</p>
+<p>The gui should be left running while the vpn is in use. Pressing quit in the gui will shutdown wireguard
+and shutdown the ssh listener as well.</p>
+</section>
+<section id="gui-options">
+<h3>GUI Options<a class="headerlink" href="#gui-options" title="Link to this heading">¶</a></h3>
+<p>wg-client-gui has no command line options. It invokes <em>wg-client</em>, and thus the configuration
+described above <a class="reference internal" href="#config-sect">config-sect</a> is used:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>/etc/wg-client/config
+</pre></div>
+</div>
+</section>
+</section>
+<section id="log-files">
+<h2>Log files<a class="headerlink" href="#log-files" title="Link to this heading">¶</a></h2>
+<p>Each application has it’s own log file. These are located in users
+home directory :</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span>/log/wg-client
+<span class="si">${</span><span class="nv">HOME</span><span class="si">}</span>/log/wg-client-gui
+</pre></div>
+</div>
+<p>Each of the log files are rotated with companion log suffixed with <em>.1</em></p>
+</section>
+<section id="sudoers">
+<h2>Sudoers<a class="headerlink" href="#sudoers" title="Link to this heading">¶</a></h2>
+<p>wg-client uses <em>wg-quick</em> from wireguard tools to start and stop the vpn.
+and since this requires root to do it’s job, any non-root user will
+need a NOPASSWD sudoers entry.</p>
+<p>You can keep all local sudoers in a single file or in separate files.
+If in single file, make this one come after any group wheel ones.
+This is to ensure this one is chosen becuase sudo uses the last
+matching entry.</p>
+<p>Simply add this sample line adjusting WGUSERS to list whatever user(s) are
+permitted to run wireguard. If more than one use comma separated list as shown below.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>User_Alias<span class="w"> </span><span class="nv">WGUSERS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>alice,<span class="w"> </span>bob,<span class="w"> </span>sally
+WGUSERS<span class="w">   </span><span class="nv">ALL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">(</span>root<span class="o">)</span><span class="w"> </span>NOPASSWD:<span class="w"> </span>/usr/bin/wg-quick
+WGUSERS<span class="w">   </span><span class="nv">ALL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">(</span>root<span class="o">)</span><span class="w"> </span>NOPASSWD:<span class="w"> </span>/usr/lib/wg-client/wg-fix-dns
+</pre></div>
+</div>
+<p>If using separete files, then care is need to ensure this entry comes after any
+wheel group entries. Where WGUSERS is 1 or more usernames or a group such as
+<em>%wgusers</em>.</p>
+<p>Then,</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>visudu<span class="w"> </span>/etc/sudoers.d/100-wireguard
+</pre></div>
+</div>
+<p>Edit <em>WGUSERS</em> as above.</p>
+<p>visudo enforces the correct permissions which should be ‘0440’. If permissions
+are too loose, sudo will ignore the file.</p>
+<p>Why the prefix number?  Because sudo uses the <strong>last</strong> matching entry and
+we need to be sure the NOPASSWD wg-quick entry comes after any group wheel lines.</p>
+<p>For example if there are 2 files in <em>/etc/sudoers.d</em> - say wg-quick and wheel,
+where the wheel entry requires a password for members of group wheel.</p>
+<p>Now if user listed in wg-quick is also a member of <em>wheel</em> group, since wg-quick
+is first and wheel is second (files are treated in lexical order) the <em>wheel</em> one
+will prevail and user will be prompted for a password when running <em>sudo /usr/bin/wg-quick</em>.
+Not what we want. To fix this use numbers to prefix the sudoers filenames. So in this
+example it would be:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>/etc/sudoers.d/010-wheel
+/etc/sudoers.d/100-wg-client
+</pre></div>
+</div>
+<p>thereby ensuring that wg-client entries follow the wheel ones.</p>
+<p>For convenience this is also noted in the sample file:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>/etc/wg-client/sudoers.sample
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>chmod<span class="w"> </span>-440<span class="w"> </span>/etc/sudoers.d/wg-client
+</pre></div>
+</div>
+</section>
+</section>
+<section id="appendix">
+<h1>Appendix<a class="headerlink" href="#appendix" title="Link to this heading">¶</a></h1>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h2>
+<p>Available on:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/gene-git/wg-client">Github</a></p></li>
+<li><p><a class="reference external" href="https://aur.archlinux.org/packages/wg-client">Archlinux AUR</a></p></li>
+</ul>
+<p>On Arch you can build using the PKGBUILD provided in packaging directory or from the AUR package.</p>
+<p>To build manually, clone the repo and do:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rm<span class="w"> </span>-f<span class="w"> </span>dist/*
+/usr/bin/python<span class="w"> </span>-m<span class="w"> </span>build<span class="w"> </span>--wheel<span class="w"> </span>--no-isolation
+<span class="nv">root_dest</span><span class="o">=</span><span class="s2">&quot;/&quot;</span><span class="w"> </span>./scripts/do-install<span class="w"> </span><span class="nv">$root_dest</span>
+</pre></div>
+</div>
+<p>When running as non-root then set root_dest a user writable directory</p>
+</section>
+<section id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading">¶</a></h2>
+<p><strong>Run Time</strong> :</p>
+<ul class="simple">
+<li><p>python              (3.11 or later)</p></li>
+<li><p>netifaces</p></li>
+<li><p>hicolor-icon-theme</p></li>
+<li><p>psutil              (aka python-psutil)</p></li>
+<li><p>PyQt6 / Qt6         (for gui)</p></li>
+<li><p>hicolor-icon-theme</p></li>
+<li><p>dateutil</p></li>
+<li><p>netifaces</p></li>
+<li><p>licap</p></li>
+<li><p>pynotify</p></li>
+<li><p>openssl               (3.0 or later)</p></li>
+</ul>
+<p><strong>Building Package</strong>:</p>
+<ul class="simple">
+<li><p>git</p></li>
+<li><p>hatch (aka python-hatch)</p></li>
+<li><p>wheel (aka python-wheel)</p></li>
+<li><p>build (aka python-build)</p></li>
+<li><p>installer (aka python-installer)</p></li>
+<li><p>rsync</p></li>
+</ul>
+<p><strong>Optional for building docs</strong>:
+* sphinx
+* myst-parser
+* texlive-latexextra  (archlinux packaguing of texlive tools)</p>
+</section>
+<section id="philosophy">
+<h2>Philosophy<a class="headerlink" href="#philosophy" title="Link to this heading">¶</a></h2>
+<p>We follow the <em>live at head commit</em> philosophy as recommended by
+Google’s Abseil team <a class="footnote-reference brackets" href="#id2" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.  This means we recommend using the
+latest commit on git master branch.</p>
+</section>
+<section id="license">
+<h2>License<a class="headerlink" href="#license" title="Link to this heading">¶</a></h2>
+<p>Created by Gene C. and licensed under the terms of the GPL-2.0-or-later license.</p>
+<ul class="simple">
+<li><p>SPDX-License-Identifier: GPL-2.0-or-later</p></li>
+<li><p>SPDX-FileCopyrightText: © 2023-present Gene C &lt;<a class="reference external" href="mailto:arch&#37;&#52;&#48;sapience&#46;com">arch<span>&#64;</span>sapience<span>&#46;</span>com</a>&gt;</p></li>
+</ul>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id4" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
+<p><a class="reference external" href="https://abseil.io/about/philosophy#upgrade-support">https://abseil.io/about/philosophy#upgrade-support</a></p>
+</aside>
+</aside>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">wg-client</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">wg-client</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#why-i-made-wg-client">Why I made wg-client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#key-features">Key features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#new-or-interesting">New or Interesting</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#getting-started">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#wg-client-application">wg-client application</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dhcp-refresh-sleep-resume">DHCP refresh &amp; sleep / resume</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#options">Options</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#wg-client-gui-application">wg-client-gui application</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#gui-usage">GUI Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#gui-options">GUI Options</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#log-files">Log files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sudoers">Sudoers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#appendix">Appendix</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#philosophy">Philosophy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#license">License</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="License/License.html">License</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">wg-client documentation</a></li>
+      <li>Next: <a href="License/License.html" title="next chapter">License</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2023, Gene C.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/README.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
