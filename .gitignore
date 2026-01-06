@@ -2,5 +2,5 @@
 Docs/_build/latex/
 Docs/_build/doctrees/
 __pycache__/
-src/c-code/fix-resolv/
+src/c-code/fix-resolv/wg-fix-resolv
 
