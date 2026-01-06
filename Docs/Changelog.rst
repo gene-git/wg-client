@@ -6,12 +6,19 @@ Tags
 
 .. code-block:: text
 
-	3.7.1 (2024-01-07) -> 7.0.0 (2026-01-06)
-	81 commits.
+	3.7.1 (2024-01-07) -> 7.1.0 (2026-01-06)
+	83 commits.
 
 Commits
 =======
 
+
+* 2026-01-06  : **7.1.0**
+
+.. code-block:: text
+
+              - Add c-code back into repo (oops)
+              - update Docs/Changelog
 
 * 2026-01-06  : **7.0.0**
 

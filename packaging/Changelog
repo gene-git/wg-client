@@ -1,9 +1,13 @@
 -------------------------------------------------------
  Changelog    : wg-client
- Tags         : 6.8.0 ➙ 7.0.0
-              : 2025-03-09 ➙ 2026-01-06
+ Tags         : 6.10.0 ➙ 7.1.0
+              : 2025-03-17 ➙ 2026-01-06
               : 6 tags. See Docs for full changelog
 -------------------------------------------------------
+
+ 2026-01-06   : 7.1.0
+              - Add c-code back into repo (oops)
+              - update Docs/Changelog
 
  2026-01-06   : 7.0.0
               - **7.0.0**
@@ -35,11 +39,4 @@
                   No reported issues with 5 seconds - no harm in being able to wait a bit longer if needed for some reason.
                 Resolv monitor log when it starts
  2025-03-09   ⋯
-              - update Docs/Changelog.rst Docs/wg-client.pdf
-
- 2025-03-09   : 6.8.0
-              - Improve readme and fix typo in help message
-                Additional self protections in kill_ssh() function
-                Tidy some code.
- 2025-03-02   ⋯
               - update Docs/Changelog.rst Docs/wg-client.pdf
