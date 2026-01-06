@@ -64,6 +64,10 @@ New or Interesting
 * Modern coding standards: PEP-8, PEP-257 and PEP-484 style and type annotations
 * Use pyconcurrent module (additional dependency)
 
+  Available on `Github <https://github.com/gene-git/pyconcurrent>`_
+  and `AUR <https://aur.archlinux.org/packages/pyconcurrent>`_
+
+
 **Older**
 
 * Change wg-fix-resolv: Ignore comments when comparing resolv.conf files. 
