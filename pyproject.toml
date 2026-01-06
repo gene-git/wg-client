@@ -1,11 +1,10 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["uv_build>=0.9.21,<=1.0.0"]
+build-backend = "uv_build"
 
 [project]
 name = "wg-client"
-dynamic = ["version"]
-description = "Wireguard linux client (command line and gui)"
+description = "Wireguard linux client (command line tool with companion gui)"
 authors = [{ name = "Gene C", email = "arch@sapience.com" }]
 license = "MIT"
 readme = "README.rst"
@@ -13,21 +12,34 @@ keywords = []
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
 ]
+requires-python = ">=3.13"
+version = "7.0.0"
 dependencies = []
 
 [project.urls]
-#Documentation = ""https://github.com/gene-git/wg-client/Docs"
-#Issues = "https://github.com/gene-git/wg-client/issues"
-#Source = "https://github.com/gene-git/wg-client"
+Documentation = "https://github.com/gene-git/wg-client/Docs"
+Issues = "https://github.com/gene-git/wg-client/issues"
+Source = "https://github.com/gene-git/wg-client"
 
-[tool.hatch.version]
-path = "src/wg_client/lib/version.py"
+[tool.uv.build-backend]
+module-name = 'wg_client'
+module-root = "src"
+source-include = [
+    '/wg_client',
+    '/wg_client/py.typed',
+]
+source-exclude = [
+    ".pytest_cache",
+    "__pycache__",
+    ".mypy_cache",
+]
 
-[tool.hatch.envs.default.scripts]
+[tool.mypy]
+check_untyped_defs = true
+follow_untyped_imports = true
+mypy_path = "src/types_stubs"
 
-[[tool.hatch.envs.all.matrix]]
-python = ["3.10", "3.11", "3.12"]
-[tool.hatch.envs.lint]
-detached = true

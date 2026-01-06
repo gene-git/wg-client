@@ -3,22 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to wg-client's documentation!
-=====================================
+#######################
+wg-client documentation
+#######################
 
 .. toctree::
    README
-   Changelog
-   License
-   Contributing
-   Code-of-conduct
-   :maxdepth: 2
-   :caption: Contents:
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   License/License

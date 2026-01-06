@@ -1,11 +1,12 @@
 #!/usr/bin/python
-# SPDX-License-Identifier: MIT
-# SPDX-FileCopyrightText: © 2023-present  Gene C <arch@sapience.com>
+# SPDX-License-Identifier: GPL-2.0-or-later
+# SPDX-FileCopyrightText: © 2023-present Gene C <arch@sapience.com>
 """
 Command line Start and Stop Wireguard
 """
 # pylint: disable=invalid-name
-from lib import WgClient
+from wg_client.cmd_line import WgClient
+
 
 def main():
     """
@@ -22,6 +23,7 @@ def main():
 
     if client.okay:
         client.do_all()
+
 
 # -----------------------------------------------------
 if __name__ == '__main__':

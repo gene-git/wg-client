@@ -1,7 +1,7 @@
 [Desktop Entry]
 Comment=
 Exec=/usr/bin/wg-client-gui
-GenericName=Wireguard VPN Tool
+GenericName=Wireguard VPN Management Tool
 Icon=wg-client.png
 MimeType=
 Name=wg-client-gui

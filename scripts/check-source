@@ -1,0 +1,32 @@
+#!/usr/bin/bash
+#
+# Source code checks (python).
+#
+# Run in top level
+# Rwquires
+# - pylint
+# - pycodestyle
+# - mypy
+# - cppcheck
+# 
+
+cd src
+echo "---"
+echo "Python checks:"
+mod='wg_client'
+PYTHONPATH=. pylint $mod/*.py $mod/*/*.py
+PYTHONPATH=. pycodestyle --max-line-length=110 $mod/*.py $mod/*/*.py
+
+cd ..
+mypy --check-untyped-defs --follow-untyped-imports src/$mod
+
+echo "---"
+echo "C-code checks:"
+includes="-I /usr/include -I /usr/include/gnu -I /usr/include/sys"
+includes+=" -I /usr/include/openssl"
+checks="--enable=style,warning"
+verb=""
+opts="--suppress=*:*/usr/include/*"
+cppcheck $includes $checks $opts $verb src/c-code/fix-resolv/*.c
+
+

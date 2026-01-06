@@ -1,15 +1,15 @@
-.. SPDX-License-Identifier: MIT
+.. SPDX-License-Identifier: GPL-2.0-or-later
 
-#########
+*********
 wg-client 
-#########
+*********
 
 Overview
 ========
 
 Linux wireguard client tools make it simple to start and stop wireguard.
-Comes with command line tool, *wg-client*, and a convenient GUI tool which
-uses it.
+Comes with command line program, *wg-client*, and a convenient GUI tool which
+depends on it.
 
 This is a companion to the wireguard server config tools `wg-tool`_.
 
@@ -54,6 +54,18 @@ Key features
 New or Interesting
 ==================
     
+**7.0.0**
+
+* Code Reorg
+* Switch packaging from hatch to uv
+* Add source checks for C-code as well as python
+* Testing to confirm all working correctly on python 3.14.2
+* C-code (wg-fix-resolve): Use more 'const' pointer to structs to improve security.
+* Modern coding standards: PEP-8, PEP-257 and PEP-484 style and type annotations
+* Use pyconcurrent module (additional dependency)
+
+**Older**
+
 * Change wg-fix-resolv: Ignore comments when comparing resolv.conf files. 
   More efficient/correct when only change is a commented time stamp for example.
 
@@ -101,9 +113,9 @@ New or Interesting
 * dns resolv.conf fix now uses capabilities. 
 
 
-###############
+***************
 Getting Started
-###############
+***************
 
 wg-client application
 =====================
@@ -487,9 +499,9 @@ For convenience this is also noted in the sample file:
 
     chmod -440 /etc/sudoers.d/wg-client
 
-########
+********
 Appendix
-########
+********
 
 Installation
 ============
@@ -545,17 +557,17 @@ Dependencies
 Philosophy
 ==========
 
-We follow the *live at head commit* philosophy. This means we recommend using the
-latest commit on git master branch.
+We follow the *live at head commit* philosophy as recommended by
+Google's Abseil team [1]_.  This means we recommend using the
+latest commit on git master branch. 
 
-This approach is also taken by Google [#]_ [#]_.
 
 License
 ========
 
-Created by Gene C. and licensed under the terms of the MIT license.
+Created by Gene C. and licensed under the terms of the GPL-2.0-or-later license.
 
-- SPDX-License-Identifier: MIT
+- SPDX-License-Identifier: GPL-2.0-or-later
 - SPDX-FileCopyrightText: © 2023-present Gene C <arch@sapience.com>
 
 .. _Github: https://github.com/gene-git/wg-client
@@ -563,5 +575,4 @@ Created by Gene C. and licensed under the terms of the MIT license.
 .. _Pynotify AUR: https://aur.archlinux.org/packages/python-pynotify
 .. _Pynotify Github: https:://github.com/gene-git/python-pynotify
 
-.. [#] https://github.com/google/googletest  
 .. [#] https://abseil.io/about/philosophy#upgrade-support

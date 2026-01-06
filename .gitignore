@@ -1,0 +1,5 @@
+.mypy_cache/
+/Docs/_build/
+__pycache__/
+src/c-code/fix-resolv/
+

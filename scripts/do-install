@@ -1,5 +1,5 @@
 #!/bin/bash
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (c) 2023 Gene C
 #
 # installer script for wg-client
@@ -9,12 +9,12 @@
 #
 dest="$1"
 self="wg-client"
-self_dir=${self//-/_}
+mod="wg_client"
 
 info="README.rst Docs scripts packaging"
 infodir="/usr/share/${self}"
 
-license="Docs/License.rst"
+license="Docs/License/License.rst"
 licensedir="/usr/share/licenses/${self}"
 
 etc='/etc/wg-client/'
@@ -25,8 +25,7 @@ icon='desktop/wg-client.png'
 desktopdir='/usr/share/applications/'
 desktopfile='desktop/wg-client.desktop'
 
-libexec='wg-fix-dns'        # remove once change to c-code
-fix_resolv='wg-fix-resolv'
+fix_resolv='src/c-code/fix-resolv/wg-fix-resolv'
 libexecdir="/usr/lib/${self}"
 
 # list apps without the ".py" or leave empty string
@@ -34,8 +33,16 @@ apps=('wg-client' 'wg-client-gui')
 
 # so can make app link in /usr/bin
 sitedir=$(/usr/bin/python3 -c "import site; print(site.getsitepackages()[0])")
-self_sitedir=${sitedir}/${self//-/_}
+installdir="${dest}${sitedir}"
+app_location="${sitedir}/${mod}/apps"
 
+uv_opts=(
+    --python /usr/bin/python
+    --system
+    --no-build-isolation
+    --link-mode=copy
+    --compile-bytecode
+)
 
 if [ ! -d "$dest" ] ; then
     echo 'Missing destination directory'
@@ -47,8 +54,7 @@ else
 
     # libexec
     mkdir -p ${dest}/${libexecdir}
-    #/usr/bin/ln -sf ${self_sitedir}/${libexec}.py ${dest}/${libexecdir}/${libexec}
-    /usr/bin/rsync --mkpath -a "src/wg_client/fix-resolv/wg-fix-resolv" ${dest}/${libexecdir}/
+    /usr/bin/rsync --mkpath -a "${fix_resolv}" ${dest}/${libexecdir}/
 
     # desktop
     mkdir -p ${dest}/${icondir} ${dest}/${desktopdir}
@@ -60,14 +66,15 @@ else
     chmod 755 ${dest}/${etc}
     /usr/bin/rsync -a --mkpath ${confs} ${dest}/${etc}/
 
-    /usr/bin/python -m installer --destdir="$dest" dist/*.whl
+    /usr/bin/uv pip install ${uv_opts[@]} --target "$installdir" dist/*.whl
+    /usr/bin/rm -rf "$installdir"/.lock
 
     # link(s) in /usr/bin/
     if [ -v apps ] ; then
         /usr/bin/mkdir -p "${dest}/usr/bin"
         for app in ${apps[@]}
         do
-            /usr/bin/ln -sf ${self_sitedir}/${app}.py ${dest}/usr/bin/${app}
+            /usr/bin/ln -sf ${app_location}/${app}.py ${dest}/usr/bin/${app}
         done
     fi
     exit 0

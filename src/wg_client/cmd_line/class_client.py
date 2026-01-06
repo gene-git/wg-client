@@ -1,5 +1,5 @@
-# SPDX-License-Identifier: MIT
-# SPDX-FileCopyrightText: © 2023-present  Gene C <arch@sapience.com>
+# SPDX-License-SPDX-License-Identifier: GPL-2.0-or-later
+# SPDX-FileCopyrightText: © 2023-present Gene C <arch@sapience.com>
 """
 Class for Start, Stop Wireguard client on linux
  - handles wg-quick up/dn
@@ -16,26 +16,28 @@ import os
 import time
 from typing import Callable
 
-from .class_proc import MyProc
-from .class_proc import MySignals
-from .ip_addr import iface_to_ips
+from wg_client.proc import MyProc
+from wg_client.proc import MySignals
+from wg_client.proc import who_logged_in
+from wg_client.utils import MyLog
+from wg_client.utils import version
+from wg_client.resolv import WgResolv
 
-from .ssh_listener import (get_ssh_port_prefix, ssh_args)
+from wg_client.net import iface_to_ips
+
+from wg_client.ssh import (get_ssh_port_prefix, ssh_args)
+from wg_client.ssh import SshMgr
 
 from .class_opts import WgClientOpts
-from .class_logger import MyLog
 from .get_info import is_wg_running
-from .class_resolv import WgResolv
-from .version import version
-from .users import who_logged_in
-from .class_ssh import SshMgr
 
-def wg_quick_cmd(test, euid, updn, iface):
+
+def wg_quick_cmd(test: bool, euid: int, updn: str, iface: str):
     '''
     consruct pargs for running wg_quick
     if confg is "test-dummy" then prepend /usr/bim/echo
     '''
-    pargs = []
+    pargs: list[str] = []
     if test:
         pargs = ['/usr/bin/echo']
 
@@ -44,27 +46,28 @@ def wg_quick_cmd(test, euid, updn, iface):
     pargs += ['/usr/bin/wg-quick', updn, iface]
     return pargs
 
+
 class WgClient():
-    """ Primary Class (no gui) """
+    """
+    Primary Class (no gui)
+    """
     def __init__(self):
-        self.okay = True
-        self.iface = None
-        self.euid = os.geteuid()
-        self.wg_ip = None
-        self.wg_ip6 = None
-        self.test = False
+        self.okay: bool = True
+        self.euid: int = os.geteuid()
+        self.wg_ip: str = ''
+        self.wg_ip6: str = ''
+        self.test: bool = False
 
         self.opts = WgClientOpts()
-        self.iface = self.opts.iface
-        if self.opts.test or self.iface == 'test-dummy' :
+        self.iface: str = self.opts.iface
+        if self.opts.test or self.iface == 'test-dummy':
             self.test = True
 
-
         self.run_proc = None
-        self.resolv = WgResolv()
+        self.resolv: WgResolv = WgResolv()
 
-        self.mysignals = MySignals()
-        self.logger = MyLog('wg-client')
+        self.mysignals: MySignals = MySignals()
+        self.logger: MyLog = MyLog('wg-client')
         self.log('wg-client starting')
 
         if self.opts.version:
@@ -72,21 +75,20 @@ class WgClient():
             print(version())
             self.okay = False
 
-        self.ssh_server = None         # so we share after looking it up
-        self.ssh_rport : str = ''
-        self.ssh_lip : str = ''
-        self.ssh_lport : str = ''
-        self.ssh_args = None
-        self.ssh_pfx = -1
-        self.ssh_mgr = None
+        self.ssh_server: str = ''         # so we share after looking it up
+        self.ssh_rport: str = ''
+        self.ssh_lip: str = ''
+        self.ssh_lport: str = ''
+        self.ssh_args: list[str] = []
+        self.ssh_pfx: int = -1
         self.ssh_mgr = SshMgr(self.opts.test, log=self.log)
-        #self.ssh_init()
+        # self.ssh_init()
 
-    def log(self, msg):
+    def log(self, msg: str):
         """ log file """
         self.logger.log(msg)
 
-    def is_ssh_running(self, user:str=None):
+    def is_ssh_running(self, user: str = '') -> bool:
         """
         Check saved PID and check if running
          - if ssh_server missing, we'll check pid is valid
@@ -104,36 +106,36 @@ class WgClient():
         self.log('wg-up requested')
         self.runit(pargs)
 
-    def fix_dns(self):
-        """
-        Call wg-fix-dns
-         - if wg is running there will be resolv.conf.wg
-           to restore resolv.conf if its been overwritten.
-           Happens with sleep / resume where network start makese a new
-           resolv.conf - we put back the vpn one (requires root or caps)
-        """
-        self.log('fix-dns requested')
-        if not is_wg_running(self.iface):
-            self.log(' wg not running - skipping fix dns resolv')
-            return
-
-        # Skip if auto fix is running
-        if not self.resolv.check_already_running():
-            pargs = self.resolv.fix_resolv_cmd()
-            self.log(f' calling: {pargs}')
-            self.runit(pargs)
-        else:
-            self.log(' fix_dns skipped as auto fix running')
+    # def fix_dns(self):
+    #     """
+    #     Call wg-fix-dns
+    #      - if wg is running there will be resolv.conf.wg
+    #        to restore resolv.conf if its been overwritten.
+    #        Happens with sleep / resume where network start makese a new
+    #        resolv.conf - we put back the vpn one (requires root or caps)
+    #     """
+    #     self.log('fix-dns requested')
+    #     if not is_wg_running(self.iface):
+    #         self.log(' wg not running - skipping fix dns resolv')
+    #         return
+    #
+    #     # Skip if auto fix is running
+    #     if not self.resolv.check_already_running():
+    #         pargs = self.resolv.fix_resolv_cmd()
+    #         self.log(f' calling: {pargs}')
+    #         self.runit(pargs)
+    #     else:
+    #         self.log(' fix_dns skipped as auto fix running')
 
     def start_resolv_monitor(self):
         """
         Runs resolv monitor daemon which
         monitors /etc/resolv.conf and restores wireguard version
         if its changed.
-        this process intentionally runs in forefround
+        this process runs in foreground by design.
           - command line can contr-C
           - gui will kill it when it exits
-          - simple enough to make it daemon process if need arises
+          - simple enough to make it daemon process if need ever arises
         """
         self.log('starting resolv monitor')
 
@@ -173,7 +175,7 @@ class WgClient():
         todo: Add support for 3 digit ip6
         """
         (ips4, ips6) = iface_to_ips(self.iface)
-        self.wg_ip = None
+        self.wg_ip = ''
         if ips4:
             self.wg_ip = ips4[0]
         if ips6:
@@ -224,6 +226,11 @@ class WgClient():
         if not self.ssh_pfx:
             self.log(' Warning: unable to find ssh port prefix')
 
+        # print('ssh_init: call ssh_args')
+        # print('  wg_ip: {wg_ip}')
+        # print('  ssh_serve: {ssh_serve}')
+        # print('  ssh_pfx: {ssh_pfx}')
+        # print('  wg_ip: {wg0ip}')
         (ssh_server, ssh_rport, ssh_lip, ssh_lport) = ssh_args(wg_ip, ssh_server, self.ssh_pfx)
         self.ssh_server = ssh_server
         self.ssh_rport = ssh_rport
@@ -252,7 +259,6 @@ class WgClient():
         """
         self.log('ssh-listener requested')
         self.get_wg_ip()
-        #if not self.wg_ip:
         if not is_wg_running(self.iface):
             self.log('VPN not running : can\'t start ssh')
             if not self.test:
@@ -272,7 +278,7 @@ class WgClient():
         self.ssh_init()
         self.ssh_mgr.start()
 
-    def runit(self, pargs, pid_saver:Callable=None):
+    def runit(self, pargs: list[str], pid_saver: Callable[[int], None] | None = None):
         """
         run a program via subprocess.run
             - used for wg-quick up/down
@@ -312,9 +318,6 @@ class WgClient():
         #
         # dns fix
         #
-        if self.opts.fix_dns:
-            self.fix_dns()
-
         if self.opts.fix_dns_auto_start:
             self.start_resolv_monitor()
 
@@ -339,31 +342,31 @@ class WgClient():
         if self.opts.ssh_stop:
             self.stop_ssh_listener()
 
-def _show_status(client:WgClient, which:str) -> None:
+
+def _show_status(client: WgClient, which: str) -> None:
     """
     Display status
     """
-    items = {}
-
+    items: dict[str, bool | str | int] = {}
     #
     # Current user
     #
-    if which in ('wg_iface', 'status')  :
+    if which in ('wg_iface', 'status'):
         items['wg_iface'] = client.iface
 
-    if which in ('wg_running', 'status')  :
+    if which in ('wg_running', 'status'):
         items['wg_running'] = is_wg_running(client.iface)
 
-    if which in ('ssh_server', 'status')  :
+    if which in ('ssh_server', 'status'):
         items['ssh_server'] = client.opts.ssh_server
 
-    if which in ('ssh_pfx', 'status')  :
+    if which in ('ssh_pfx', 'status'):
         items['ssh_pfx'] = client.ssh_pfx
 
-    if which in ('ssh_running', 'status')  :
+    if which in ('ssh_running', 'status'):
         items['ssh_running'] = client.is_ssh_running()
 
-    if which in ('resolv_monitor', 'status')  :
+    if which in ('resolv_monitor', 'status'):
         items['resolv_monitor'] = client.resolv.check_already_running()
 
     for (key, val) in items.items():
