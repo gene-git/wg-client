@@ -4,7 +4,8 @@
 Parse output of wg-quick and get client wg address
 """
 import ipaddress
-import netifaces as ni
+import json
+from pyconcurrent import run_prog
 
 
 def wg_quick_out_to_ip4(wg_quick_output: str) -> str:
@@ -67,30 +68,44 @@ def iface_to_ips(iface: str) -> tuple[list[str], list[str]]:
     Use ni to get ips
     return list of ip4,ip6 addresses
     """
-    # pylint: disable=c-extension-no-member,invalid-name
-    ips4: list[str] = []
-    ips6: list[str] = []
+    ip4: list[str] = []
+    ip6: list[str] = []
 
-    ifaces = ni.interfaces()
-    if iface not in ifaces:
-        return (ips4, ips6)
+    pargs = ['ip', '-j', '-d', 'address', 'show', iface]
+    (ret, out, _err) = run_prog(pargs)
+    if ret != 0:
+        # print(f'Error getting ips from interface: {err}')
+        return (ip4, ip6)
 
-    adds = ni.ifaddresses(iface)
-    if not adds:
-        return (ips4, ips6)
+    if not out:
+        return (ip4, ip6)
 
-    add4 = adds.get(ni.AF_INET)
-    if add4:
-        for add in add4:
-            ip = add.get('addr')
-            if ip:
-                ips4.append(ip)
+    try:
+        data = json.loads(out)
 
-    add6 = adds.get(ni.AF_INET6)
-    if add6:
-        for add in add6:
-            ip = add.get('addr')
-            if ip:
-                ips6.append(ip)
+    except json.JSONDecodeError as err:
+        # print(f'Error decoding output of ip addr show: {err}')
+        return (ip4, ip6)
 
-    return (ips4, ips6)
+    if not (data and data[0] and data[0].get('addr_info')):
+        return (ip4, ip6)
+
+    addr_infos = data[0].get('addr_info')
+    if not addr_infos:
+        return (ip4, ip6)
+
+    for addr_info in addr_infos:
+        fam = addr_info.get('family')
+        ip = addr_info.get('local')
+
+        if not (fam and ip):
+            continue
+
+        match fam:
+            case 'inet':
+                ip4.append(ip)
+
+            case 'inet6':
+                ip6.append(ip)
+
+    return (ip4, ip6)

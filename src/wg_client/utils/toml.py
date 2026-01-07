@@ -24,7 +24,6 @@ def read_toml_file(fpath: str) -> dict[str, Any]:
         if data:
             try:
                 data_dict = toml.loads(data)
-            except toml.TOMLDecodeError as exc:
-                # print(f'TOML file format error {exc}\n')
+            except toml.TOMLDecodeError:
                 pass
     return data_dict
