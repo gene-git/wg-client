@@ -54,7 +54,11 @@ Key features
 New or Interesting
 ==================
     
-**7.0.0**
+**Version 7.2.0**
+
+* Drop unmaintained *netifaces* module - use our own code for what we need. 
+
+**Version 7.0.0**
 
 * Code Reorg
 * Switch packaging from hatch to uv
@@ -532,25 +536,23 @@ Dependencies
 
 **Run Time** :
 
-* python              (3.11 or later)
-* netifaces
-* hicolor-icon-theme 
-* psutil              (aka python-psutil)
+* python              (3.13 or later)
+* psutil              (python-psutil)
+* dateutil
+* libcap
+* pynotify            (python-notify)
+* openssl
+* pyconcurrent
 * PyQt6 / Qt6         (for gui)
 * hicolor-icon-theme
-* dateutil
-* netifaces
-* licap
-* pynotify
-* openssl               (3.0 or later)
+* bash
+* glibc
 
 **Building Package**:
 
 * git
-* hatch (aka python-hatch)
-* wheel (aka python-wheel)
-* build (aka python-build)
-* installer (aka python-installer)
+* uv
+* uv-build          (python-uv-build)
 * rsync
 
 **Optional for building docs**:

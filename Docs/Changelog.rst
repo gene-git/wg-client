@@ -6,14 +6,23 @@ Tags
 
 .. code-block:: text
 
-	3.7.1 (2024-01-07) -> 7.1.1, origin/master (2026-01-06)
-	84 commits.
+	3.7.1 (2024-01-07) -> 7.2.0 (2026-01-06)
+	86 commits.
 
 Commits
 =======
 
 
-* 2026-01-06  : **7.1.1, origin/master**
+* 2026-01-06  : **7.2.0**
+
+.. code-block:: text
+
+              - **Version 7.2.0**
+            
+                * Drop unmaintained *netifaces* module - use our own code for what we need.
+              - update Docs/Changelog
+
+* 2026-01-06  : **7.1.1**
 
 .. code-block:: text
 
