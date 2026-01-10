@@ -6,7 +6,7 @@ build-backend = "uv_build"
 name = "wg-client"
 description = "Wireguard linux client (command line tool with companion gui)"
 authors = [{ name = "Gene C", email = "arch@sapience.com" }]
-license = "MIT"
+license = "GPL-2.0-or-later"
 readme = "README.rst"
 keywords = []
 classifiers = [
@@ -17,7 +17,7 @@ classifiers = [
     "Programming Language :: Python :: 3.15",
 ]
 requires-python = ">=3.13"
-version = "7.2.0"
+version = "7.3.0"
 dependencies = []
 
 [project.urls]
