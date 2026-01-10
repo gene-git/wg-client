@@ -6,12 +6,25 @@ Tags
 
 .. code-block:: text
 
-	3.7.1 (2024-01-07) -> 7.2.0 (2026-01-06)
-	86 commits.
+	3.7.1 (2024-01-07) -> 7.3.0 (2026-01-10)
+	88 commits.
 
 Commits
 =======
 
+
+* 2026-01-10  : **7.3.0**
+
+.. code-block:: text
+
+              - Correct license in pyproject.toml
+                Arch PKGBUILD - move graphical dependencies into the package() function.
+                  Makes these runtime and build server does not need to have them installed
+ 2026-01-06   ⋯
+
+.. code-block:: text
+
+              - update Docs/Changelog
 
 * 2026-01-06  : **7.2.0**
 
