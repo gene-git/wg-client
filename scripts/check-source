@@ -10,23 +10,28 @@
 # - cppcheck
 # 
 
-cd src
-echo "---"
-echo "Python checks:"
-mod='wg_client'
-PYTHONPATH=. pylint $mod/*.py $mod/*/*.py
-PYTHONPATH=. pycodestyle --max-line-length=110 $mod/*.py $mod/*/*.py
+dest=($realpath "./src")
+export PYTHONPATH="$dest"
+mod="$dest"/'wg_client'
 
-cd ..
-mypy --check-untyped-defs --follow-untyped-imports src/$mod
+echo "---------------------"
+echo "Python pylint:"
 
-echo "---"
+PYTHONPATH=. pylint "$mod"/*.py "$mod"/*/*.py
+PYTHONPATH=. pycodestyle --max-line-length=110 "$mod"/*.py "$mod"/*/*.py
+
+echo ""
+echo "---------------------"
+echo "Python mypy:"
+mypy --check-untyped-defs --follow-untyped-imports "$mod"
+
+echo ""
+echo "---------------------"
 echo "C-code checks:"
-includes="-I /usr/include -I /usr/include/gnu -I /usr/include/sys"
-includes+=" -I /usr/include/openssl"
-checks="--enable=style,warning"
-verb=""
-opts="--suppress=*:*/usr/include/*"
-cppcheck $includes $checks $opts $verb src/c-code/fix-resolv/*.c
+code_dir="src/resolv-manager"
+#opts="--enable=style,warning"
+#/usr/bin/cppcheck "$opts" "$code_dir"/*.[ch]
+
+/usr/bin/clang-tidy -p build/release "$code_dir"/*.[ch]
 
 

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Managing DNS &#8212; wg-client 8.0.0
+ documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <script src="_static/documentation_options.js?v=f663eb4a"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="managing-dns">
+<span id="id1"></span><h1>Managing DNS<a class="headerlink" href="#managing-dns" title="Link to this heading">¶</a></h1>
+<p>When using a VPN in any non-trusted environment it is standard practice to use DNS servers via
+the VPN tunnel. The host the VPN server is running on should have access to trusted DNS servers.
+It is these servers the VPN client should be using. These DNS servers have <code class="docutils literal notranslate"><span class="pre">IP</span></code> addresses
+on a network accessible to to the VPN server being used.</p>
+<p>Let’s go over an example. If the VPN endpoint the client is using offers 2 DNS servers
+on <code class="docutils literal notranslate"><span class="pre">IP</span></code> addresses <em>10.10.10.100</em> and <em>10.20.20.100</em> then on the wireguard client machine
+create a <em>resolv.conf</em> file using these <code class="docutils literal notranslate"><span class="pre">IP</span></code> addresses. Lets put this file in
+<em>/etc/wg-client/wireguard-resolv.conf</em> with content:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#</span>
+<span class="c1"># Wireguard client resolv.conf</span>
+<span class="c1"># Standard format with IP address(es)</span>
+<span class="c1"># and optional search line if so desired.</span>
+<span class="n">nameserver</span> <span class="mf">10.10.10.100</span>
+<span class="n">nameserver</span> <span class="mf">10.20.20.100</span>
+</pre></div>
+</div>
+<p>In order to have this DNS resolv.conf file used while the VPN is running, we
+add instructions to the wireguard config using PostUp and PostDown.
+The goal is once wireguard is up, we want to use the wireguard resolv.conf for DNS
+and after wireguard is down, we want to restore the standard resolv.conf.</p>
+<p>Lets say the wireguard interface is <em>wgc</em>. Then the <em>/etc/wireguard/wgc.conf</em> file
+would be:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">Interface</span><span class="p">]</span>
+<span class="n">PrivateKey</span>      <span class="o">=</span> <span class="n">xxx</span>
+<span class="n">Address</span>         <span class="o">=</span> <span class="n">nnn</span><span class="o">.</span><span class="n">nnn</span><span class="o">.</span><span class="n">nnn</span><span class="o">.</span><span class="n">X</span><span class="o">/</span><span class="mi">32</span><span class="p">,</span> <span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="p">::</span><span class="n">X</span><span class="o">/</span><span class="mi">128</span>
+<span class="n">PostUp</span>          <span class="o">=</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">wg</span><span class="o">-</span><span class="n">client</span><span class="o">/</span><span class="n">post</span><span class="o">-</span><span class="n">up</span><span class="o">.</span><span class="n">sh</span> <span class="n">wgc</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">wg</span><span class="o">-</span><span class="n">client</span><span class="o">/</span><span class="n">wireguard</span><span class="o">-</span><span class="n">resolv</span><span class="o">.</span><span class="n">conf</span>
+<span class="n">PostDown</span>        <span class="o">=</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">wg</span><span class="o">-</span><span class="n">client</span><span class="o">/</span><span class="n">post</span><span class="o">-</span><span class="n">down</span><span class="o">.</span><span class="n">sh</span>
+
+<span class="p">[</span><span class="n">Peer</span><span class="p">]</span>
+<span class="n">PublicKey</span>       <span class="o">=</span> <span class="n">xxx</span>
+<span class="n">PresharedKey</span>    <span class="o">=</span> <span class="n">yyy</span>
+<span class="n">AllowedIPs</span>      <span class="o">=</span> <span class="mf">0.0.0.0</span><span class="o">/</span><span class="mi">0</span><span class="p">,</span> <span class="p">::</span><span class="o">/</span><span class="mi">0</span>
+<span class="n">Endpoint</span>        <span class="o">=</span> <span class="n">vpn</span><span class="o">.</span><span class="n">example</span><span class="o">.</span><span class="n">com</span><span class="p">:</span><span class="mi">55001</span>
+<span class="n">PersistentKeepalive</span> <span class="o">=</span> <span class="mi">25</span>
+</pre></div>
+</div>
+<p>The post-up script requires the first argument to be the wireguard interface (<em>wgc</em> in the above example).
+By default the wireguard resolv.conf to use is taken from <em>/etc/wc-client/wireguard-resolv.conf</em>,
+but you can also provide the full path name as an optional second argument.</p>
+<p>Both <em>post-up.sh</em> and <em>post-down.sh</em> use the <em>resaolv-manager</em> to do the actual work.</p>
+<p>With these in place, when wireguard is brought up,  the provided wireguard DNS resolv file
+is installed to /etc/resolv.conf. Before doing that a copy of the current resolv.conf file is saved
+so it can be safely restored when needed.</p>
+<p>When wireguard is shut down, it restores the standard resolv.conf.
+<em>resolv-manager</em> log files are found in <em>/var/log/wg-client/</em></p>
+<p>When <em>wg-client</em> brings wireguard up, the PostUp script installs the appropriate resolv.conf file
+and when it is shut down, it restores the standard resolv.conf</p>
+<p>In addition, <em>wg-client</em> starts a <em>resolv-manager</em> dameon in monitor mode. The monitor’s job
+is to watch the <em>/etc/resolv.conf</em> file for any changes and if it changes, save that new version
+and re-install the wireguard resolv.conf. This will enusre that while the VPN is running DNS requests
+continue to use the VPN tunnel. This uses kernel provided <em>inotify</em> and is very efficient.
+The monitor application sleeps until the kernel wakes it up to let it know a resolv.conf file
+has changed.</p>
+<p>There are a couple of reasons the resolv.conf file can change. It can happen after a sleep resume cycle,
+a DHCP lease renewal or if a new WiFI network is connected. Wireguard uses UDP, so changing networks
+does not impact its function, but if the resolv.conf changes it needs to be <em>fixed</em>.</p>
+<p>Once wireguard goes down, the monitor daemon restores the standard resolv.conf and exits.</p>
+<p>We still suggest having the PostDown above, to handle any cases where the VPN is brought up
+directly rather than by <em>wg-client</em>. For example <em>wg-quick up wgc</em> / <em>wg-quick down wgc</em>.</p>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">wg-client</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Wireguard Client Tool Manual:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="README.html">1. wg-client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html#getting-started">2. Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Changes-recent.html">3. Recent Changes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Config.html">4. Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Options.html">5. Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Options.html#log-files">6. Log files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Appendix.html">7. Appendix</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2023-present, Gene C.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/dns.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

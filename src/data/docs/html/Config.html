@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>4. Configuration &#8212; wg-client 8.0.0
+ documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <script src="_static/documentation_options.js?v=f663eb4a"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="5. Options" href="Options.html" />
+    <link rel="prev" title="3. Recent Changes" href="Changes-recent.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="configuration">
+<span id="config-sect"></span><h1><span class="section-number">4. </span>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">¶</a></h1>
+<p>wg-client reads its configuration from</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>/etc/wg-client/config
+</pre></div>
+</div>
+<p>Please copy the sample config and edit appropriately. The format is in <em>TOML</em> format.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Sample</span>
+<span class="n">iface</span> <span class="o">=</span> <span class="s1">&#39;wgc&#39;</span>
+<span class="n">ssh_server</span> <span class="o">=</span> <span class="s1">&#39;vpn.example.com&#39;</span>
+<span class="n">ssh_pfx</span> <span class="o">=</span> <span class="s1">&#39;47&#39;</span>
+</pre></div>
+</div>
+<p>This config file provides:</p>
+<ul>
+<li><p>iface - required</p>
+<p>Wireguard interface; defaults to <em>wgc</em>. It is <em>&lt;iface&gt;</em> of <em>/etc/wireguard/&lt;iface&gt;.conf</em></p>
+</li>
+<li><p>ssh_server - optional</p>
+<p>Hostname of the remote ssh server accessible over the vpn;
+this is where the ssh listening port is run.
+Hostname must be accessible over the wg vpn.</p>
+</li>
+<li><p>ssh_pfx - used with ssh_server</p>
+<p>1 or 2 digit number, 65 or smaller, to be used as ssh listening port number prefix.
+The port number is of the form PPxxx, with <em>PP</em> the prefix and
+<em>xxx</em> is taken from the last octet of the wireguard vpn internal IP address.</p>
+<p>The prefix can also be given as a range of numbers (<em>‘n-m’</em>).
+In this case the prefix used is randomly chosen from that range</p>
+<p>Keep in mind that the largest port number is 65535, which limits <em>ssh_pfx</em> to be 65 or lower.</p>
+</li>
+</ul>
+<p>The port number chosen will be written to the log file.</p>
+<p>The remote ssh host will then listen on <em>127.0.0.1:&lt;port&gt;</em>.
+It will also listen on <em>&lt;remote-ip-address&gt;:&lt;port&gt;</em>
+provided the remote ssh server permits it by having the sshd option set:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>GatewayPorts<span class="w"> </span>yes
+</pre></div>
+</div>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">wg-client</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Wireguard Client Tool Manual:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="README.html">1. wg-client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html#getting-started">2. Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Changes-recent.html">3. Recent Changes</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">4. Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Options.html">5. Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Options.html#log-files">6. Log files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Appendix.html">7. Appendix</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Changes-recent.html" title="previous chapter"><span class="section-number">3. </span>Recent Changes</a></li>
+      <li>Next: <a href="Options.html" title="next chapter"><span class="section-number">5. </span>Options</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2023-present, Gene C.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/Config.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

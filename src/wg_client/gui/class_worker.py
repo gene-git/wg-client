@@ -6,6 +6,7 @@ THread support via pyqt6 QRunnable
 # pylint: disable=no-name-in-module,too-few-public-methods
 from PyQt6.QtCore import QRunnable, QObject, QThreadPool, pyqtSignal, pyqtSlot
 from wg_client.proc.class_proc import MyProc
+from wg_client.utils import gLog
 
 
 class MyQsignals(QObject):
@@ -74,13 +75,12 @@ class MyRunners:
     """
     Convenience wrapper around QRunner to enable multi-threaded workers
     """
-    def __init__(self, mylog, mysignals):
+    def __init__(self, mysignals):
         self.threadpool = QThreadPool.globalInstance()
         self.id_last = 0
         self.ids_used = []
         self.workers = {}
         self.complete_func = {}
-        self.log = mylog
         self.mysignals = mysignals
 
     def new_worker(self, complete_func, pargs):
@@ -96,7 +96,7 @@ class MyRunners:
         if self.threadpool is not None:
             self.threadpool.start(worker)
         else:
-            self.log(f'Error - threadpool is None for id_num: {id_num}')
+            gLog.msg(f'Error - threadpool is None for id_num: {id_num}')
         return id_num
 
     def end(self, id_num):
@@ -126,7 +126,7 @@ class MyRunners:
         Actually run it
         """
         myproc = MyProc(self.mysignals)
-        myproc.popen(pargs, logger=self.log)
+        myproc.popen(pargs, log=gLog.msg)
 
     def complete(self, id_num):
         """
@@ -134,7 +134,7 @@ class MyRunners:
         """
         if id_num not in self.ids_used:
             # should never happen
-            self.log(f'Err: id {id_num} not in used list')
+            gLog.msg(f'Err: id {id_num} not in used list')
 
         # remove from used list, and and call the users complete func
         self.ids_used.remove(id_num)
@@ -142,4 +142,4 @@ class MyRunners:
             self.complete_func[id_num](id_num)
             self.complete_func.pop(id_num)
         else:
-            self.log(f'Err: id {id_num} not in complete func list')
+            gLog.msg(f'Err: id {id_num} not in complete func list')

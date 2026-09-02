@@ -3,8 +3,8 @@
 """
 Project wg-client
 """
-__version__ = "7.3.0"
-__date__ = "2026-01-10"
+__version__ = "8.0.0"
+__date__ = "2026-09-02"
 __reldev__ = "release"
 
 

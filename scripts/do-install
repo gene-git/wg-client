@@ -1,82 +1,19 @@
 #!/bin/bash
-# SPDX-License-Identifier: GPL-2.0-or-later
-# Copyright (c) 2023 Gene C
 #
-# installer script for wg-client
-# e.g. Call from PKGBUILD:  
-#   ./do-install ${pkgdir}
-# gene c
+# Install
+# - arguments:
+#   - no args: destination is "build/pkg".
+#   - destination   =>  install to this directory
 #
-dest="$1"
-self="wg-client"
-mod="wg_client"
 
-info="README.rst Docs scripts packaging"
-infodir="/usr/share/${self}"
-
-license="Docs/License/License.rst"
-licensedir="/usr/share/licenses/${self}"
-
-etc='/etc/wg-client/'
-confs='conf.d/config.sample conf.d/sudoers.sample'
-
-icondir='/usr/share/icons/hicolor/scalable/apps/'
-icon='desktop/wg-client.png'
-desktopdir='/usr/share/applications/'
-desktopfile='desktop/wg-client.desktop'
-
-fix_resolv='src/c-code/fix-resolv/wg-fix-resolv'
-libexecdir="/usr/lib/${self}"
-
-# list apps without the ".py" or leave empty string
-apps=('wg-client' 'wg-client-gui')
-
-# so can make app link in /usr/bin
-sitedir=$(/usr/bin/python3 -c "import site; print(site.getsitepackages()[0])")
-installdir="${dest}${sitedir}"
-app_location="${sitedir}/${mod}/apps"
-
-uv_opts=(
-    --python /usr/bin/python
-    --system
-    --no-build-isolation
-    --link-mode=copy
-    --compile-bytecode
-)
-
-if [ ! -d "$dest" ] ; then
-    echo 'Missing destination directory'
-    exit 1
+if (( $# < 1 )) ; then
+    dest='build/pkg'
 else
-    # shared
-    /usr/bin/rsync --mkpath -a ${info} ${dest}${infodir}
-    /usr/bin/rsync --mkpath -a ${license} ${dest}/${licensedir}/
-
-    # libexec
-    mkdir -p ${dest}/${libexecdir}
-    /usr/bin/rsync --mkpath -a "${fix_resolv}" ${dest}/${libexecdir}/
-
-    # desktop
-    mkdir -p ${dest}/${icondir} ${dest}/${desktopdir}
-    /usr/bin/rsync -a --mkpath ${icon} ${dest}/${icondir}
-    /usr/bin/rsync -a --mkpath ${desktopfile} ${dest}/${desktopdir}
-
-    # /etc/wg-client must be readable by non-priv user
-    mkdir -p ${dest}/${etc}
-    chmod 755 ${dest}/${etc}
-    /usr/bin/rsync -a --mkpath ${confs} ${dest}/${etc}/
-
-    /usr/bin/uv pip install ${uv_opts[@]} --target "$installdir" dist/*.whl
-    /usr/bin/rm -rf "$installdir"/.lock
-
-    # link(s) in /usr/bin/
-    if [ -v apps ] ; then
-        /usr/bin/mkdir -p "${dest}/usr/bin"
-        for app in ${apps[@]}
-        do
-            /usr/bin/ln -sf ${app_location}/${app}.py ${dest}/usr/bin/${app}
-        done
-    fi
-    exit 0
+    dest="$1"
 fi
 
+dest=$(realpath "$dest")
+
+/usr/bin/meson install -C build/release --destdir "$dest" > /dev/null
+
+exit 0

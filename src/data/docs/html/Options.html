@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>5. Options &#8212; wg-client 8.0.0
+ documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <script src="_static/documentation_options.js?v=f663eb4a"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="7. Appendix" href="Appendix.html" />
+    <link rel="prev" title="4. Configuration" href="Config.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="options">
+<span id="options-sect"></span><h1><span class="section-number">5. </span>Options<a class="headerlink" href="#options" title="Link to this heading">¶</a></h1>
+<section id="wg-client">
+<h2><span class="section-number">5.1. </span>wg-client<a class="headerlink" href="#wg-client" title="Link to this heading">¶</a></h2>
+<p>Summary of available options for wg-client.</p>
+<p><strong>Positional argument</strong> : Optional</p>
+<ul>
+<li><p>wireguard interface name</p>
+<p>Default interface is taken from <em>iface</em> in config file.
+The config file is chosen by first checking for <em>./etc/wg-client/config</em> <a class="footnote-reference brackets" href="#id2" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>
+and then in <em>/etc/wg-client/config</em>.  If not found the wg interface defaults to <em>wgc</em></p>
+</li>
+</ul>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id2" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>Useful during development and testing</p>
+</aside>
+</aside>
+<p><strong>Options</strong>:</p>
+<p>These are all the options available in wg-client:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">positional</span> <span class="n">arguments</span><span class="p">:</span>
+  <span class="n">iface</span>                 <span class="n">Optional</span> <span class="n">wg</span> <span class="n">interface</span> <span class="p">(</span><span class="ow">or</span> <span class="n">test</span><span class="o">-</span><span class="n">dummy</span> <span class="k">for</span> <span class="n">test</span> <span class="n">mode</span><span class="p">)</span>
+
+<span class="n">options</span><span class="p">:</span>
+  <span class="o">-</span><span class="n">h</span><span class="p">,</span> <span class="o">--</span><span class="n">help</span>            <span class="n">show</span> <span class="n">this</span> <span class="n">help</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">exit</span>
+  <span class="o">--</span><span class="n">test</span>                <span class="n">Test</span> <span class="n">mode</span>
+  <span class="o">--</span><span class="n">wg</span><span class="o">-</span><span class="n">up</span>               <span class="n">Turn</span> <span class="n">wireguard</span> <span class="n">on</span>
+  <span class="o">--</span><span class="n">wg</span><span class="o">-</span><span class="n">dn</span>               <span class="n">Turn</span> <span class="n">wireguard</span> <span class="n">off</span>
+  <span class="o">--</span><span class="n">resolv</span><span class="o">-</span><span class="n">manager</span><span class="o">-</span><span class="n">start</span>
+                        <span class="n">Try</span> <span class="p">(</span><span class="n">re</span><span class="p">)</span><span class="n">start</span> <span class="n">resolv</span><span class="o">-</span><span class="n">manager</span> <span class="n">daemon</span> <span class="o">-</span> <span class="n">development</span> <span class="n">option</span>
+  <span class="o">--</span><span class="n">ssh</span><span class="o">-</span><span class="n">start</span>           <span class="n">Run</span> <span class="n">ssh</span> <span class="n">over</span> <span class="n">vpn</span> <span class="n">to</span> <span class="n">create</span> <span class="n">remote</span> <span class="n">listener</span>
+  <span class="o">--</span><span class="n">ssh</span><span class="o">-</span><span class="n">stop</span>            <span class="n">Kill</span> <span class="n">ssh</span> <span class="n">listener</span> <span class="k">if</span> <span class="n">its</span> <span class="n">running</span>
+  <span class="o">--</span><span class="n">ssh</span><span class="o">-</span><span class="n">pfx</span> <span class="n">SSH_PFX</span>     <span class="n">ssh</span> <span class="n">port</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span> <span class="mi">2</span> <span class="n">digits</span><span class="p">:</span> <span class="s2">&quot;nn&quot;</span> <span class="ow">or</span> <span class="s2">&quot;nn-mmm&quot;</span> <span class="k">for</span> <span class="nb">range</span>
+  <span class="o">--</span><span class="n">ssh</span><span class="o">-</span><span class="n">server</span> <span class="n">SSH_SERVER</span>
+                        <span class="n">Remote</span> <span class="n">ssh</span> <span class="n">server</span> <span class="n">to</span> <span class="nb">set</span> <span class="n">up</span> <span class="n">listening</span> <span class="n">port</span>
+  <span class="o">--</span><span class="n">show</span><span class="o">-</span><span class="n">iface</span>          <span class="n">Report</span> <span class="n">the</span> <span class="n">wg</span> <span class="n">interface</span> <span class="n">name</span>
+  <span class="o">--</span><span class="n">show</span><span class="o">-</span><span class="n">ssh</span><span class="o">-</span><span class="n">server</span>     <span class="n">Report</span> <span class="n">the</span> <span class="n">ssh</span> <span class="n">server</span> <span class="n">name</span>
+  <span class="o">--</span><span class="n">show</span><span class="o">-</span><span class="n">ssh</span><span class="o">-</span><span class="n">running</span>    <span class="n">Report</span> <span class="k">if</span> <span class="n">ssh</span> <span class="ow">is</span> <span class="n">running</span>
+  <span class="o">--</span><span class="n">show</span><span class="o">-</span><span class="n">wg</span><span class="o">-</span><span class="n">running</span>     <span class="n">Report</span> <span class="k">if</span> <span class="n">wireguard</span> <span class="ow">is</span> <span class="n">running</span>
+  <span class="o">--</span><span class="n">show</span><span class="o">-</span><span class="n">resolv</span><span class="o">-</span><span class="n">manager</span>
+                        <span class="n">Report</span> <span class="k">if</span> <span class="n">resolv</span><span class="o">-</span><span class="n">manager</span> <span class="ow">is</span> <span class="n">running</span>
+  <span class="o">--</span><span class="n">show</span><span class="o">-</span><span class="n">info</span>           <span class="n">Display</span> <span class="n">status</span> <span class="o">-</span> <span class="n">alias</span> <span class="k">for</span> <span class="o">--</span><span class="n">status</span>
+  <span class="o">--</span><span class="n">status</span>              <span class="n">Display</span> <span class="n">status</span>
+  <span class="o">--</span><span class="n">version</span>             <span class="n">Display</span> <span class="n">version</span>
+</pre></div>
+</div>
+<section id="uaing-ssh">
+<h3><span class="section-number">5.1.1. </span>Uaing ssh<a class="headerlink" href="#uaing-ssh" title="Link to this heading">¶</a></h3>
+<p>When asking wg-client to start ssh, it runs ssh to the remote host inside the vpn tunnel,
+sets it to listen on a remote port.
+Port number used is described in section <a class="reference internal" href="Config.html#config-sect"><span class="std std-ref">Configuration</span></a>.</p>
+<p>Note that this blocks waiting for ssh. To stop ssh, simply make a separate
+invocation of <em>wg-client -ssh-stop</em>. If using the GUI tool, simply click the <em>Stop Ssh</em> button.</p>
+<p>In the event that ssh connection is dropped, it will automatically be restarted.
+There are normal, quite common situations where ssh process can exit prematurely.</p>
+<blockquote>
+<div><p>For example:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>After sleep/resume (longer than tcp timeout)</p></li>
+<li><p>if remote server sshd restarts (reboot for example)</p></li>
+<li><p>changing IP address (e.g. happens when location changes. e.g. Move from hotel to starbucks)</p></li>
+</ul>
+</div></blockquote>
+</div></blockquote>
+<p>While attempting to reconnect ssh there is a waiting period between each attempt.
+Currently the wait time is 30 seconds.</p>
+<p>The ssh port prefix can be 2 digits: “nn” or a range of 2 digit numbers “nn-mm”. When using a range,
+prefix used will be randomly drawn from the range. Maximum value is 65. This can also be set in
+the config file.</p>
+</section>
+</section>
+</section>
+<section id="log-files">
+<h1><span class="section-number">6. </span>Log files<a class="headerlink" href="#log-files" title="Link to this heading">¶</a></h1>
+<p>There are 3 kinds of log files: one for resolv-manager, one for command line app
+and one for the gui app.</p>
+<p>resolv-manager logs are in /var/log/wg-client and while wg-client and wg-client-gui
+logs are in:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>${HOME}/log/wg-client
+${HOME}/log/wg-client-gui
+</pre></div>
+</div>
+<p>All log files are rotated with the usual integer suffix scheme.</p>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">wg-client</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Wireguard Client Tool Manual:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="README.html">1. wg-client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html#getting-started">2. Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Changes-recent.html">3. Recent Changes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Config.html">4. Configuration</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">5. Options</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#wg-client">5.1. wg-client</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#log-files">6. Log files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Appendix.html">7. Appendix</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Config.html" title="previous chapter"><span class="section-number">4. </span>Configuration</a></li>
+      <li>Next: <a href="Appendix.html" title="next chapter"><span class="section-number">7. </span>Appendix</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2023-present, Gene C.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/Options.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

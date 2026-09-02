@@ -1,0 +1,71 @@
+#!/usr/bin/bash
+#
+# Run a build
+# - arguments: [-cpu_level baseline] [release/debug] [analyze]
+# 
+# All arguments are optional.
+#
+# Defaults are: -cpu_level x86-64-v3 release
+#
+#  - analyze can only be used with debug:
+#    i.e. do-build [-cpu_level xxx] debug analyze
+#
+#   - -cpu_level baseline (default is x86-64-v3)
+#   if not set then it is release.
+#
+# *** MAJOR WARNING Arch Reproducble build can lead to bad builds ***
+#
+# Arch packaging can/does change timestamps to be back dated. 
+# This can break compiled builds using any normal timestamp dependent system (meson, make, cmake etc).
+# As a result we must work around this by deleting and building from scratch - always.
+#
+# So do NOT delete the line: rm -rf build/* - please!
+# 
+btype="release"
+cpu_level=""
+CFLAGS=
+LDFLAGS=
+
+
+# command line over rides
+#
+if [[ "$1" == "-cpu_level" ]] ; then
+    shift 1
+    if [[ "$1" == "baseline" ]] ; then
+        cpu_level="-Dcpu_level=baseline"
+        shift 1
+    else
+        echo "Unknown -cpu_level : $1 (expect baseline)"
+        exit 1
+    fi
+fi
+if [[ "$1" != "" ]] ; then
+    btype="$1"
+    shift 1
+fi
+
+#
+# meson
+#
+case "$btype" in
+    "debug")
+        do_strip="-Dstrip=false"
+        if [[ "$1" == "analyze" ]] ; then
+            analyzer=("-Danalyzer=true" "-Db_lto=true")
+        fi
+        ;;
+
+    *)
+        do_strip=""
+        ;;
+esac
+
+meson_opts=(
+    --reconfigure
+    -Db_ndebug=if-release
+    --buildtype="$btype"
+)
+/usr/bin/meson setup "${meson_opts[@]}" build/"$btype" "$do_strip" "${analyzer[@]}"
+/usr/bin/meson compile -C build/$btype
+
+exit 0

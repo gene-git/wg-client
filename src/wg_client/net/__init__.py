@@ -3,5 +3,4 @@
 """
 Library
 """
-from .ip_addr import iface_to_ips
-from .ip_addr import ip_to_octet
+from .iface_ips import iface_to_ips

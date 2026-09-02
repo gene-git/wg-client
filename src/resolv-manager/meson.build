@@ -1,0 +1,21 @@
+inc_dir += include_directories('.')
+lib_sources += files(
+  'change_privileges.c',
+  'config.c',
+  'copy_file.c',
+  'daemonize.c',
+  'initialize.c',
+  'install_standard.c',
+  'install_wg.c',
+  'locking.c',
+  'locking_init.c',
+  'log_close.c',
+  'log_init.c',
+  'log_msg.c',
+  'main.c',
+  'makedir.c',
+  'monitor.c',
+  'options.c',
+  'permissions.c',
+  'user_info.c',
+  )

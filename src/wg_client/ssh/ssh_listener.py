@@ -4,7 +4,7 @@
 Parse output of wg-quick and get client wg address
 """
 import random
-from wg_client.net import ip_to_octet
+from py_cidr import PyCidr
 
 
 def get_ssh_port_prefix(pfx_range: list[str]) -> int:
@@ -37,8 +37,15 @@ def ssh_args(wg_ip: str, server: str, prefix: int) -> tuple[str, str, str, str]:
         print('ssh_args Error Need wg_server, wg_ip and port prefix')
         return (server, remote_port, local_ip, local_port)
 
-    octet = ip_to_octet(wg_ip)
-    remote_port = f'{prefix}{octet}'
+    # get the last part of the address octet or hextet
+    cidr = f'{wg_ip}/{prefix}'
+    ip_tail = PyCidr.get_host_bits(cidr)
+    if ':' in wg_ip:
+        ip_tail = ip_tail.rsplit(':', maxsplit=1)[-1]
+    else:
+        ip_tail = ip_tail.rsplit('.', maxsplit=1)[-1]
+
+    remote_port = f'{prefix}{ip_tail}'
     local_port = '22'
     local_ip = '127.0.0.1'
 

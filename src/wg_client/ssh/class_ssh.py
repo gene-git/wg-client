@@ -127,7 +127,7 @@ class SshMgr:
             self.log(f'ssh:start - {re}connecting')
 
             self.start_time = time.time()
-            self.proc.popen(self.pargs, logger=self.log, pid_saver=write_ssh_pid)
+            self.proc.popen(self.pargs, log=self.log, pid_saver=write_ssh_pid)
             self.end_time = time.time()
 
             delta_str = self.running_time()

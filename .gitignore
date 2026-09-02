@@ -1,6 +1,7 @@
 .mypy_cache/
-Docs/_build/latex/
-Docs/_build/doctrees/
 __pycache__/
-src/c-code/fix-resolv/wg-fix-resolv
+src/data/docs/_build/
+src/data/docs/_static/
+src/data/docs/_templates/
+build/
 

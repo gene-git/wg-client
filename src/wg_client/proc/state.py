@@ -4,8 +4,10 @@
 App stuff
 """
 import os
-import signal
 from typing import Iterable
+import signal
+import pwd
+from pathlib import Path
 import psutil
 
 from wg_client.utils import open_file
@@ -86,26 +88,35 @@ def get_parent_pid(pid: int, pargs: list[str] | None = None, user: str = '') -> 
     return ppid
 
 
-def homedir(user: str = ''):
+def homedir(user: str = '') -> str:
     """
+    If no user given, then process owner.
+    If user given and nonexistent - returns 'unknown'
     return user home dir
-    If no user given, then self (process owner)
     """
-    if user:
-        upath = f'~{user}'
-    else:
-        upath = '~'
-    hdir = os.path.expanduser(upath)
+    if not user:
+        return str(Path.home())
+
+    try:
+        hdir = pwd.getpwnam(user).pw_dir
+    except KeyError:
+        hdir = 'unkown'
     return hdir
 
 
-def get_appdir(user: str = ''):
+def get_local_state_dir(user: str = '') -> str:
     """
     Place we save state
     """
     home = homedir(user)
-    app_dir = os.path.join(home, '.local/share/state/wg-client')
-    return app_dir
+    sdir = os.path.join(home, '.local/share/state/wg-client')
+    try:
+        os.makedirs(sdir, exist_ok=True)
+    except OSError:
+        pid = os.getpid()
+        sdir = f'/tmp/wg-client-state-{pid}'
+        os.makedirs(sdir, exist_ok=True)
+    return sdir
 
 
 def pid_filename(tag: str, user: str = '') -> str:
@@ -113,7 +124,7 @@ def pid_filename(tag: str, user: str = '') -> str:
     full path for pid file
       <app_dir>/<tag>.pid
     """
-    app_dir = get_appdir(user)
+    app_dir = get_local_state_dir(user)
     pidfile = os.path.join(app_dir, f'{tag}.pid')
     return pidfile
 

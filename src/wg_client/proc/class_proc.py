@@ -97,13 +97,10 @@ class MyProc:
         self.proc = None
         self.mysignals = mysignals
 
-    def popen(self, pargs, logger=None, pid_saver=None):
+    def popen(self, pargs, log: Callable[[str], None] = print, pid_saver=None):
         """
         run using subprocess.Popen()
         """
-        log = print
-        if logger:
-            log = logger
         outs = None
         errs = None
         ret = None

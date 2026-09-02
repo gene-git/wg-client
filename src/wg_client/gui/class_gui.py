@@ -13,11 +13,12 @@ from PyQt6.QtWidgets import (QWidget, QApplication, QPlainTextEdit, QPushButton)
 from PyQt6.QtWidgets import (QVBoxLayout, QGridLayout, QMainWindow)
 
 from wg_client.proc import MySignals
-from wg_client.utils import MyLog
-from wg_client.cmd_line import is_wg_running
-from wg_client.cmd_line import is_ssh_running
-from wg_client.cmd_line import get_wg_iface
-from wg_client.cmd_line import get_ssh_server
+from wg_client.utils import gLog
+from wg_client.cmd_line.get_info import is_wg_running
+
+from .get_info import is_ssh_running
+from .get_info import get_wg_iface
+from .get_info import get_ssh_server
 
 from .class_worker import MyRunners
 
@@ -47,8 +48,9 @@ class WgClientGui():
         """
         multi-threaded to keep gui responsive
         """
-        self.mysignals: MySignals | None = None
-        self.runners: MyRunners | None = None
+        self._setup: bool = False
+        self.mysignals: MySignals
+        self.runners: MyRunners
 
         #
         # invoke wg-client to do all the 'real' work
@@ -71,29 +73,22 @@ class WgClientGui():
         #
         # gui has it's own log file
         #
-        self.logger = MyLog('wg-client-gui')
-        self.log('Start GUI Client:')
-
-        logfile = self.logger.logfile()
-        self.message(f'Info is logged to {logfile}')
+        gLog.initialize()
+        gLog.msg('Start GUI Client:')
 
         #
         # Get the wireguard interface name
         # uses to check if wg is running
         #
-        self.wg_iface: str = get_wg_iface(self.log)
+        self.wg_iface: str = get_wg_iface(gLog.msg)
         if self.wg_iface:
-            self.log(f'wg iface : {self.wg_iface}')
+            gLog.msg(f'wg iface : {self.wg_iface}')
         else:
             self.message('Error: Failed to get wireguard interface')
 
-        self.ssh_server: str = get_ssh_server(self.log)
+        self.ssh_server: str = get_ssh_server(gLog.msg)
         if self.ssh_server == 'None':
             self.ssh_server = ''
-
-    def log(self, msg):
-        """ log to file """
-        self.logger.log(msg)
 
     def setup(self):
         """
@@ -163,7 +158,9 @@ class WgClientGui():
         # worker pool
         #
         self.mysignals = MySignals()
-        self.runners = MyRunners(self.log, self.mysignals)
+        self.runners = MyRunners(self.mysignals)
+
+        self._setup = True
 
     def message(self, s):
         ''' save message '''
@@ -176,119 +173,79 @@ class WgClientGui():
         wg_running = is_wg_running(self.wg_iface)
         if wg_running:
             self.message('vpn already running')
-            self.log('vpn_up - vpn already running')
-
-            #
-            # not needed since --fix-dns-auto-start daemon should be running
-            # wg-client will check on daemon and exit if running
-            #
-            # self.log(' Checking wg-fix-dns')
-            # self.message(' double checking dns fix')
-            # pargs = [self.cmd, '--fix-dns']
-
-            # if self.runners is not None:
-            #     id_num = self.runners.new_worker(self.complete, pargs)
-            #     self.id_num_map[id_num] = 'fix dns'
-            # else:
-            #     self.log(f'Error in vpn_up(): runners is None')
+            gLog.msg('vpn_up - vpn already running')
 
         else:
-            self.log('vpn_up - starting vpn')
+            gLog.msg('vpn_up - starting vpn')
             self.message('start vpn')
             pargs = [self.cmd, '--wg-up']
 
             if self.runners is None:
                 txt = 'Error vpn_up: runners is None'
-                self.log(txt)
+                gLog.msg(txt)
                 self.message(txt)
                 return
 
             id_num = self.runners.new_worker(self.complete, pargs)
             self.id_num_map[id_num] = 'start vpn'
 
-            #
-            #  --fix-dns-auto-start
-            #  Give enough time for wg to start
-            #
-            self.log(' Starting wg-fix-dns-auto-start')
-            self.message(' starting dns auto fix')
-            pargs = [self.cmd, '--fix-dns-auto-start']
-            id_num = self.runners.new_worker(self.complete, pargs)
-            self.id_num_map[id_num] = 'start auto fix dns'
-
     def vpn_dn(self):
         ''' Stop '''
         #
-        # 1) Stop resolv monitor
-        #    do before stopping vpn so that wg can restore the correct resolv.conf
-        #
-        self.log(' Stopping fix-dns-auto-start')
-        self.message(' stopping dns auto fix')
-        pargs = [self.cmd, '--fix-dns-auto-stop']
-        if self.runners is None:
-            txt = 'Error vpn_dn: runners is None'
-            self.log(txt)
-            self.message(txt)
-            return
-
-        id_num = self.runners.new_worker(self.complete, pargs)
-        self.id_num_map[id_num] = 'stop auto fix dns'
-
-        #
-        # 2) stop wireguard
+        # stop wireguard
         #
         wg_running = is_wg_running(self.wg_iface)
         if wg_running:
-            self.log('vpn_dn - stopping vpn')
+            gLog.msg('vpn_dn - stopping vpn')
             self.message('stop vpn')
             pargs = [self.cmd, '--wg-dn']
             id_num = self.runners.new_worker(self.complete, pargs)
             self.id_num_map[id_num] = 'stop vpn'
         else:
-            self.log('vpn_dn - vpn not running')
+            gLog.msg('vpn_dn - vpn not running')
             self.message('vpn not running')
 
     def ssh_start(self):
         ''' Start SSH '''
-        ssh_running = is_ssh_running(self.log)
+        ssh_running = is_ssh_running(gLog.msg)
         if ssh_running:
-            self.log('ssh_start ssh already running')
+            gLog.msg('ssh_start ssh already running')
             self.message(' ssh aleady running')
         else:
             wg_running = is_wg_running(self.wg_iface)
             if wg_running:
-                self.log('ssh_start - starting ssh listener')
+                gLog.msg('ssh_start - starting ssh listener')
                 self.message('Starting ssh')
                 pargs = [self.cmd, '--ssh-start']
 
                 if self.runners is None:
                     txt = 'Error ssh_start: runners is None'
-                    self.log(txt)
+                    gLog.msg(txt)
                     self.message(txt)
                     return
 
                 id_num = self.runners.new_worker(self.complete, pargs)
                 self.id_num_map[id_num] = 'ssh start'
             else:
-                self.log('ssh_start - vpn not running')
+                gLog.msg('ssh_start - vpn not running')
                 self.message('vpn not running - cant run ssh')
 
     def ssh_stop(self):
         ''' Stop SSH '''
-        ssh_running = is_ssh_running(self.log)
+        ssh_running = is_ssh_running(gLog.msg)
         if ssh_running:
-            self.log('ssh_stop - stopping ssh listener')
+            gLog.msg('ssh_stop - stopping ssh listener')
             self.message('Stopping ssh')
             pargs = [self.cmd, '--ssh-stop']
             if self.runners is None:
                 txt = 'Error ssh_stop: runners is None'
-                self.log(txt)
+                gLog.msg(txt)
                 self.message(txt)
                 return
             id_num = self.runners.new_worker(self.complete, pargs)
             self.id_num_map[id_num] = 'ssh stop'
         else:
-            self.log('ssh_stop ssh not running')
+            gLog.msg('ssh_stop ssh not running')
             self.message('ssh not running')
 
     def complete(self, id_num):
@@ -297,12 +254,12 @@ class WgClientGui():
         we're either starting or stopping.
         '''
         which = self.id_num_map[id_num]
-        self.log(f'{id_num} {which} : completed')
+        gLog.msg(f'{id_num} {which} : completed')
         self.message(f'{which} : completed')
 
     def quit(self):
         ''' Done '''
-        self.log('Quit : Client GUI')
+        gLog.msg('Quit : Client GUI')
         self.ssh_stop()
         self.vpn_dn()
         # self.runners.quit()

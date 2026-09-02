@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>1. wg-client &#8212; wg-client 8.0.0
+ documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <script src="_static/documentation_options.js?v=f663eb4a"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="3. Recent Changes" href="Changes-recent.html" />
+    <link rel="prev" title="wg-client Documentation" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="wg-client">
+<h1><span class="section-number">1. </span>wg-client<a class="headerlink" href="#wg-client" title="Link to this heading">¶</a></h1>
+<p><strong>Migration required from pre 8.x versions</strong></p>
+<p>Here’s what is needed:</p>
+<ul>
+<li><p>Create /etc/wg-client/wireguard-resolv.conf
+This should be the DNS settings to be used while wireguard is running.
+Standard resolv.conf format (nameserver x.x.x.x)</p></li>
+<li><p>confirm that /etc/wg-client/config exists and sets thw wireguard i
+interface. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">iface</span> <span class="o">=</span> <span class="n">wg0</span>
+</pre></div>
+</div>
+</li>
+<li><p>edit the wireguard client config and update the PostUp and PostDn.
+For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">Interface</span><span class="p">]</span>
+<span class="n">PrivateKey</span> <span class="o">=</span> <span class="o">...</span>
+<span class="n">Address</span> <span class="o">=</span> <span class="o">...</span>
+<span class="n">Postup</span> <span class="o">=</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">wg</span><span class="o">-</span><span class="n">client</span><span class="o">/</span><span class="n">post</span><span class="o">-</span><span class="n">up</span><span class="o">.</span><span class="n">sh</span>
+<span class="n">PostDown</span> <span class="o">=</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">wg</span><span class="o">-</span><span class="n">client</span><span class="o">/</span><span class="n">post</span><span class="o">-</span><span class="n">down</span><span class="o">.</span><span class="n">sh</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>Thats should be all that’s required.</p>
+<section id="overview">
+<h2><span class="section-number">1.1. </span>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
+<p>wg-client makes it simple for any user to start and stop a wireguard client on Linux.
+The command line program, <em>wg-client</em>, provides all the functionality.
+A GUI tool makes it super convenient. The GUI tool runs the command line client
+and thus offeres exactly the same functionality in a user friendly application.</p>
+<p>A companion package, <a class="reference external" href="https://github.com/gene-git/wg_tool">wg-tool</a> is for adminstering the server side of things.</p>
+<p>wg-client also has an option to invoke ssh to create a remote listening port
+connected back to local (client end) ssh daemon.</p>
+<p>This can be useful to facilitate remote ssh back to client computer
+if it’s needed.  For example; it can be used to provide access to a git repo
+on the client, or for remote backups of laptop, or even for admin to login to client
+should the need arise.</p>
+<p>All git tags are signed with <a class="reference external" href="mailto:arch&#37;&#52;&#48;sapience&#46;com">arch<span>&#64;</span>sapience<span>&#46;</span>com</a> key which is available via WKD
+or download from <a class="reference external" href="https://www.sapience.com/tech">https://www.sapience.com/tech</a>. Add the key to your package builder gpg keyring.
+The key is included in the Arch package and the source= line with <em>?signed</em> at the end can be used
+to verify the git tag.  You can also manually verify the signature</p>
+</section>
+<section id="why-i-made-wg-client">
+<h2><span class="section-number">1.2. </span>Why I made wg-client<a class="headerlink" href="#why-i-made-wg-client" title="Link to this heading">¶</a></h2>
+<p>After building <a class="reference external" href="https://github.com/gene-git/wg_tool">wg-tool</a> which simplified administraion of wireguard servers, I needed
+a simple way for non-tech (unprivileged) users to connect their laptops to the server.</p>
+<p>Thus wg-client was born.  The gui client makes it really simple for non-tech users,
+though I find it pretty convenient as well.</p>
+</section>
+<section id="key-features">
+<h2><span class="section-number">1.3. </span>Key features<a class="headerlink" href="#key-features" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Graphical app makes it simple for any user to get VPN running.</p></li>
+<li><p>Standalone tool makes it easy to test and also keeps sudo outside of gui to minimize any
+security implications. The gui relies completely on the command line tool to do the real work.</p></li>
+<li><p>resolv-manager is written on C. It uses capabilities and is designed to be run
+by non-root users. When run as root, it drops privileges to (user, group) =  (<em>nobody</em>, <em>nobody</em>)..
+Code has been checked and is clean using:
+- clang-tidy
+- valgrind
+- compiler based sanitizers</p></li>
+<li><p>python code is checked with mypy</p></li>
+</ul>
+</section>
+</section>
+<section id="getting-started">
+<h1><span class="section-number">2. </span>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">¶</a></h1>
+<section id="dns-notes">
+<h2><span class="section-number">2.1. </span>DNS Notes<a class="headerlink" href="#dns-notes" title="Link to this heading">¶</a></h2>
+<p>When using a any VPN client, it is standard practive to make sure that all
+DNS traffic is routed through the tunnel in order to trusted DNS servers.
+While this is not a hard requirement, and may not always be applicable with split
+routing, it is always desirable from the security standpoint.</p>
+<p>There is a little gotcha to be aware of.
+The system may, at times, modify <em>/etc/resolv.conf</em> removing the safety of the
+VPN provided DNS servers by replacing this file.</p>
+<p>Consequently it is important to be aware if this occurrs.
+The way it is handled is by saving this just updated file and restore the
+one that should be used with wireguard. The one that just got saved is the
+the right one to use when the VPN is turned off and by saving a copy
+of it, it can be restored to /etc/resolv.conf when wireguard shuts down.</p>
+<p>What causes this to happen?
+It can happen for different reasons. For example if WiFi network changes, or after a
+sleep resume cycle or when a dhcp lease is renewed.</p>
+<p>While wireguard itself uses UDP and is largely indifferent to such network,
+it is important to keep DNS properly managed.</p>
+<p>Taking care of all of this is eactly what <em>resolv-manager</em> does.</p>
+<p>To ensure that DNS resolver files are all managed correctly requires
+a copy of the standard resolv.conf file saved to <em>/etc/resolv.conf.saved</em>
+and the wireguard version to <em>/etc/resolv.conf.wg</em>.</p>
+<p>With those in place <em>resolv-manager</em> will keep track of any changes.
+It will saev any new standard <em>/etc/rsolv.conf</em> and put back the appropriate
+one for wireguard.</p>
+<p>After creating /etc/wg-client/wireguard-resolv.conf which has the nameservers
+using the DNS servers provided by the wireguard server end, then
+set wireguard’s configuration file (<em>/etc/wireguard/wgc.conf</em> for example)
+to use PostUp and PosDown.  Check that the wg-client config file,
+/etc/wg-client/config, sets the wireguard interface. For example with a line:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">iface</span> <span class="o">=</span> <span class="n">wg0</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[Interface]
+PrivateKey = ...
+Address    = ...
+Postup     = /etc/wg-client/post-up.sh
+PostDown   = /etc/wg-client/post-down.sh
+...
+</pre></div>
+</div>
+<p>There helper scripts <em>post-up.sh</em> and <em>post-down.sh</em> are part of wg-client.
+wg-client handles everything else including running resolv-manager to monitor
+/etc/resolv.conf while thw vpn is active to ensure the resolv.conf file
+remains correct.</p>
+<p>More information about resolv-manager can be found in the man page:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">man</span> <span class="n">wg</span><span class="o">-</span><span class="n">client</span><span class="o">-</span><span class="n">resolv</span><span class="o">-</span><span class="n">manage</span>
+</pre></div>
+</div>
+</section>
+<section id="wg-client-application">
+<h2><span class="section-number">2.2. </span>wg-client application<a class="headerlink" href="#wg-client-application" title="Link to this heading">¶</a></h2>
+<section id="usage">
+<h3><span class="section-number">2.2.1. </span>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h3>
+<p>wg-client is a command line program and can be run in any terminal.
+It has two primary options, one to start wireguard and one to stop it.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wg-client<span class="w"> </span>--wg-up
+wg-client<span class="w"> </span>--dg-dn
+</pre></div>
+</div>
+<p>It also has a config file (/etc/wg-client/config) where the wireguard interface
+is specified and ssh information if that is being used.</p>
+<p>To get a list of all options use <em>-h</em>.</p>
+<p>The command line options for <em>wg-client</em> are described in the manual section <a class="reference internal" href="Options.html#options-sect"><span class="std std-ref">Options</span></a>.
+The configuration file contents in section <a class="reference internal" href="Config.html#config-sect"><span class="std std-ref">Configuration</span></a>.</p>
+</section>
+</section>
+<section id="wg-client-gui-application">
+<h2><span class="section-number">2.3. </span>wg-client-gui application<a class="headerlink" href="#wg-client-gui-application" title="Link to this heading">¶</a></h2>
+<section id="gui-usage">
+<h3><span class="section-number">2.3.1. </span>GUI Usage<a class="headerlink" href="#gui-usage" title="Link to this heading">¶</a></h3>
+<p>The gui app can be run using the wg-client.desktop file and can be added
+to launchers in the usual way. For example in gnome simply search applications for wg-cliient
+and right click to pin the launcher. The gui is built on PyQt6 which in relies on Qt6.</p>
+<p>The gui has buttons to start and stop wireguard and a button to run ssh to set up the listener
+on the host configured in the config file.</p>
+<p>The gui should be left running while the vpn is in use. Pressing quit in the gui will shutdown wireguard
+and shutdown the ssh listener as well.</p>
+</section>
+</section>
+<section id="sudoers">
+<h2><span class="section-number">2.4. </span>Sudoers<a class="headerlink" href="#sudoers" title="Link to this heading">¶</a></h2>
+<p>To start and stop wireguard wg-client uses <em>wg-quick</em> (in wireguard-tools).
+Doing so requires root privieles and so any user approved to run wireguard must
+be granted permission.  Any non-root user will need a NOPASSWD sudoers entry.</p>
+<p>You can keep all local sudoers in a single file or in separate files.
+If in single file, make this one come after any group wheel ones.
+This is to ensure this one is chosen becuase sudo uses the last
+matching entry.</p>
+<p>Simply add this sample line adjusting WGUSERS to list whatever user(s) are
+permitted to run wireguard. If more than one use comma separated list as shown below.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>User_Alias<span class="w"> </span><span class="nv">WGUSERS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>alice,<span class="w"> </span>bob,<span class="w"> </span>sally
+WGUSERS<span class="w">   </span><span class="nv">ALL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">(</span>root<span class="o">)</span><span class="w"> </span>NOPASSWD:<span class="w"> </span>/usr/bin/wg-quick
+WGUSERS<span class="w">   </span><span class="nv">ALL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">(</span>root<span class="o">)</span><span class="w"> </span>NOPASSWD:<span class="w"> </span>/usr/lib/wg-client/wg-fix-dns
+</pre></div>
+</div>
+<p>If using separete files, then care is need to ensure this entry comes after any
+wheel group entries. Where WGUSERS is 1 or more usernames or a group such as
+<em>%wgusers</em>.</p>
+<p>Then,</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>visudu<span class="w"> </span>/etc/sudoers.d/100-wireguard
+</pre></div>
+</div>
+<p>Edit <em>WGUSERS</em> as above.</p>
+<p>visudo enforces the correct permissions which should be ‘0440’. If permissions
+are too loose, sudo will ignore the file.</p>
+<p>Why the prefix number?  Because sudo uses the <strong>last</strong> matching entry and
+we need to be sure the NOPASSWD wg-quick entry comes after any group wheel lines.</p>
+<p>For example if there are 2 files in <em>/etc/sudoers.d</em> - say wg-quick and wheel,
+where the wheel entry requires a password for members of group wheel.</p>
+<p>Now if user listed in wg-quick is also a member of <em>wheel</em> group, since wg-quick
+is first and wheel is second (files are treated in lexical order) the <em>wheel</em> one
+will prevail and user will be prompted for a password when running <em>sudo /usr/bin/wg-quick</em>.
+Not what we want. To fix this use numbers to prefix the sudoers filenames. So in this
+example it would be:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>/etc/sudoers.d/010-wheel
+/etc/sudoers.d/100-wg-client
+</pre></div>
+</div>
+<p>thereby ensuring that wg-client entries follow the wheel ones.</p>
+<p>For convenience this is also noted in the sample file:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>/etc/wg-client/sudoers.sample
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>chmod<span class="w"> </span>-440<span class="w"> </span>/etc/sudoers.d/wg-client
+</pre></div>
+</div>
+<p>The same thing asl can be achieved using doas or run0.</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">wg-client</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Wireguard Client Tool Manual:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">1. wg-client</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">1.1. Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#why-i-made-wg-client">1.2. Why I made wg-client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#key-features">1.3. Key features</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#getting-started">2. Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#dns-notes">2.1. DNS Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wg-client-application">2.2. wg-client application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wg-client-gui-application">2.3. wg-client-gui application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sudoers">2.4. Sudoers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Changes-recent.html">3. Recent Changes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Config.html">4. Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Options.html">5. Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Options.html#log-files">6. Log files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Appendix.html">7. Appendix</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">wg-client Documentation</a></li>
+      <li>Next: <a href="Changes-recent.html" title="next chapter"><span class="section-number">3. </span>Recent Changes</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2023-present, Gene C.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/README.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -20,22 +20,6 @@ def open_file(path: str, mode: str) -> IO | None:
     return fobj
 
 
-def copy_file(f_from: str, f_to: str) -> bool:
-    """
-    copy file
-    """
-    okay = True
-    from_data = read_file(f_from)
-    if from_data:
-        if not write_file(from_data, f_to):
-            print(f'Failed to write {f_to}')
-            return not okay
-    else:
-        print(f'Failed to read {f_from}')
-        return not okay
-    return okay
-
-
 def write_file(data: str, f_to: str, mode: str = 'w') -> bool:
     """
     write file

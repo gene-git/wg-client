@@ -3,4 +3,5 @@
 """
 Library
 """
-from .class_resolv import WgResolv
+# from .class_resolv import WgResolv
+from .resolv_manager import ResolvManager

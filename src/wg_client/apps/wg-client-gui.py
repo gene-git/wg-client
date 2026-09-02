@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # SPDX-FileCopyrightText: © 2023-present Gene C <arch@sapience.com>
 """
-Command line Start and Stop Wireguard
+GUI Tool to Start and Stop Wireguard
 """
 # pylint: disable=invalid-name
 import sys
@@ -26,6 +26,5 @@ def main():
     MainGui(myname)
 
 
-# -----------------------------------------------------
 if __name__ == '__main__':
     main()

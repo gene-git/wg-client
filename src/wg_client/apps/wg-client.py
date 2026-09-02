@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # SPDX-FileCopyrightText: © 2023-present Gene C <arch@sapience.com>
 """
-Command line Start and Stop Wireguard
+Command line tool Start and Stop Wireguard
 """
 # pylint: disable=invalid-name
 from wg_client.cmd_line import WgClient
@@ -12,7 +12,7 @@ def main():
     """
     Application to start vpn, stop vpn and start ssh remote listener
     Runs : wg-quick up/down <interface>
-    Defaul <interface> is wgc but can be provided on command line
+    Default <interface> is wgc but can be provided on command line
     The special <interface> 'test-dummy' runs in test mode
     Since wg-quick must be run as root :
     create /etc/sudoers.d/wg-runner
@@ -25,6 +25,5 @@ def main():
         client.do_all()
 
 
-# -----------------------------------------------------
 if __name__ == '__main__':
     main()

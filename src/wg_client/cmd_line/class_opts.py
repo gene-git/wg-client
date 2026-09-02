@@ -72,16 +72,8 @@ def get_avail_options(defaults: dict[str, str]) -> list[_Opt]:
     opt = ('--wg-dn', {'help': ohelp, 'action': 'store_true'})
     opts.append(opt)
 
-    # ohelp = 'Fix wg dns if needed'
-    # opt = ('--fix-dns', {'help': ohelp, 'action': 'store_true'})
-    # opts.append(opt)
-
-    ohelp = 'Auto fix wg dns if needed - stays running'
-    opt = ('--fix-dns-auto-start', {'help': ohelp, 'action': 'store_true'})
-    opts.append(opt)
-
-    ohelp = 'Auto fix wg dns if needed - stays running'
-    opt = ('--fix-dns-auto-stop', {'help': ohelp, 'action': 'store_true'})
+    ohelp = 'Try (re)start resolv-manager daemon - development option'
+    opt = ('--resolv-manager-start', {'help': ohelp, 'action': 'store_true'})
     opts.append(opt)
 
     ohelp = 'Run ssh over vpn to create remote listener'
@@ -118,8 +110,8 @@ def get_avail_options(defaults: dict[str, str]) -> list[_Opt]:
     opt = ('--show-wg-running', {'help': ohelp, 'action': 'store_true'})
     opts.append(opt)
 
-    ohelp = 'Report if auto fix dns is running'
-    opt = ('--show-fix-dns-auto', {'help': ohelp, 'action': 'store_true'})
+    ohelp = 'Report if resolv-manager is running'
+    opt = ('--show-resolv-manager', {'help': ohelp, 'action': 'store_true'})
     opts.append(opt)
 
     ohelp = 'Display status - alias for --status'
@@ -151,24 +143,28 @@ class WgClientOpts:
         desc = 'wg-client : manage wireguard peer'
         self.okay: bool = True
         self.wg_up: bool = False
-        # self.fix_dns: bool = False
-        self.fix_dns_auto_start: bool = False
-        self.fix_dns_auto_stop: bool = False
+
         self.wg_dn: bool = False
         self.ssh_start: bool = False
         self.ssh_stop: bool = False
+
+        self.resolv_manager_start: bool = False
+
         self.show_iface: bool = False
         self.show_ssh_server: bool = False
         self.show_ssh_running: bool = False
         self.show_wg_running: bool = False
-        self.show_fix_dns_auto: bool = False
+        self.show_resolv_manager: bool = False
         self.show_info: bool = False
+
         self.status: bool = False
         self.version: bool = False
         self.iface: str = 'wgc'
         self.ssh_server: str = ''
         self.ssh_pfx: str = ''
         self.pfx_range: list[str] = []
+
+        self.test: bool = False
 
         # get config settings
         self.okay = read_config(self)
@@ -199,7 +195,3 @@ class WgClientOpts:
                 setattr(self, key, val)
 
         self.pfx_range = _parse_ssh_pfx(self.ssh_pfx)
-
-    def __getattr__(self, name):
-        """ non-set items simply return None makes it easy to check existence"""
-        return None
