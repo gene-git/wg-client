@@ -6,14 +6,22 @@ Tags
 
 .. code-block:: text
 
-	3.7.1 (2024-01-07) -> 8.0.0 (2026-09-02)
-	90 commits.
+	3.7.1 (2024-01-07) -> 8.0.1 (2026-09-02)
+	93 commits.
 
 Commits
 =======
 
 
-* 2026-09-02  : **8.0.0**
+* 2026-09-02  : **8.0.1**
+
+.. code-block:: text
+
+              - meson tweak
+              - remove unused from meson.build
+              - add meson.options
+
+* 2026-09-02  : **8.0.0, origin/master**
 
 .. code-block:: text
 
