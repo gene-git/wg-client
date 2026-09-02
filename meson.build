@@ -243,14 +243,6 @@ install_data(
   install_tag: 'examples'
 )
 
-install_data(
-  [
-    s_scripts / 'wg-post-updn',
-  ],
-  install_dir: d_etc / 'wg-client/scripts',
-  install_tag: 'scripts'
-)
-
 # /usr/share
 
 install_data(
