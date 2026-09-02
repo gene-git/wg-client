@@ -1,0 +1,13 @@
+option('cpu_level', type: 'combo', choices: ['baseline', 'x86-64-v3'], value: 'baseline',
+  description: 'CPU baseline to compile for. "baseline" targets generic x86-64 and ' +
+               'is safe on any hardware - this is often what packaged/distributed builds ' +
+               'use. "x86-64-v3" requires an AVX2/BMI2/FMA capable CPU ' +
+               '(Haswell, 2013+) and will SIGILL on older or more conservative ' +
+               '(e.g. some VM) CPUs. If using on hardware spec prior to 2013 ' +
+               'best to use baseline instead.'
+)
+
+option('analyzer', type: 'boolean', value: false,
+  description: 'Build with -fanalyzer. Development / CI. Use -fanalyzer to catch' +
+               'use-after-free/double-free/null-deref. Slow and can be noisy.'
+)
