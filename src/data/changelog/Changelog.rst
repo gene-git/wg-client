@@ -6,14 +6,22 @@ Tags
 
 .. code-block:: text
 
-	3.7.1 (2024-01-07) -> 8.0.1 (2026-09-02)
-	93 commits.
+	3.7.1 (2024-01-07) -> 8.0.2 (2026-09-02)
+	94 commits.
 
 Commits
 =======
 
 
-* 2026-09-02  : **8.0.1**
+* 2026-09-02  : **8.0.2**
+
+.. code-block:: text
+
+              - **8.02**
+            
+                * Add missing dependency no PyCidr package used by the ssh listener
+
+* 2026-09-02  : **8.0.1, origin/master**
 
 .. code-block:: text
 
@@ -21,7 +29,7 @@ Commits
               - remove unused from meson.build
               - add meson.options
 
-* 2026-09-02  : **8.0.0, origin/master**
+* 2026-09-02  : **8.0.0**
 
 .. code-block:: text
 

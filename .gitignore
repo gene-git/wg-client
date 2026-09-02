@@ -1,7 +1,7 @@
 .mypy_cache/
 __pycache__/
+build/
 src/data/docs/_build/
 src/data/docs/_static/
 src/data/docs/_templates/
-build/
-
+src/data/docs/html/.buildinfo.bak

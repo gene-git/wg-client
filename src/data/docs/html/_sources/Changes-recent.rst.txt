@@ -1,6 +1,11 @@
 Recent Changes
 ==============
 
+**8.02**
+
+* Add missing dependency no PyCidr package used by the ssh listener 
+
+
 **8.0.0**
 
 * Package / build management now uses meson/mesonpy
