@@ -6,14 +6,22 @@ Tags
 
 .. code-block:: text
 
-	3.7.1 (2024-01-07) -> 8.0.2 (2026-09-02)
-	94 commits.
+	3.7.1 (2024-01-07) -> 8.0.3 (2026-09-03)
+	95 commits.
 
 Commits
 =======
 
 
-* 2026-09-02  : **8.0.2**
+* 2026-09-03  : **8.0.3**
+
+.. code-block:: text
+
+              - **8.0.3**
+            
+                * Typo in Readme
+
+* 2026-09-02  : **8.0.2, origin/master**
 
 .. code-block:: text
 
@@ -21,7 +29,7 @@ Commits
             
                 * Add missing dependency no PyCidr package used by the ssh listener
 
-* 2026-09-02  : **8.0.1, origin/master**
+* 2026-09-02  : **8.0.1**
 
 .. code-block:: text
 

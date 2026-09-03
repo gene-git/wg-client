@@ -15,7 +15,6 @@ Here's what is needed:
 * confirm that /etc/wg-client/config exists and sets thw wireguard i
   interface. For example::
 
-
     iface = wg0
 
 * edit the wireguard client config and update the PostUp and PostDn.
@@ -28,6 +27,8 @@ Here's what is needed:
     PostDown = /etc/wg-client/post-down.sh
 
 Thats should be all that's required.
+
+* There is a new *resolv-manager* 
 
 Overview
 ========
@@ -141,7 +142,7 @@ remains correct.
 
 More information about resolv-manager can be found in the man page::
 
-    man wg-client-resolv-manage
+    man wg-client-resolv-manageer
 
 wg-client application
 =====================

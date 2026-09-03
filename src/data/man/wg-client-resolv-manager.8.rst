@@ -1,10 +1,10 @@
-========================
-wg-client-resolv-manager
-========================
+==============
+resolv-manager
+==============
 
------------------------
-Manage /etc/resolv.conf
------------------------
+----------------------------------------------
+Manages /etc/resolv.conf while using Wireguard 
+----------------------------------------------
 
 :Author: Gene C <arch@sapience.com>
 :Manual section: 8
@@ -20,7 +20,7 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-Part of the wg-client package. When wireguard VPN is running DNS is usually
+Part of the wg-client package. When wireguard VPN is running DNS is typically
 used via the VPN tunnel. When wireguard is started an appropriate /etc/resolv.conf
 should be installed and when it is stopped the standard version should be restored.
 
@@ -35,6 +35,9 @@ is wgc then it would have::
 
 Where the file /etc/wg-client/wireguard-resolv.conf is the resolv.conf to use
 while the VPN is running.
+
+With no arguments post-up.sh reads the wireguard interface from /etc/wg-client/config
+and uses /etc/wg-client/wireguard-resolv.conf for the VPN resolv.conf.
 
 post-up.sh uses resolv-manager to save a copy of the current standard
 resolv.conf and install the wireguard provided file to /etc/resolv.conf by running::
