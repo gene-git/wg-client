@@ -5,6 +5,7 @@
 #   - no args: destination is "build/pkg".
 #   - destination   =>  install to this directory
 #
+set -euo pipefail
 
 if (( $# < 1 )) ; then
     dest='build/pkg'

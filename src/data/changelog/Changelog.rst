@@ -6,12 +6,27 @@ Tags
 
 .. code-block:: text
 
-	3.7.1 (2024-01-07) -> 8.0.3 (2026-09-03)
-	95 commits.
+	3.7.1 (2024-01-07) -> 8.0.4 (2026-09-10)
+	97 commits.
 
 Commits
 =======
 
+
+* 2026-09-10  : **8.0.4**
+
+.. code-block:: text
+
+              - **8.0.4**
+            
+                * Change Arch package dependencies that have been renamed:
+            
+                  - pyconcurrent -> python-pyconcurrent
+ 2026-09-03   ⋯
+
+.. code-block:: text
+
+              - add .gitattributes to mark docs as docs so github treats as docs not code
 
 * 2026-09-03  : **8.0.3**
 
@@ -21,7 +36,7 @@ Commits
             
                 * Typo in Readme
 
-* 2026-09-02  : **8.0.2, origin/master**
+* 2026-09-02  : **8.0.2**
 
 .. code-block:: text
 

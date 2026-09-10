@@ -21,27 +21,31 @@
 #
 # So do NOT delete the line: rm -rf build/* - please!
 # 
+set -euo pipefail
+
 btype="release"
 cpu_level=""
 CFLAGS=
 LDFLAGS=
 
-
+#
 # command line over rides
 #
-if [[ "$1" == "-cpu_level" ]] ; then
-    shift 1
-    if [[ "$1" == "baseline" ]] ; then
-        cpu_level="-Dcpu_level=baseline"
+if (($# > 0)) ; then
+    if [[ "$1" == "-cpu_level" ]] ; then
         shift 1
-    else
-        echo "Unknown -cpu_level : $1 (expect baseline)"
-        exit 1
+        if [[ "$1" == "baseline" ]] ; then
+            cpu_level="-Dcpu_level=baseline"
+            shift 1
+        else
+            echo "Unknown -cpu_level : $1 (expect baseline)"
+            exit 1
+        fi
     fi
-fi
-if [[ "$1" != "" ]] ; then
-    btype="$1"
-    shift 1
+    if [[ "$1" != "" ]] ; then
+        btype="$1"
+        shift 1
+    fi
 fi
 
 #
@@ -61,11 +65,11 @@ case "$btype" in
 esac
 
 meson_opts=(
-    --reconfigure
-    -Db_ndebug=if-release
+    --reconfigure build/"$btype"
     --buildtype="$btype"
+    -Db_ndebug=if-release
 )
-/usr/bin/meson setup "${meson_opts[@]}" build/"$btype" "$do_strip" "${analyzer[@]}"
+/usr/bin/meson setup "${meson_opts[@]}" "$do_strip" "${analyzer[@]}"
 /usr/bin/meson compile -C build/$btype
 
 exit 0

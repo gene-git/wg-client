@@ -1,5 +1,5 @@
 #
-# src/data/docs/conf.p
+# src/data/docs/conf.py
 #
 import os
 import sys
