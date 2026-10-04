@@ -7,10 +7,10 @@ Command line Start and Stop Wireguard
 # pylint: disable=too-many-instance-attributes
 import os
 import sys
-from PyQt6.QtCore import (Qt)
-from PyQt6.QtGui import (QGuiApplication, QIcon)
-from PyQt6.QtWidgets import (QWidget, QApplication, QPlainTextEdit, QPushButton)
-from PyQt6.QtWidgets import (QVBoxLayout, QGridLayout, QMainWindow)
+from PySide6.QtCore import (Qt)
+from PySide6.QtGui import (QGuiApplication, QIcon)
+from PySide6.QtWidgets import (QWidget, QApplication, QPlainTextEdit, QPushButton)
+from PySide6.QtWidgets import (QVBoxLayout, QGridLayout, QMainWindow)
 
 from wg_client.proc import MySignals
 from wg_client.utils import gLog

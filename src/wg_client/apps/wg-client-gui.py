@@ -5,9 +5,12 @@
 GUI Tool to Start and Stop Wireguard
 """
 # pylint: disable=invalid-name
+import os
 import sys
 from wg_client.gui import MainGui
 
+os.environ["QT_NO_XDG_DESKTOP_PORTAL"] = "1"
+os.environ["QT_LOGGING_RULES"] = "qt.qpa.wayland.textinput.warning=false;qt.qpa.services.warning=false"
 
 def main():
     """

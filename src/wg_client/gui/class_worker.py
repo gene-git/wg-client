@@ -1,10 +1,10 @@
 # SPDX-License-SPDX-License-Identifier: GPL-2.0-or-later
 # SPDX-FileCopyrightText: © 2023-present Gene C <arch@sapience.com>
 """
-THread support via pyqt6 QRunnable
+THread support via pyside6 QRunnable
 """
 # pylint: disable=no-name-in-module,too-few-public-methods
-from PyQt6.QtCore import QRunnable, QObject, QThreadPool, pyqtSignal, pyqtSlot
+from PySide6.QtCore import QRunnable, QObject, QThreadPool, Signal, Slot
 from wg_client.proc.class_proc import MyProc
 from wg_client.utils import gLog
 
@@ -15,7 +15,7 @@ class MyQsignals(QObject):
       - leave start commented in case we want to turn on
       - we currently only track when worker thread is completed
     '''
-    completed = pyqtSignal(int)
+    completed = Signal(int)
 
 
 class Worker(QRunnable):
@@ -45,7 +45,7 @@ class Worker(QRunnable):
         # set the callback func when complete
         self.signals.completed.connect(complete_func)
 
-    @pyqtSlot()
+    @Slot()
     def run(self):
         '''
         Run the supplied function with passed args, kwargs.

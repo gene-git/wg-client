@@ -1,39 +1,84 @@
+
+
 <!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<html lang="en" data-content_root="./">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-
-    <title>Managing DNS &#8212; wg-client 8.0.4
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Managing DNS &mdash; wg-client 8.0.4
  documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
-    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
-    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
-    <script src="_static/documentation_options.js?v=0a12f1ed"></script>
-    <script src="_static/doctools.js?v=fd6eb6e6"></script>
-    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=29180f0f" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=0a12f1ed"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-   
-  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-  
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
 
-  
-  
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
 
-  </head><body>
-  
-
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
           
+          
+          <a href="index.html" class="icon icon-home">
+            wg-client
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Wireguard Client Tool Manual:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="README.html">1. wg-client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html#getting-started">2. Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Changes-recent.html">3. Recent Changes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Config.html">4. Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Options.html">5. Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Options.html#log-files">6. Log files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Appendix.html">7. Appendix</a></li>
+</ul>
 
-          <div class="body" role="main">
-            
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">wg-client</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Managing DNS</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/dns.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
   <section id="managing-dns">
-<span id="id1"></span><h1>Managing DNS<a class="headerlink" href="#managing-dns" title="Link to this heading">¶</a></h1>
+<span id="id1"></span><h1>Managing DNS<a class="headerlink" href="#managing-dns" title="Link to this heading"></a></h1>
 <p>When using a VPN in any non-trusted environment it is standard practice to use DNS servers via
 the VPN tunnel. The host the VPN server is running on should have access to trusted DNS servers.
 It is these servers the VPN client should be using. These DNS servers have <code class="docutils literal notranslate"><span class="pre">IP</span></code> addresses
@@ -42,12 +87,12 @@ on a network accessible to to the VPN server being used.</p>
 on <code class="docutils literal notranslate"><span class="pre">IP</span></code> addresses <em>10.10.10.100</em> and <em>10.20.20.100</em> then on the wireguard client machine
 create a <em>resolv.conf</em> file using these <code class="docutils literal notranslate"><span class="pre">IP</span></code> addresses. Lets put this file in
 <em>/etc/wg-client/wireguard-resolv.conf</em> with content:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#</span>
-<span class="c1"># Wireguard client resolv.conf</span>
-<span class="c1"># Standard format with IP address(es)</span>
-<span class="c1"># and optional search line if so desired.</span>
-<span class="n">nameserver</span> <span class="mf">10.10.10.100</span>
-<span class="n">nameserver</span> <span class="mf">10.20.20.100</span>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>#
+# Wireguard client resolv.conf
+# Standard format with IP address(es)
+# and optional search line if so desired.
+nameserver 10.10.10.100
+nameserver 10.20.20.100
 </pre></div>
 </div>
 <p>In order to have this DNS resolv.conf file used while the VPN is running, we
@@ -56,18 +101,18 @@ The goal is once wireguard is up, we want to use the wireguard resolv.conf for D
 and after wireguard is down, we want to restore the standard resolv.conf.</p>
 <p>Lets say the wireguard interface is <em>wgc</em>. Then the <em>/etc/wireguard/wgc.conf</em> file
 would be:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">Interface</span><span class="p">]</span>
-<span class="n">PrivateKey</span>      <span class="o">=</span> <span class="n">xxx</span>
-<span class="n">Address</span>         <span class="o">=</span> <span class="n">nnn</span><span class="o">.</span><span class="n">nnn</span><span class="o">.</span><span class="n">nnn</span><span class="o">.</span><span class="n">X</span><span class="o">/</span><span class="mi">32</span><span class="p">,</span> <span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="p">::</span><span class="n">X</span><span class="o">/</span><span class="mi">128</span>
-<span class="n">PostUp</span>          <span class="o">=</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">wg</span><span class="o">-</span><span class="n">client</span><span class="o">/</span><span class="n">post</span><span class="o">-</span><span class="n">up</span><span class="o">.</span><span class="n">sh</span> <span class="n">wgc</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">wg</span><span class="o">-</span><span class="n">client</span><span class="o">/</span><span class="n">wireguard</span><span class="o">-</span><span class="n">resolv</span><span class="o">.</span><span class="n">conf</span>
-<span class="n">PostDown</span>        <span class="o">=</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">wg</span><span class="o">-</span><span class="n">client</span><span class="o">/</span><span class="n">post</span><span class="o">-</span><span class="n">down</span><span class="o">.</span><span class="n">sh</span>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[Interface]
+PrivateKey      = xxx
+Address         = nnn.nnn.nnn.X/32, xxxx:xxxx:xxxx::X/128
+PostUp          = /etc/wg-client/post-up.sh wgc /etc/wg-client/wireguard-resolv.conf
+PostDown        = /etc/wg-client/post-down.sh
 
-<span class="p">[</span><span class="n">Peer</span><span class="p">]</span>
-<span class="n">PublicKey</span>       <span class="o">=</span> <span class="n">xxx</span>
-<span class="n">PresharedKey</span>    <span class="o">=</span> <span class="n">yyy</span>
-<span class="n">AllowedIPs</span>      <span class="o">=</span> <span class="mf">0.0.0.0</span><span class="o">/</span><span class="mi">0</span><span class="p">,</span> <span class="p">::</span><span class="o">/</span><span class="mi">0</span>
-<span class="n">Endpoint</span>        <span class="o">=</span> <span class="n">vpn</span><span class="o">.</span><span class="n">example</span><span class="o">.</span><span class="n">com</span><span class="p">:</span><span class="mi">55001</span>
-<span class="n">PersistentKeepalive</span> <span class="o">=</span> <span class="mi">25</span>
+[Peer]
+PublicKey       = xxx
+PresharedKey    = yyy
+AllowedIPs      = 0.0.0.0/0, ::/0
+Endpoint        = vpn.example.com:55001
+PersistentKeepalive = 25
 </pre></div>
 </div>
 <p>The post-up script requires the first argument to be the wireguard interface (<em>wgc</em> in the above example).
@@ -96,75 +141,31 @@ directly rather than by <em>wg-client</em>. For example <em>wg-quick up wgc</em>
 </section>
 
 
+           </div>
           </div>
-          
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023-present, Gene C.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="Main">
-        <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="index.html">wg-client</a></h1>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
 
-
-
-
-
-
-
-
-
-<search id="searchbox" style="display: none" role="search">
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</search>
-<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
-<p class="caption" role="heading"><span class="caption-text">Wireguard Client Tool Manual:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="README.html">1. wg-client</a></li>
-<li class="toctree-l1"><a class="reference internal" href="README.html#getting-started">2. Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Changes-recent.html">3. Recent Changes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Config.html">4. Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Options.html">5. Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Options.html#log-files">6. Log files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Appendix.html">7. Appendix</a></li>
-</ul>
-
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="index.html">Documentation overview</a><ul>
-  </ul></li>
-</ul>
-</div>
-
-
-
-
-
-
-
-
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &#169;2023-present, Gene C.
-      
-      |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
-      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
-      
-      |
-      <a href="_sources/dns.rst.txt"
-          rel="nofollow">Page source</a>
-    </div>
-
-    
-
-    
-  </body>
+</body>
 </html>

@@ -1,33 +1,16 @@
 Recent Changes
 ==============
 
-**8.0.4**
+Sun Oct  4 06:14:30 AM EDT 2026
 
-* Change Arch package dependencies that have been renamed:
+* Update Documentation 
 
-  - pyconcurrent -> python-pyconcurrent
+ * Now available on https://wg-client.readthedocs.io
 
-**8.0.3**
+* GUI 
+  
+  * Migrate from PyQt6 to PySide6
+  * Fix some GUI related warnings
 
-* Typo in Readme 
-
-**8.0.2**
-
-* Add missing dependency no PyCidr package used by the ssh listener 
-
-**8.0.0**
-
-* Package / build management now uses meson/mesonpy
-* New resolv-manager:
-  - wirtten in C.
-  - Runs as a background daemon managing /etc/resolv.conf
-  - replaces the python inotify based monitor
-  - see man page wg-client-resolv-manager
-* You need to make a change.
-  Please update PostUp / PostDown in wireguard config and
-  use the helper scripts installed in /etc/wg-client:
-  post-up.sh and post-down.sh. 
-  Create /etc/wg-client/wireguirs.resolv.conf with the DNS settings
-  you want to use while VPN tunnel is up. Standard resolv.conf format
-  (nameserver x.x.x.x) 
-
+    * Could not register app ID: Connection already associated with an application ID
+    * Trying to disable 0xNNN but 0x0 is focused

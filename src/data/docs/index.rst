@@ -1,4 +1,4 @@
-=======================
+
 wg-client Documentation
 =======================
 
@@ -13,10 +13,21 @@ wg-client Documentation
     Options
     Appendix
 
+Man Pages
+=========
+
+.. toctree::
+    :maxdepth: 2
+    :numbered:
+    :caption: wg-client man pages
+
+    man-ready/wg-client-resolv-manager.8
+
 .. only:: html
 
     Indices and Tables
     ==================
     * :ref:`genindex`
     * :ref:`search`
+
 

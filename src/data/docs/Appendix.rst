@@ -5,13 +5,44 @@
 Appendix
 ========
 
+.. _migration:
+
+Migration from Pre 8.x
+======================
+
+Older versions (pre 8.x) need a small change becasue *resolv-manager* has been re-written
+in C and now runs a background daemon managing /etc/resolv.conf. 
+
+This is what is needed:
+
+* Create /etc/wg-client/wireguard-resolv.conf
+  This should be the DNS settings to be used while wireguard is running.
+  Standard resolv.conf format (nameserver x.x.x.x)
+
+* confirm that /etc/wg-client/config exists and sets thw wireguard i
+  interface. For example::
+
+    iface = wg0
+
+* edit the wireguard client config and update the PostUp and PostDn.
+  For example::
+
+    [Interface]
+    PrivateKey = ...
+    Address = ...
+    Postup = /etc/wg-client/post-up.sh
+    PostDown = /etc/wg-client/post-down.sh
+
+Thats should be all that's required.
+
+
 Installation
 ============
 
 Available on:
 
-* `Github`_ 
-* `Archlinux AUR`_
+* `Github <https://github.com/gene-git/wg-client>`_ 
+* `Archlinux AUR <https://aur.archlinux.org/packages/wg-client>`_
 
 On Arch you can build using the PKGBUILD provided in packaging directory or from the AUR package.
 
@@ -36,7 +67,7 @@ Dependencies
 * pynotify            (python-notify)
 * openssl
 * pyconcurrent
-* PyQt6 / Qt6         (for gui)
+* PySide6 / Qt6        (for gui)
 * hicolor-icon-theme
 * bash
 * glibc
@@ -46,32 +77,19 @@ Dependencies
 * git
 * meson
 * meson-python
-* uv
 * rsync
-
-**Optional for building docs**:
-* sphinx
-* texlive-latexextra  (archlinux packaguing of texlive tools)
 
 Log files
 =========
 
-Each application has it's own log file. These are located in users
-home directory :
+Each application has it's own log file. They are located in the home directory :
 
 .. code-block:: bash
 
     ${HOME}/log/wg-client
     ${HOME}/log/wg-client-gui
 
-Each of the log files are rotated with companion log suffixed with *.1*
-
-Philosophy
-==========
-
-We follow the *live at head commit* philosophy as recommended by
-Google's Abseil team [1]_.  This means we recommend using the
-latest commit on git master branch. 
+Each log file is rotated with using numerical suffix.
 
 License
 ========
@@ -81,7 +99,3 @@ Created by Gene C. and licensed under the terms of the GPL-2.0-or-later license.
 - SPDX-License-Identifier: GPL-2.0-or-later
 - SPDX-FileCopyrightText: © 2023-present Gene C <arch@sapience.com>
 
-.. _Github: https://github.com/gene-git/wg-client
-.. _Archlinux AUR: https://aur.archlinux.org/packages/wg-client
-
-.. [1] https://abseil.io/about/philosophy#upgrade-support

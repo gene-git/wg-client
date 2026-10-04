@@ -1,0 +1,300 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>1. resolv-manager &mdash; wg-client 8.0.4
+ documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=29180f0f" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=0a12f1ed"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="7. Appendix" href="../Appendix.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            wg-client
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Wireguard Client Tool Manual:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">1. wg-client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#getting-started">2. Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Changes-recent.html">3. Recent Changes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Config.html">4. Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Options.html">5. Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Options.html#log-files">6. Log files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Appendix.html">7. Appendix</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">sd-boot man pages</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">1. resolv-manager</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#manages-etc-resolv-conf-while-using-wireguard">1.1. Manages /etc/resolv.conf while using Wireguard</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#synopsis">1.1.1. SYNOPSIS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#description">1.1.2. DESCRIPTION</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#monitor-mode">1.1.3. MONITOR MODE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#security">1.1.4. SECURITY</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#options">1.1.5. OPTIONS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#errors">1.1.6. ERRORS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#examples">1.1.7. EXAMPLES</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#see-also">1.1.8. SEE ALSO</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">wg-client</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">1. </span>resolv-manager</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/man-ready/wg-client-resolv-manager.8.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="resolv-manager">
+<h1><span class="section-number">1. </span>resolv-manager<a class="headerlink" href="#resolv-manager" title="Link to this heading"></a></h1>
+<section id="manages-etc-resolv-conf-while-using-wireguard">
+<h2><span class="section-number">1.1. </span>Manages /etc/resolv.conf while using Wireguard<a class="headerlink" href="#manages-etc-resolv-conf-while-using-wireguard" title="Link to this heading"></a></h2>
+<section id="synopsis">
+<h3><span class="section-number">1.1.1. </span>SYNOPSIS<a class="headerlink" href="#synopsis" title="Link to this heading"></a></h3>
+<p><strong>/usr/lib/wg-client/resolv-manager</strong> -i &lt;iface&gt; -t &lt;task-name&gt; [<em>options</em> …]</p>
+</section>
+<section id="description">
+<h3><span class="section-number">1.1.2. </span>DESCRIPTION<a class="headerlink" href="#description" title="Link to this heading"></a></h3>
+<p>Part of the wg-client package. When wireguard VPN is running DNS is typically
+used via the VPN tunnel. When wireguard is started an appropriate /etc/resolv.conf
+should be installed and when it is stopped the standard version should be restored.</p>
+<p>This is simple to do using PostUp and PostDown in the wireguard config file.
+For example if the config file is /etc/wireguard/wgc.conf, so the wireguard interface
+is wgc then it would have:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[interface]
+...
+PostUp    = /etc/wg-client/post-up.sh wgc /etc/wg-client/wireguard-resolv.conf
+PostDown  = /etc/wg-client/post-down.sh
+</pre></div>
+</div>
+<p>Where the file /etc/wg-client/wireguard-resolv.conf is the resolv.conf to use
+while the VPN is running.</p>
+<p>With no arguments post-up.sh reads the wireguard interface from /etc/wg-client/config
+and uses /etc/wg-client/wireguard-resolv.conf for the VPN resolv.conf.</p>
+<p>post-up.sh uses resolv-manager to save a copy of the current standard
+resolv.conf and install the wireguard provided file to /etc/resolv.conf by running:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>resolv-manager -i wgc -t wireguard -f /etc/wg-client/wireguard-resolv.conf -l /var/log/wg-client
+</pre></div>
+</div>
+<p>The standard resolv.conf is saved to resolv.conf.saved and the caller provided
+wireguard file is tagged and saved to resolv.conf.wg.</p>
+<p>When shutting down wireguard, post-down.sh uses it to restore the standard resolv.conf by
+using:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>resolv-manager -t standard -l /var/log/wg-client
+</pre></div>
+</div>
+<p>In this case the standard resolv.conf is restored from the saved version.</p>
+<p>The wireguard version has a comment added as the first line in the file in order
+to mark it as to be used only while wireguard is active.</p>
+<p>With the above DNS will be work correctly when starting and stopping wireguard using:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>wg-quick up wgc
+</pre></div>
+</div>
+<p>and</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>wg-quick down wgc
+</pre></div>
+</div>
+<p>It is quite normal that /etc/resolv.conf can be changed by some network
+related events. For example, This can happen after a sleep/resume cycle,
+when a DHCP lease renews or when a new WiFi network is connected.</p>
+<p>While wireguard itself is largely immune to such changes, since it uses UDP, DNS
+needs to be fixed up to keep using the wireguard version of resolv.conf.</p>
+<p>resolv-manager handles this. When <strong>wg-client –wg-up</strong> is used to start
+wireguard (or the GUI which runs the same command) it starts <em>ressolve-manager</em>
+in <em>monitor</em> mode.</p>
+</section>
+<section id="monitor-mode">
+<h3><span class="section-number">1.1.3. </span>MONITOR MODE<a class="headerlink" href="#monitor-mode" title="Link to this heading"></a></h3>
+<p><strong>wg-client –wg-up</strong> starts wireguard and then runs:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>resaolv-manager -i wgc -t monitor
+</pre></div>
+</div>
+<p>This runs as a background daemon and monitors /etc/resolv.conf for any changes.
+This is done using <em>inotify</em> whereby it asks the kernel to wake it up when the file
+changes. This is exremely efficient and allows it to sleep until the kernel wakes it up.</p>
+<p>When it detects that resolv.conf has changed, it saves the new standard version
+and re-installs the VPN resolv.conf so that DNS continues to use the tunnel.</p>
+<p>It also monitors /sys/class/net/wgc (or whatever interface is being used) and
+when it detects that wireguard is no longer running it shuts itself down.</p>
+<p>It can also monitor has an option to monitor a <strong>semaphore</strong> file and
+deleting that semaphore file, signals the monitor to shutdown.
+wg-client uses a semaphore file.</p>
+<p>The reason is because resolv-manager uses locking to guarantee
+there is only one version running at a time. The semaphore gives <strong>wg-client</strong>
+tha ability to instuct resolv-manager to shut down before it turns off wireguard.
+This way wireguard’s PostDOwn can safely use resolv-manager to restore
+the standard resolv.conf since the monitor instance is no longer running.</p>
+<p>Clearly there cannot be more than one program monitoring and modifying the same files.
+File Locking is a sound way to make sure this does not happen.
+The lock file used is <strong>/run/lock/wg-client/lock</strong>.
+resolv-manager will only monitor or change any files after it as acquired the lock.</p>
+</section>
+<section id="security">
+<h3><span class="section-number">1.1.4. </span>SECURITY<a class="headerlink" href="#security" title="Link to this heading"></a></h3>
+<p>Since resolv-manager needs privileges to modify file in /etc and it is
+run by non-root user, it uses just enough <strong>capabilities</strong> to do its job.</p>
+<p>These are all that are required:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>/usr/bin/setcap cap_chown,cap_dac_override=ep /usr/lib/wg-client/resolv-manager
+</pre></div>
+</div>
+<p>The Arch PKGBUILD sets these capabilities when the package is installed.</p>
+<p>It is designed to be run as ordinary unprivileged user.</p>
+<p>If it is run as root, then it drops privileges to nobody and retains
+the capabilities to function properly. Starting wireguard itself needs root privileges
+so resolv-manager is started by root in the PostUp and PostDown settings.</p>
+</section>
+<section id="options">
+<h3><span class="section-number">1.1.5. </span>OPTIONS<a class="headerlink" href="#options" title="Link to this heading"></a></h3>
+<p>The required options are <strong>–iface</strong> and <strong>–task</strong>.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>-t, --task       &lt;name&gt;   Task name is one of: s[tandard], w[ireguard] or m[onitor]
+-i, --iface      &lt;iface&gt;  The wireguard inteface name (e.g. wg0)
+-l, --logdir     &lt;dir&gt;    Log directory
+-n, --numlogs    &lt;num&gt;    Number of log files to keep in the rotation.
+-d, --daemon              Run as a background daemon.
+-f, --file       &lt;file&gt;   Used with -t wireguard to provide the wireguard resolv.conf to use
+-s, --semaphores &lt;file&gt;   Watch this file and exit if removed or not found (monitor mode)
+-T, --testing             Developer option. Fles are relative to the current directory.
+                          For example it looks for ./etc/resolv.conf
+--help, -h                Show help message and exit.
+</pre></div>
+</div>
+<p>At least one task is required and both the <em>wireguard</em> and <em>monitor</em> tasks both need
+the interface to be provided as well.</p>
+</section>
+<section id="errors">
+<h3><span class="section-number">1.1.6. </span>ERRORS<a class="headerlink" href="#errors" title="Link to this heading"></a></h3>
+<p>The exit codes are taken from “sysexits.h”:</p>
+<ul>
+<li><p>EX_OK</p>
+<p>A successful termination.</p>
+</li>
+<li><p>EX_USAGE</p>
+<p>Problematic command line arguments.</p>
+</li>
+<li><p>EX_OSFILE</p>
+<p>File related errors, typically unable to open a file.</p>
+</li>
+<li><p>EX_TEMPFAIL</p>
+<p>Not ready as wireguard is not running.</p>
+</li>
+<li><p>EX_OSERR</p>
+<p>Likely due to failure to daemonize</p>
+</li>
+<li><p>EX_IOERR</p>
+<p>IO errors are likely to to reading or writing files. Probably /etc/resolv.conf et al.</p>
+</li>
+<li><p>EX_SOFTWARE</p>
+<blockquote>
+<div><p>Some other problem occurred. Most likely the monitor encountered an unrecoverable
+error related to inotify.</p>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="examples">
+<h3><span class="section-number">1.1.7. </span>EXAMPLES<a class="headerlink" href="#examples" title="Link to this heading"></a></h3>
+<p>Run as a daemon to monitor the dns resolv.conf file for changes:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>/usr/lib/wg-client/resolv-monitor -i wg0 -t monitor -d -l /var/log/wg-client
+</pre></div>
+</div>
+<p>Run as non-priveleged user and exit when a semaphore file is removed:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>/usr/lib/wg-client/resolv-monitor -i wg0 -t monitor -s /tmp/i-am-running
+</pre></div>
+</div>
+<p>Install a wireguard file to <em>/etc/resolv.conf</em> and save current standard file:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>/usr/lib/wg-client/resolv-monitor -i wg0 -t wireguard -f /etc/wg-client/wg-resolv.conf
+</pre></div>
+</div>
+<p>Restore the standard /etc/resolv.conf back to <em>/etc/resolv.conf</em>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>/usr/lib/wg-client/resolv-monitor -t standard -l /var/log/wg-client
+</pre></div>
+</div>
+</section>
+<section id="see-also">
+<h3><span class="section-number">1.1.8. </span>SEE ALSO<a class="headerlink" href="#see-also" title="Link to this heading"></a></h3>
+<p>wg(8), wg-quick(8)</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../Appendix.html" class="btn btn-neutral float-left" title="7. Appendix" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023-present, Gene C.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

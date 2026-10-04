@@ -6,29 +6,8 @@ wg-client
 
 **Migration required from pre 8.x versions**
 
-Here's what is needed:
-
-* Create /etc/wg-client/wireguard-resolv.conf
-  This should be the DNS settings to be used while wireguard is running.
-  Standard resolv.conf format (nameserver x.x.x.x)
-
-* confirm that /etc/wg-client/config exists and sets thw wireguard i
-  interface. For example::
-
-    iface = wg0
-
-* edit the wireguard client config and update the PostUp and PostDn.
-  For example::
-
-    [Interface]
-    PrivateKey = ...
-    Address = ...
-    Postup = /etc/wg-client/post-up.sh
-    PostDown = /etc/wg-client/post-down.sh
-
-Thats should be all that's required.
-
-* There is a new *resolv-manager* 
+If you are updating from pre 8.x versions please see the
+Appendix to user newer versions :ref:`migration`.
 
 Overview
 ========
@@ -52,6 +31,14 @@ All git tags are signed with arch@sapience.com key which is available via WKD
 or download from https://www.sapience.com/tech. Add the key to your package builder gpg keyring.
 The key is included in the Arch package and the source= line with *?signed* at the end can be used
 to verify the git tag.  You can also manually verify the signature
+
+Documentation
+-------------
+
+The manual provides detailed information about using wg-client.
+It is available in HTML and PDF formats installed under */usr/share/wg-client/docs*
+
+It is also available at: `readthedocs <https://wg-client.readthedocs.io>`_.
 
 Why I made wg-client
 ====================
@@ -86,27 +73,27 @@ Getting Started
 DNS Notes
 =========
 
-When using a any VPN client, it is standard practive to make sure that all 
-DNS traffic is routed through the tunnel in order to trusted DNS servers.
-While this is not a hard requirement, and may not always be applicable with split 
-routing, it is always desirable from the security standpoint.
+When using any VPN client, it is standard practice to ensure all 
+DNS traffic is routed through the VPN tunnel in order to trusted DNS servers.
+While this isn't a hard requirement, and is not strictly applicable with split 
+routing, it is always desirable from a security standpoint.
 
 There is a little gotcha to be aware of.
 The system may, at times, modify */etc/resolv.conf* removing the safety of the 
-VPN provided DNS servers by replacing this file. 
+VPN provided DNS servers to different ones. This also breaks LAN related services.
 
-Consequently it is important to be aware if this occurrs. 
-The way it is handled is by saving this just updated file and restore the 
-one that should be used with wireguard. The one that just got saved is the 
-the right one to use when the VPN is turned off and by saving a copy
-of it, it can be restored to /etc/resolv.conf when wireguard shuts down.
+Consequently, it is important to be identify if this happens and deal with it.
+It is handled is by saving any newly resolv.conf file and then restoring the 
+correct one that should be used with wireguard. The resolv.conf that was just 
+saved is the the right file to use when the VPN is turned off but not while it
+is runninf. By saving a copy, it can be restored when the wireguard VPN shuts down.
 
 What causes this to happen?
-It can happen for different reasons. For example if WiFi network changes, or after a 
-sleep resume cycle or when a dhcp lease is renewed. 
+It can happen for different reasons. It can happen if the WiFi network changes, after a 
+sleep resume cycle or when a DHCP lease is renewed. 
 
-While wireguard itself uses UDP and is largely indifferent to such network, 
-it is important to keep DNS properly managed.
+While wireguard itself uses UDP and is mostly indifferent to such network changes, 
+nonetheless it is quite important to keep DNS properly managed.
 
 Taking care of all of this is eactly what *resolv-manager* does.
 
@@ -115,16 +102,14 @@ a copy of the standard resolv.conf file saved to */etc/resolv.conf.saved*
 and the wireguard version to */etc/resolv.conf.wg*.  
 
 With those in place *resolv-manager* will keep track of any changes.
-It will saev any new standard */etc/rsolv.conf* and put back the appropriate
-one for wireguard.
+It will save any updated standard */etc/rsolv.conf* file and put back 
+the appropriate one for wireguard.
 
-After creating /etc/wg-client/wireguard-resolv.conf which has the nameservers
-using the DNS servers provided by the wireguard server end, then
-set wireguard's configuration file (*/etc/wireguard/wgc.conf* for example) 
-to use PostUp and PosDown.  Check that the wg-client config file,
-/etc/wg-client/config, sets the wireguard interface. For example with a line::
+After creating /etc/wg-client/wireguard-resolv.conf with the 
+the DNS nameservers provided by the wireguard server end, then
+set the wireguard configuration file (for example */etc/wireguard/wgc.conf*) 
+to use PostUp and PosDown.  
 
-    iface = wg0
 
 .. code-block:: text
 
@@ -135,10 +120,16 @@ to use PostUp and PosDown.  Check that the wg-client config file,
     PostDown   = /etc/wg-client/post-down.sh
     ...
 
+In addition the wg-client config file, */etc/wg-client/config*, must
+set the wireguard interface that is used. For example with a line::
+
+    iface = wg0
+
 There helper scripts *post-up.sh* and *post-down.sh* are part of wg-client.
 wg-client handles everything else including running resolv-manager to monitor
-/etc/resolv.conf while thw vpn is active to ensure the resolv.conf file
-remains correct.
+/etc/resolv.conf while thw vpn is active to ensures that DNS is resolved using
+the appropriate DNS servers while wireguard is active as well as restoring the
+standard resolv file when wireguard is shut down.
 
 More information about resolv-manager can be found in the man page::
 
@@ -158,13 +149,13 @@ It has two primary options, one to start wireguard and one to stop it.
    wg-client --wg-up
    wg-client --dg-dn
 
-It also has a config file (/etc/wg-client/config) where the wireguard interface
-is specified and ssh information if that is being used.
+It uses a config file (/etc/wg-client/config) where the wireguard interface
+is specified along with optional ssh information.
 
-To get a list of all options use *-h*. 
+To see the list of available options use *-h*. 
 
-The command line options for *wg-client* are described in the manual section :ref:`options-sect`.
-The configuration file contents in section :ref:`config-sect`.
+The *wg-client* options are described fully in the manual 
+section :ref:`options-sect` and the configuration file in section :ref:`config-sect`.
 
 
 wg-client-gui application
@@ -187,8 +178,8 @@ and shutdown the ssh listener as well.
 Sudoers
 =======
   
-To start and stop wireguard wg-client uses *wg-quick* (in wireguard-tools).
-Doing so requires root privieles and so any user approved to run wireguard must 
+To start and stop wireguard wg-client uses *wg-quick* (from wireguard-tools).
+Doing so requires root priviliges. As a result, any user approved to run wireguard must 
 be granted permission.  Any non-root user will need a NOPASSWD sudoers entry. 
 
 You can keep all local sudoers in a single file or in separate files.
@@ -230,23 +221,19 @@ Now if user listed in wg-quick is also a member of *wheel* group, since wg-quick
 is first and wheel is second (files are treated in lexical order) the *wheel* one
 will prevail and user will be prompted for a password when running *sudo /usr/bin/wg-quick*.
 Not what we want. To fix this use numbers to prefix the sudoers filenames. So in this
-example it would be:
-
-.. code-block:: bash
+example it would be::
 
    /etc/sudoers.d/010-wheel
    /etc/sudoers.d/100-wg-client
 
 thereby ensuring that wg-client entries follow the wheel ones.
 
-For convenience this is also noted in the sample file:
+For convenience this is also noted in the sample file::
+
+    /etc/wg-client/samples/sudoers.sample
 
 .. code-block:: bash
 
-    /etc/wg-client/sudoers.sample
+    chmod 440 /etc/sudoers.d/wg-client
 
-.. code-block:: bash
-
-    chmod -440 /etc/sudoers.d/wg-client
-
-The same thing asl can be achieved using doas or run0.
+This can also be achieved with doas or run0.
