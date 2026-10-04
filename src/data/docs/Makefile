@@ -10,13 +10,13 @@ SOURCEDIR     = .
 BUILDDIR      = _build
 
 SOURCES = conf.py ../../version.txt Makefile 
-SOURCES += Appendix.rst Changes-recent.rst Config.rst 
-SOURCES += README.rst dns.rst index.rst Options.rst
+SOURCES += Appendix.rst Config.rst 
+SOURCES += README.rst index.rst Options.rst
 
 SOURCES_MAN = ../man/wg-client-resolv-manager.8.rst
 MAN_READY = ./man-ready/wg-client-resolv-manager.8.rst
 
-.PHONY: help Makefile clean html latexpdf
+.PHONY: help clean html latexpdf
 
 HTML_EXCL   = --exclude _sources/ --exclude .buildinfo  --exclude .doctrees/
 

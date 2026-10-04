@@ -8,7 +8,6 @@ wg-client Documentation
     :caption: Wireguard Client Tool Manual:
 
     README
-    Changes-recent
     Config
     Options
     Appendix
