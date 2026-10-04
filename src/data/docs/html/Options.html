@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>5. Options &mdash; wg-client 8.0.4
+  <title>4. Options &mdash; wg-client 8.0.4
  documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
@@ -21,8 +21,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="7. Appendix" href="Appendix.html" />
-    <link rel="prev" title="4. Configuration" href="Config.html" /> 
+    <link rel="next" title="6. Appendix" href="Appendix.html" />
+    <link rel="prev" title="3. Configuration" href="Config.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -48,17 +48,20 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="README.html">1. wg-client</a></li>
 <li class="toctree-l1"><a class="reference internal" href="README.html#getting-started">2. Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Changes-recent.html">3. Recent Changes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Config.html">4. Configuration</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">5. Options</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#wg-client">5.1. wg-client</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#uaing-ssh">5.1.1. Uaing ssh</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Config.html">3. Configuration</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">4. Options</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#wg-client">4.1. wg-client</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#uaing-ssh">4.1.1. Uaing ssh</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="#log-files">6. Log files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Appendix.html">7. Appendix</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#log-files">5. Log files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Appendix.html">6. Appendix</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">wg-client man pages</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="man-ready/wg-client-resolv-manager.8.html">1. resolv-manager</a></li>
 </ul>
 
         </div>
@@ -75,7 +78,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active"><span class="section-number">5. </span>Options</li>
+      <li class="breadcrumb-item active"><span class="section-number">4. </span>Options</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/Options.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -86,9 +89,9 @@
            <div itemprop="articleBody">
              
   <section id="options">
-<span id="options-sect"></span><h1><span class="section-number">5. </span>Options<a class="headerlink" href="#options" title="Link to this heading"></a></h1>
+<span id="options-sect"></span><h1><span class="section-number">4. </span>Options<a class="headerlink" href="#options" title="Link to this heading"></a></h1>
 <section id="wg-client">
-<h2><span class="section-number">5.1. </span>wg-client<a class="headerlink" href="#wg-client" title="Link to this heading"></a></h2>
+<h2><span class="section-number">4.1. </span>wg-client<a class="headerlink" href="#wg-client" title="Link to this heading"></a></h2>
 <p>Summary of available options for wg-client.</p>
 <p><strong>Positional argument</strong> : Optional</p>
 <ul>
@@ -133,7 +136,7 @@ options:
 </pre></div>
 </div>
 <section id="uaing-ssh">
-<h3><span class="section-number">5.1.1. </span>Uaing ssh<a class="headerlink" href="#uaing-ssh" title="Link to this heading"></a></h3>
+<h3><span class="section-number">4.1.1. </span>Uaing ssh<a class="headerlink" href="#uaing-ssh" title="Link to this heading"></a></h3>
 <p>When asking wg-client to start ssh, it runs ssh to the remote host inside the vpn tunnel,
 sets it to listen on a remote port.
 Port number used is described in section <a class="reference internal" href="Config.html#config-sect"><span class="std std-ref">Configuration</span></a>.</p>
@@ -160,7 +163,7 @@ the config file.</p>
 </section>
 </section>
 <section id="log-files">
-<h1><span class="section-number">6. </span>Log files<a class="headerlink" href="#log-files" title="Link to this heading"></a></h1>
+<h1><span class="section-number">5. </span>Log files<a class="headerlink" href="#log-files" title="Link to this heading"></a></h1>
 <p>There are 3 kinds of log files: one for resolv-manager, one for command line app
 and one for the gui app.</p>
 <p>resolv-manager logs are in /var/log/wg-client and while wg-client and wg-client-gui
@@ -176,8 +179,8 @@ ${HOME}/log/wg-client-gui
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="Config.html" class="btn btn-neutral float-left" title="4. Configuration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="Appendix.html" class="btn btn-neutral float-right" title="7. Appendix" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="Config.html" class="btn btn-neutral float-left" title="3. Configuration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Appendix.html" class="btn btn-neutral float-right" title="6. Appendix" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -6,12 +6,27 @@ Tags
 
 .. code-block:: text
 
-	3.7.1 (2024-01-07) -> 8.0.4 (2026-09-10)
-	97 commits.
+	3.7.1 (2024-01-07) -> 8.0.5 (2026-10-04)
+	99 commits.
 
 Commits
 =======
 
+
+* 2026-10-04  : **8.0.5**
+
+.. code-block:: text
+
+              - release 8.0.5
+                Sun Oct  4 06:14:30 AM EDT 2026
+                * Update Documentation
+                  * Now available on https://wg-client.readthedocs.io
+                * GUI
+                  * Migrate from PyQt6 to PySide6
+                  * Fix some GUI related warnings
+                    * Could not register app ID: Connection already associated with an application ID
+                    * Trying to disable 0xNNN but 0x0 is focused
+              - pre-release commit for readthedocs
 
 * 2026-09-10  : **8.0.4**
 

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>7. Appendix &mdash; wg-client 8.0.4
+  <title>6. Appendix &mdash; wg-client 8.0.4
  documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
@@ -22,7 +22,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="1. resolv-manager" href="man-ready/wg-client-resolv-manager.8.html" />
-    <link rel="prev" title="5. Options" href="Options.html" /> 
+    <link rel="prev" title="4. Options" href="Options.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -48,20 +48,19 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="README.html">1. wg-client</a></li>
 <li class="toctree-l1"><a class="reference internal" href="README.html#getting-started">2. Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Changes-recent.html">3. Recent Changes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Config.html">4. Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Options.html">5. Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Options.html#log-files">6. Log files</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">7. Appendix</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#migration-from-pre-8-x">7.1. Migration from Pre 8.x</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#installation">7.2. Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#dependencies">7.3. Dependencies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#log-files">7.4. Log files</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#license">7.5. License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Config.html">3. Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Options.html">4. Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Options.html#log-files">5. Log files</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">6. Appendix</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#migration-from-pre-8-x">6.1. Migration from Pre 8.x</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation">6.2. Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dependencies">6.3. Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#log-files">6.4. Log files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#license">6.5. License</a></li>
 </ul>
 </li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">sd-boot man pages</span></p>
+<p class="caption" role="heading"><span class="caption-text">wg-client man pages</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="man-ready/wg-client-resolv-manager.8.html">1. resolv-manager</a></li>
 </ul>
@@ -80,7 +79,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active"><span class="section-number">7. </span>Appendix</li>
+      <li class="breadcrumb-item active"><span class="section-number">6. </span>Appendix</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/Appendix.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -91,9 +90,9 @@
            <div itemprop="articleBody">
              
   <section id="appendix">
-<h1><span class="section-number">7. </span>Appendix<a class="headerlink" href="#appendix" title="Link to this heading"></a></h1>
+<h1><span class="section-number">6. </span>Appendix<a class="headerlink" href="#appendix" title="Link to this heading"></a></h1>
 <section id="migration-from-pre-8-x">
-<span id="migration"></span><h2><span class="section-number">7.1. </span>Migration from Pre 8.x<a class="headerlink" href="#migration-from-pre-8-x" title="Link to this heading"></a></h2>
+<span id="migration"></span><h2><span class="section-number">6.1. </span>Migration from Pre 8.x<a class="headerlink" href="#migration-from-pre-8-x" title="Link to this heading"></a></h2>
 <p>Older versions (pre 8.x) need a small change becasue <em>resolv-manager</em> has been re-written
 in C and now runs a background daemon managing /etc/resolv.conf.</p>
 <p>This is what is needed:</p>
@@ -121,7 +120,7 @@ PostDown = /etc/wg-client/post-down.sh
 <p>Thats should be all that’s required.</p>
 </section>
 <section id="installation">
-<h2><span class="section-number">7.2. </span>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h2>
+<h2><span class="section-number">6.2. </span>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h2>
 <p>Available on:</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://github.com/gene-git/wg-client">Github</a></p></li>
@@ -136,7 +135,7 @@ PostDown = /etc/wg-client/post-down.sh
 <p>If destination is not specified it defaults to <em>build/pkg</em></p>
 </section>
 <section id="dependencies">
-<h2><span class="section-number">7.3. </span>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading"></a></h2>
+<h2><span class="section-number">6.3. </span>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading"></a></h2>
 <p><strong>Run Time</strong> :</p>
 <ul class="simple">
 <li><p>python              (3.13 or later)</p></li>
@@ -160,7 +159,7 @@ PostDown = /etc/wg-client/post-down.sh
 </ul>
 </section>
 <section id="log-files">
-<h2><span class="section-number">7.4. </span>Log files<a class="headerlink" href="#log-files" title="Link to this heading"></a></h2>
+<h2><span class="section-number">6.4. </span>Log files<a class="headerlink" href="#log-files" title="Link to this heading"></a></h2>
 <p>Each application has it’s own log file. They are located in the home directory :</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span>/log/wg-client
 <span class="si">${</span><span class="nv">HOME</span><span class="si">}</span>/log/wg-client-gui
@@ -169,7 +168,7 @@ PostDown = /etc/wg-client/post-down.sh
 <p>Each log file is rotated with using numerical suffix.</p>
 </section>
 <section id="license">
-<h2><span class="section-number">7.5. </span>License<a class="headerlink" href="#license" title="Link to this heading"></a></h2>
+<h2><span class="section-number">6.5. </span>License<a class="headerlink" href="#license" title="Link to this heading"></a></h2>
 <p>Created by Gene C. and licensed under the terms of the GPL-2.0-or-later license.</p>
 <ul class="simple">
 <li><p>SPDX-License-Identifier: GPL-2.0-or-later</p></li>
@@ -182,7 +181,7 @@ PostDown = /etc/wg-client/post-down.sh
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="Options.html" class="btn btn-neutral float-left" title="5. Options" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Options.html" class="btn btn-neutral float-left" title="4. Options" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="man-ready/wg-client-resolv-manager.8.html" class="btn btn-neutral float-right" title="1. resolv-manager" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
