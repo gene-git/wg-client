@@ -5,3 +5,4 @@ Library
 """
 # from .class_resolv import WgResolv
 from .resolv_manager import ResolvManager
+from .legacy import stop_legacy_monitor

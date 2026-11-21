@@ -5,27 +5,41 @@ Ensure that nothing overwrites the wireguard resolv.conf
 (Use inotify to monitor for file resolv.conf change, then repair)
 """
 # pylint: disable=too-many-instance-attributes
-from pyconcurrent import run_prog
-
 from wg_client.utils import cLog
 from wg_client.proc import get_matching_processes
 
-from .semaphore import create_semaphore
-from .semaphore import remove_semaphore
+
+def _is_monitor_args(argv: list[str]) -> bool:
+    """
+    True if argv selects the monitor task:
+      -t m[onitor]  --task m[onitor]  --task=m[onitor]  -tm[onitor]
+    """
+    for (idx, arg) in enumerate(argv):
+        value = None
+        if arg in ('-t', '--task'):
+            if idx + 1 < len(argv):
+                value = argv[idx + 1]
+        elif arg.startswith('--task='):
+            value = arg[len('--task='):]
+        elif arg.startswith('-t') and not arg.startswith('--'):
+            value = arg[2:]
+
+        if value and 'monitor'.startswith(value):
+            return True
+    return False
 
 
 class ResolvManager():
     """
-    resolv-manager is standalone daemon process.
-    This class provides a way to:
-    - check if resolv-manager is running
-    - start resolv-manager
+    resolv-manager is a standalone daemon process.
+    It is started (as root) by the wireguard PostUp script (post-up.sh) and
+    exits by itself when the wireguard interface goes away (wg-quick down),
+    restoring the standard resolv.conf.
+    This class provides a way to check if it is running.
     """
     def __init__(self):
         self.okay: bool = True
         self.resolv_manager: str = '/usr/lib/wg-client/resolv-manager'
-
-        self.pid: int = -1
 
     def running_info(self) -> dict[str, str]:
         """
@@ -46,55 +60,13 @@ class ResolvManager():
     def is_running(self) -> bool:
         """
         Checks if resolv-manager is running in monitor mode
-        Return : pargs list
         """
         info = self.running_info()
-        if info:
+        if not info:
+            return False
+
+        if not _is_monitor_args(info['args'].split()):
             pid = info['pid']
-            if '-t m' in info['args']:
-                cLog.msg(f' resolv-manager running not monitor mode pid: {pid}')
-            return True
-        return False
-
-    def start(self, iface: str) -> bool:
-        """
-        Provide run/exit semaphore to resolv-manager
-        - Fatal error if cannot touch the semaphore file.
-        Start resolv-manager
-        """
-        cLog.msg(' Starting : resolv_manager')
-        logdir = cLog.logdir()
-
-        semaphore_file = create_semaphore()
-        if not semaphore_file:
-            cLog.msg(" Error: creating semaphore file for resolv-manager")
-            return False
-
-        pargs = [self.resolv_manager]
-        pargs += ["--daemon", "--iface", iface, "-t", "monitor", "-l", logdir]
-        pargs += ["--semaphore", semaphore_file]
-
-        (ret, outs, errs) = run_prog(pargs)
-        if ret == 0:
-            cLog.msg(f" Success : dameon, monitor. logdir {logdir}")
-        else:
-            cLog.msg(" Error")
-            cLog.msg(outs)
-            cLog.msg(errs)
-            return False
-        return True
-
-    def stop(self) -> bool:
-        """
-        Simply remove the semphore
-        - if this fails - we need to have user manually kill it!
-        - maybe we add code to get the process and kill it here.
-        - we should add a separate routine that kills resolv-manager
-          if not shut down after a second.
-        """
-        cLog.msg(' Stopping resolv-manager')
-        if not remove_semaphore():
-            cLog.msg(" Error: removeing semaphore file for resolv-manager")
-            cLog.msg("   may need to manually kill it - should never happen!!")
+            cLog.msg(f' resolv-manager running but not in monitor mode pid: {pid}')
             return False
         return True

@@ -11,7 +11,7 @@ BUILDDIR      = _build
 
 SOURCES = conf.py ../../version.txt Makefile 
 SOURCES += Appendix.rst Config.rst 
-SOURCES += README.rst index.rst Options.rst
+SOURCES += README.rst index.rst Options.rst Update.rst
 
 SOURCES_MAN = ../man/wg-client-resolv-manager.8.rst
 MAN_READY = ./man-ready/wg-client-resolv-manager.8.rst

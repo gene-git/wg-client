@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>1. wg-client &mdash; wg-client 8.1.0
+  <title>1. wg-client &mdash; wg-client 9.0.0
  documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
@@ -15,7 +15,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=87b6a113"></script>
+      <script src="_static/documentation_options.js?v=0b13d40c"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
@@ -66,12 +66,14 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#sudoers">2.4. Sudoers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#non-user-wireguard-tunnels">2.5. Non-User Wireguard Tunnels</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Config.html">3. Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Options.html">4. Options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Options.html#log-files">5. Log files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Appendix.html">6. Appendix</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Update.html">6. Updating to Version 9.x from 8.x</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Appendix.html">7. Appendix</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">wg-client man pages</span></p>
 <ul>
@@ -196,13 +198,18 @@ PostDown   = /etc/wg-client/post-down.sh
 </div>
 <p>In addition the wg-client config file, <em>/etc/wg-client/config</em>, must
 set the wireguard interface that is used. For example with a line:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>iface = wg0
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>iface = wgc
 </pre></div>
 </div>
-<p>There helper scripts <em>post-up.sh</em> and <em>post-down.sh</em> are part of wg-client.
-wg-client handles everything else including running resolv-manager to monitor
-/etc/resolv.conf while thw vpn is active to ensures that DNS is resolved using
-the appropriate DNS servers while wireguard is active as well as restoring the
+<p>Users with permission to use wireguard must be members of the
+<em>wg-client</em> group. This group is given sudo permission that allows <em>/usr/bin/wg-quick</em> to
+be appropriately run.</p>
+<p>Wireguard interfaces that users may use must have interface names that start with
+the letter <em>w</em>.</p>
+<p>The helper scripts <em>post-up.sh</em> and <em>post-down.sh</em> are part of wg-client.</p>
+<p>The scripts also run resolv-manager to monitor /etc/resolv.conf while thw vpn is active to
+ensure that the correct resolv.conf is used so that DNS is resolved using
+the DNS needed while the tunnel is up. It also restores the
 standard resolv file when wireguard is shut down.</p>
 <p>More information about resolv-manager can be found in the man page:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>man wg-client-resolv-manageer
@@ -259,7 +266,7 @@ WGUSERS<span class="w">   </span><span class="nv">ALL</span><span class="w"> </s
 wheel group entries. Where WGUSERS is 1 or more usernames or a group such as
 <em>%wgusers</em>.</p>
 <p>Then,</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>visudu<span class="w"> </span>/etc/sudoers.d/100-wireguard
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>visudu<span class="w"> </span>/etc/sudoers.d/99-wireguard
 </pre></div>
 </div>
 <p>Edit <em>WGUSERS</em> as above.</p>
@@ -275,7 +282,7 @@ will prevail and user will be prompted for a password when running <em>sudo /usr
 Not what we want. To fix this use numbers to prefix the sudoers filenames. So in this
 example it would be:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>/etc/sudoers.d/010-wheel
-/etc/sudoers.d/100-wg-client
+/etc/sudoers.d/99-wireguard
 </pre></div>
 </div>
 <p>thereby ensuring that wg-client entries follow the wheel ones.</p>
@@ -287,6 +294,14 @@ example it would be:</p>
 </pre></div>
 </div>
 <p>This can also be achieved with doas or run0.</p>
+</section>
+<section id="non-user-wireguard-tunnels">
+<h2><span class="section-number">2.5. </span>Non-User Wireguard Tunnels<a class="headerlink" href="#non-user-wireguard-tunnels" title="Link to this heading"></a></h2>
+<p><strong>imporant</strong></p>
+<p>Members of group wg-client can bring up and down any WireGuard interface whose name starts with
+<em>w</em> (e.g. wgc, wg0, wg-home) and has a config in /etc/wireguard. Interfaces that users must not control,
+such as server or site-to-site tunnels, should use a name that does not start with w (e.g. site0, srv-link).</p>
+<p>Renaming an interface means renaming /etc/wireguard/&lt;name&gt;.conf and, if used, the wg-quick&#64;&lt;name&gt; systemd unit.</p>
 </section>
 </section>
 

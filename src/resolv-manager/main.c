@@ -1,30 +1,31 @@
 /*
- * SPDX-License-SPDX-License-Identifier: GPL-2.0-or-later
+ * SPDX-License-Identifier: GPL-2.0-or-later
  * SPDX-FileCopyrightText: © 2023-present Gene C <arch@sapience.com>
  */
 #include "resolv_manager.h"
+#include <errno.h>
 #include <fcntl.h>
-#include <limits.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sysexits.h>
 #include <unistd.h>
 
 
 /*
  * Open directories
+ * On failure, any fd opened is left in conf for config_clean() to close.
  */
 static bool open_directories(Config *conf) {
+    Options *opts = &conf->opts;
 
     conf->sys_net.fd = open(conf->sys_net.path, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
     if (conf->sys_net.fd < 0) {
+        log_msg(opts, " Error opening %s: %s", conf->sys_net.path, errno_str(errno));
         return false;
     }
 
     conf->etc.fd = open(conf->etc.path, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
     if (conf->etc.fd < 0) {
-        (void)close(conf->sys_net.fd);
+        log_msg(opts, " Error opening %s: %s", conf->etc.path, errno_str(errno));
         return false;
     }
 
@@ -38,26 +39,39 @@ static bool open_directories(Config *conf) {
 */
 static bool check_wireguard_ready(Config *conf) {
 
-    if (!conf->iface.name) {
-        log_msg(&conf->opts, " Missing Wireguard interface name");
-        return false;
-    }
-
-    if (!conf->wg.name) {
-        log_msg(&conf->opts, " Missing Wireguard resolv file (resolv.conf.wg)");
-        return false;
-    }
-
-    if (faccessat(conf->sys_net.fd, conf->iface.name, F_OK, 0) != 0) {
+    if (!iface_exists(conf)) {
         log_msg(&conf->opts, " Wireguard interface not available: %s", conf->iface.name);
         return false;
     }
 
-    if (faccessat(conf->etc.fd, conf->wg.name, F_OK, 0) != 0) {
+    if (faccessat(conf->etc.fd, conf->wg.name, F_OK, AT_SYMLINK_NOFOLLOW) != 0) {
         log_msg(&conf->opts, " Wireguard resolv file not available: %s", conf->wg.name);
         return false;
     }
     return true;
+}
+
+/*
+ * Must be root - run from wireguard PostUp/PostDown.
+ * Testing mode may be run as a normal user: all capabilities are dropped.
+ */
+static int check_root(Config *conf) {
+
+    if (getuid() == 0 && geteuid() == 0) {
+        return EX_OK;
+    }
+
+    if (conf->opts.testing) {
+        if (caps_drop_all() != 0) {
+            return EX_OSERR;
+        }
+        log_msg(&conf->opts, " testing mode: all capabilities dropped");
+        return EX_OK;
+    }
+
+    log_msg(&conf->opts, "Error: must be run as root (wireguard PostUp / PostDown)");
+    (void)fprintf(stderr, "Error: must be run as root (wireguard PostUp / PostDown)\n");
+    return EX_NOPERM;
 }
 
 static int do_tasks(Config *conf) {
@@ -80,139 +94,150 @@ static int do_tasks(Config *conf) {
             break;
 
         case MONITOR:
-            if (install_wg_resolv(conf) == 0) {
-                ret = monitor_loop(conf);
-            } else {
+            /*
+             * monitor_loop() installs the wireguard resolv.conf itself
+             * (after its watches are in place) and always restores the
+             * standard one before returning.
+             */
+            if (monitor_loop(conf) != 0) {
                 ret = EX_SOFTWARE;
             }
             break;
 
+        case NOTHING:
         default:
+            ret = EX_USAGE;
             break;
     }
     return ret;
 }
 
 /*
- * 3 modes:
- *  - monitor (the default)
- *      - install_wg_resolv()
- *      - wait for any file changes 
- *        - if resolv.conf changes then do install_wg_resolv()
- *        - if resolv.conf.wg changes then do install_wg_resolv()
- *        - if sys/net/wg0 goes away (wireguard stopped) - restore() then exit
- *
- *  - standard
- *      - copy resolv.conf.save to resolv.conf
- *
- *  - wireguard
- *      - copy resolv.conf to resolv.conf.save
- *      - copy resolv.conf.wg to resolv.conf
- *
- * Returns from sysexits.h:
- *      EX_OK = successful termination (including already running)
- *      EX_USAGE = options
- *      EX_OSFILE = file errors
- *      EX_TEMPFAIL = not ready - wireguard is not running. - try again
- *      EX_OSERR = failure to daemonize or drop privs.
- *      EX_IOERR = typically read/write on /etc/resolv.conf et al
- *      EX_SOFTWARE = some other problem - mostly likely the monitor daemon encoutered 
- *                    some unrecoverable issue.
+ * Everything up to the point of doing the work - run as root.
+ * Errors here are reported to the caller (wg-quick) via exit code.
  */
-int main(int argc, char **argv) {
-    int result = EX_OK;
-    Config conf = {}; 
-    Locking locking = {};
+static int prepare(Config *conf, Locking *locking) {
 
-    if (!initialize(argc, argv, &conf)) {
-        result = EX_USAGE;
-        goto cleanup;
+    int result = check_root(conf);
+    if (result != EX_OK) {
+        return result;
     }
 
     /*
      * Make sure no other executable is running
      */
-    if (!initialize_lock(&conf, &locking)) {
-        result = EX_USAGE;
-        goto cleanup;
+    if (!initialize_lock(conf, locking)) {
+        return locking->locked_by_other ? EX_TEMPFAIL : EX_OSERR;
+    }
+
+    if (!open_directories(conf)) {
+        return EX_OSFILE;
     }
 
     /*
-     * If semaphore provided and does not exist - exit.
+     * Save any provided wireguard resolv.conf file
      */
-    if (conf.opts.semaphore && access (conf.opts.semaphore, F_OK) != 0) {
-        log_msg(&conf.opts, "Semaphore not found - all done: %s", conf.opts.semaphore);
-        goto cleanup;
-    }
-
-    /*
-     * Open directories
-     */
-    if (!open_directories(&conf)) {
-        result = EX_OSFILE;
-        goto cleanup;
-    }
-
-    /*
-     * Save any provided wireguar resolv.conf file
-     */
-    if (conf.opts.file && save_wg_resolv(&conf, conf.opts.file) != 0) {
-        result = EX_IOERR;
-        goto cleanup;
+    if (conf->opts.file && save_wg_resolv(conf, conf->opts.file) != 0) {
+        return EX_IOERR;
     }
 
     /*
      * Check wireguard up and provided resolv.wg file
      * - not needed if simply restoring standard resolv.
      */
-    if (conf.opts.task != INSTALL_STANDARD && !check_wireguard_ready(&conf)) {
-        result = EX_TEMPFAIL;
-        goto cleanup;
+    if (conf->opts.task != INSTALL_STANDARD && !check_wireguard_ready(conf)) {
+        return EX_TEMPFAIL;
     }
+    return EX_OK;
+}
 
-    /*
-     * Daemonize
-     */
-    if (conf.opts.daemon) {
-        log_msg(&conf.opts, " daemon mode");
+/*
+ * Daemonize (monitor), drop privileges and do the work.
+ */
+static int run(Config *conf) {
 
-        result = daemonize();
+    if (conf->opts.daemon) {
+        log_msg(&conf->opts, " daemon mode");
+
+        int result = daemonize();
         if (result != EX_OK) {
-            goto cleanup;
+            return result;
         }
     }
 
     /*
-     * Drop privs if root but keep caps.
-     * - we'll check caps after we drop privs
+     * Drop privs if root but keep the 2 caps we need.
      */
-    if (change_privileges(&conf) != 0) {
-        result = EX_OSERR;
-        goto cleanup;
+    if (change_privileges(conf) != 0) {
+        return EX_OSERR;
     }
 
-    check_permissions(&conf.perms);
-    if (!conf.perms.cap_dac_override) {
-        log_msg(&conf.opts, "Warning : missing CAP_DAC_OVERRIDE capability");
-        log_msg(&conf.opts, "        : this is okay in test mode");
+    if (check_permissions(&conf->perms) != 0) {
+        log_msg(&conf->opts, "Warning : unable to read capabilities");
+    }
+    if (!conf->perms.cap_dac_override || !conf->perms.cap_chown) {
+        log_msg(&conf->opts, "Warning : missing CAP_DAC_OVERRIDE and/or CAP_CHOWN capability");
+        log_msg(&conf->opts, "        : this is okay in test mode");
     }
 
-    /*
-     * tasks
-     */
-    result = do_tasks(&conf);
+    return do_tasks(conf);
+}
 
-cleanup:
+/*
+ * 3 tasks:
+ *  - monitor  (started from PostUp as a daemon)
+ *      - install_wg_resolv()
+ *      - wait for any changes
+ *        - if resolv.conf changes then do install_wg_resolv()
+ *        - if resolv.conf.wg changes then do install_wg_resolv()
+ *        - if resolv.conf.wg removed, interface removed (wg-quick down),
+ *          or SIGTERM/SIGINT/SIGHUP/SIGQUIT - install_standard_resolv() then exit
+ *
+ *  - standard  (PostDown - safety net, monitor normally already restored)
+ *      - copy resolv.conf.saved to resolv.conf
+ *
+ *  - wireguard  (PostUp, with -f)
+ *      - copy resolv.conf to resolv.conf.saved
+ *      - copy resolv.conf.wg to resolv.conf
+ *
+ * Returns from sysexits.h:
+ *      EX_OK = successful termination (including -h)
+ *      EX_USAGE = options
+ *      EX_NOPERM = not run as root (and not testing mode)
+ *      EX_OSFILE = file errors
+ *      EX_TEMPFAIL = not ready - wireguard is not running, or lock held by another - try again
+ *      EX_OSERR = failure to daemonize, drop privs, or acquire lock
+ *      EX_IOERR = typically read/write on /etc/resolv.conf et al
+ *      EX_SOFTWARE = some other problem - mostly likely the monitor daemon encoutered
+ *                    some unrecoverable issue.
+ */
+int main(int argc, char **argv) {
+    Config conf = {};
+    Locking locking = {};
+
+    locking.fd = -1;
+    locking.dir_fd = -1;
+
+    int init = initialize(argc, argv, &conf);
+    if (init != 0) {
+        config_clean(&conf);
+        return (init > 0) ? EX_OK : EX_USAGE;
+    }
+
+    int result = prepare(&conf, &locking);
+    if (result == EX_OK) {
+        result = run(&conf);
+    }
+
     release_lock(&locking);
 
     if (result == EX_OK) {
         log_msg(&conf.opts, "Done all good");
     } else {
-        log_msg(&conf.opts, "Done with warnings or errors");
+        log_msg(&conf.opts, "Done with warnings or errors (%d)", result);
     }
 
     config_clean(&conf);
 
     return result;
 }
-

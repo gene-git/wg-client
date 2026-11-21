@@ -1,5 +1,6 @@
 inc_dir += include_directories('.')
 lib_sources += files(
+  'caps.c',
   'change_privileges.c',
   'config.c',
   'copy_file.c',

@@ -123,12 +123,20 @@ to use PostUp and PosDown.
 In addition the wg-client config file, */etc/wg-client/config*, must
 set the wireguard interface that is used. For example with a line::
 
-    iface = wg0
+    iface = wgc
 
-There helper scripts *post-up.sh* and *post-down.sh* are part of wg-client.
-wg-client handles everything else including running resolv-manager to monitor
-/etc/resolv.conf while thw vpn is active to ensures that DNS is resolved using
-the appropriate DNS servers while wireguard is active as well as restoring the
+Users with permission to use wireguard must be members of the
+*wg-client* group. This group is given sudo permission that allows */usr/bin/wg-quick* to 
+be appropriately run.
+
+Wireguard interfaces that users may use must have interface names that start with
+the letter *w*. 
+
+The helper scripts *post-up.sh* and *post-down.sh* are part of wg-client.
+
+The scripts also run resolv-manager to monitor /etc/resolv.conf while thw vpn is active to 
+ensure that the correct resolv.conf is used so that DNS is resolved using
+the DNS needed while the tunnel is up. It also restores the
 standard resolv file when wireguard is shut down.
 
 More information about resolv-manager can be found in the man page::
@@ -204,7 +212,7 @@ Then,
 
 .. code-block:: bash
 
-    visudu /etc/sudoers.d/100-wireguard
+    visudu /etc/sudoers.d/99-wireguard
     
 Edit *WGUSERS* as above.
 
@@ -224,7 +232,7 @@ Not what we want. To fix this use numbers to prefix the sudoers filenames. So in
 example it would be::
 
    /etc/sudoers.d/010-wheel
-   /etc/sudoers.d/100-wg-client
+   /etc/sudoers.d/99-wireguard
 
 thereby ensuring that wg-client entries follow the wheel ones.
 
@@ -237,3 +245,15 @@ For convenience this is also noted in the sample file::
     chmod 440 /etc/sudoers.d/wg-client
 
 This can also be achieved with doas or run0.
+
+
+Non-User Wireguard Tunnels
+==========================
+
+**imporant**
+
+Members of group wg-client can bring up and down any WireGuard interface whose name starts with 
+*w* (e.g. wgc, wg0, wg-home) and has a config in /etc/wireguard. Interfaces that users must not control, 
+such as server or site-to-site tunnels, should use a name that does not start with w (e.g. site0, srv-link).
+
+Renaming an interface means renaming /etc/wireguard/<name>.conf and, if used, the wg-quick@<name> systemd unit.

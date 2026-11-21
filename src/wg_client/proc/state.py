@@ -100,22 +100,23 @@ def homedir(user: str = '') -> str:
     try:
         hdir = pwd.getpwnam(user).pw_dir
     except KeyError:
-        hdir = 'unkown'
+        hdir = 'unknown'
     return hdir
 
 
 def get_local_state_dir(user: str = '') -> str:
     """
-    Place we save state
+    Place we save state: ~/.local/share/state/wg-client
+     - for another user (root only) the directory is not created.
+     - no fallback to a shared directory such as /tmp: a predictable
+       name there can be pre-created by another user.
+    Raises OSError if it cannot be created.
     """
     home = homedir(user)
     sdir = os.path.join(home, '.local/share/state/wg-client')
-    try:
-        os.makedirs(sdir, exist_ok=True)
-    except OSError:
-        pid = os.getpid()
-        sdir = f'/tmp/wg-client-state-{pid}'
-        os.makedirs(sdir, exist_ok=True)
+    if user and user != process_owner():
+        return sdir
+    os.makedirs(sdir, mode=0o700, exist_ok=True)
     return sdir
 
 

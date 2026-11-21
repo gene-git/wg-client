@@ -1,18 +1,23 @@
 /*
- * SPDX-License-SPDX-License-Identifier: GPL-2.0-or-later
+ * SPDX-License-Identifier: GPL-2.0-or-later
  * SPDX-FileCopyrightText: © 2023-present Gene C <arch@sapience.com>
  */
 #include "resolv_manager.h"
 #include <fcntl.h>
-#include <stdlib.h>
+#include <stdio.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <sysexits.h>
 #include <unistd.h>
 
 /*
  * Run as background daemon
+ * Parents use _exit() so stdio buffers / atexit handlers are not run twice.
+ * Locks are OFD locks so they stay with the child.
  */
-int daemonize(void) {
+int daemonize() {
+
+    (void)fflush(nullptr);
 
     /*
      * fork #1
@@ -22,7 +27,7 @@ int daemonize(void) {
         return EX_OSERR;
     }
     if (pid > 0) {
-        exit(EX_OK);
+        _exit(EX_OK);
     }
 
     if (setsid() < 0) {
@@ -37,10 +42,13 @@ int daemonize(void) {
         return EX_OSERR;
     }
     if (pid > 0) {
-        exit(EX_OK);
+        _exit(EX_OK);
     }
 
-    umask(0);
+    /*
+     * All files we create have explicit modes - 022 is defense in depth.
+     */
+    umask(S_IWGRP | S_IWOTH);
 
     if (chdir("/") < 0) {
         return EX_OSERR;
@@ -51,25 +59,25 @@ int daemonize(void) {
      * confirm /dev/null is valid character device
      */
     int dev_null = open("/dev/null", O_RDWR | O_CLOEXEC);
-    if (dev_null >= 0) {
-        struct stat stbuf = {};
-
-        if (fstat(dev_null, &stbuf) < 0 || !S_ISCHR(stbuf.st_mode)) {
-            (void)close(dev_null);
-            (void)close(STDIN_FILENO);
-            (void)close(STDOUT_FILENO);
-            (void)close(STDERR_FILENO);
-            return EX_OSERR;
-        }
-
-        dup2(dev_null, STDIN_FILENO);
-        dup2(dev_null, STDOUT_FILENO);
-        dup2(dev_null, STDERR_FILENO);
-        (void)close(dev_null);
-
-    } else {
+    if (dev_null < 0) {
         return EX_OSERR;
     }
-    return EX_OK;
-}
 
+    struct stat stbuf = {};
+    if (fstat(dev_null, &stbuf) < 0 || !S_ISCHR(stbuf.st_mode)) {
+        (void)close(dev_null);
+        return EX_OSERR;
+    }
+
+    int status = EX_OK;
+    if (dup2(dev_null, STDIN_FILENO) < 0 ||
+        dup2(dev_null, STDOUT_FILENO) < 0 ||
+        dup2(dev_null, STDERR_FILENO) < 0) {
+        status = EX_OSERR;
+    }
+
+    if (dev_null > STDERR_FILENO) {
+        (void)close(dev_null);
+    }
+    return status;
+}

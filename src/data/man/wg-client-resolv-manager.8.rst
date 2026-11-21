@@ -116,15 +116,11 @@ run by non-root user, it uses just enough **capabilities** to do its job.
 
 These are all that are required::
 
-    /usr/bin/setcap cap_chown,cap_dac_override=ep /usr/lib/wg-client/resolv-manager
+    cap_chown,cap_dac_override=ep
 
-The Arch PKGBUILD sets these capabilities when the package is installed.
-
-It is designed to be run as ordinary unprivileged user. 
-
-If it is run as root, then it drops privileges to nobody and retains 
-the capabilities to function properly. Starting wireguard itself needs root privileges
-so resolv-manager is started by root in the PostUp and PostDown settings.
+Since the executable is run by wireguard using the PostUp and PostDown
+it starts with root, but it immediately changes to user nobody and drops its priviliges 
+retaining only the capabilities it needs.
 
 
 OPTIONS

@@ -273,9 +273,12 @@ def MainGui(myname):
     Defaul <interface> is wgc but can be provided on command line
     The special <interface> 'test-dummy' makes program run in test mode
     Since wg-quick must be run as root :
-    create /etc/sudoers.d/010-wg-quick
-        <user>   ALL=NOPASSWD: SETENV: /usr/bin/wg-quick
-    where <user> is the user who will be using the tool
+    install /etc/sudoers.d/010-wg-client (see /etc/wg-client/samples/sudoers.sample):
+        Cmnd_Alias WG_CLIENT_QUICK = /usr/bin/wg-quick up wgc, /usr/bin/wg-quick down wgc
+        %wg-client ALL = (root) NOPASSWD: WG_CLIENT_QUICK
+    and add each user to group wg-client (gpasswd -a <user> wg-client).
+    The wireguard config PostUp (post-up.sh) starts the resolv-manager monitor.
+    Exact commands only - wg-quick with arbitrary arguments is equivalent to root.
 
     Add buttons:
         Run ssh -R to create remote listener

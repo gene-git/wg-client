@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>1. resolv-manager &mdash; wg-client 8.1.0
+  <title>1. resolv-manager &mdash; wg-client 9.0.0
  documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
@@ -15,13 +15,13 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=87b6a113"></script>
+      <script src="../_static/documentation_options.js?v=0b13d40c"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="prev" title="6. Appendix" href="../Appendix.html" /> 
+    <link rel="prev" title="7. Appendix" href="../Appendix.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -50,7 +50,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../Config.html">3. Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Options.html">4. Options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Options.html#log-files">5. Log files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Appendix.html">6. Appendix</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Update.html">6. Updating to Version 9.x from 8.x</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Appendix.html">7. Appendix</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">wg-client man pages</span></p>
 <ul class="current">
@@ -183,14 +184,12 @@ resolv-manager will only monitor or change any files after it as acquired the lo
 <p>Since resolv-manager needs privileges to modify file in /etc and it is
 run by non-root user, it uses just enough <strong>capabilities</strong> to do its job.</p>
 <p>These are all that are required:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>/usr/bin/setcap cap_chown,cap_dac_override=ep /usr/lib/wg-client/resolv-manager
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>cap_chown,cap_dac_override=ep
 </pre></div>
 </div>
-<p>The Arch PKGBUILD sets these capabilities when the package is installed.</p>
-<p>It is designed to be run as ordinary unprivileged user.</p>
-<p>If it is run as root, then it drops privileges to nobody and retains
-the capabilities to function properly. Starting wireguard itself needs root privileges
-so resolv-manager is started by root in the PostUp and PostDown settings.</p>
+<p>Since the executable is run by wireguard using the PostUp and PostDown
+it starts with root, but it immediately changes to user nobody and drops its priviliges
+retaining only the capabilities it needs.</p>
 </section>
 <section id="options">
 <h3><span class="section-number">1.1.5. </span>OPTIONS<a class="headerlink" href="#options" title="Link to this heading"></a></h3>
@@ -270,7 +269,7 @@ error related to inotify.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../Appendix.html" class="btn btn-neutral float-left" title="6. Appendix" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../Appendix.html" class="btn btn-neutral float-left" title="7. Appendix" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

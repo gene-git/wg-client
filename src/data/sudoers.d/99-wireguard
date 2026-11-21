@@ -1,0 +1,29 @@
+
+#
+# Allow wg-quick to be run for users who are members of the wg-quick group.
+#
+# Add users to wg-quick group:
+#   gpasswd -a <USERNAME> wg-client; 
+#
+# Note that user needs to log out and back in for it to take effect. 
+#
+# Ensure that this file is named so it is sorted after any file for WHEEL group user
+# In case a user is in wheel group. sudo retains the last matching file.
+#
+# Use :
+#   visudo /etc/sudoers.d/100-wireguard
+#
+# visudo should use correct permissions which should be '0440'
+#
+# Keep things in lexical order.
+# For example this scheme:  
+#      001-wheel 100-wireguard
+#
+# guarantees wheel is processed ahead of wireguard entry
+#
+# **Important** Any wireguard interface name starting with "w" is allowed for group users.
+#
+# If user laptop - no problem, for any other wireguard interface on same user machine,
+# please use a name that does NOT begin with "w". e.g. miami-wg0
+#
+%wg-client  ALL = (root) NOPASSWD: /usr/bin/wg-quick ^(up|down) w[a-zA-Z0-9_=+.-]{1,14}$

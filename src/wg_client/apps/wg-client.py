@@ -15,9 +15,12 @@ def main():
     Default <interface> is wgc but can be provided on command line
     The special <interface> 'test-dummy' runs in test mode
     Since wg-quick must be run as root :
-    create /etc/sudoers.d/wg-runner
-        <user>   ALL=NOPASSWD: SETENV: /usr/bin/wg-quick
-    where <user> is the user who will be using the tool
+    wg-client provides /etc/sudoers.d/99-wireguard which gives wireguard
+    access to members of wg-client group to tunnels with interface names
+    starting with the letter "w".
+    Add each user to group wg-client (gpasswd -a <user> wg-client).
+    The wireguard config PostUp (post-up.sh) starts the resolv-manager monitor.
+    Exact commands only - wg-quick with arbitrary arguments is equivalent to root.
     """
     client = WgClient()
 

@@ -1,6 +1,59 @@
 Recent Changes
 ==============
 
+**9.0.0**
+
+**Changes required**
+
+* wg-client users **must** now be added to the *wg-client* group.
+* An sudoers file is installed that allows wireguard to be used by *wg-client* group members.
+  Please remove any existing sudoers file as no longer needed and is less secure than
+  the new version using the *wg-client* group.
+* The sudoers file limits users to wireguard interface names starting with the letter *w*.
+  This way any system tunnel on same machine cannot be modified by wg-client users,
+  provided that the system interface name does not start with a *w*. E.g. a system
+  tunnel might be named *memphis-1*. Be sure any wg-client interface name 
+  starts with a *w*
+* You can leave the existing sudoers.d file until user has logged out and back.
+* Please see the chapter in the documentation titled *UPDATING TO VERSION 9.X FROM 8.X*.
+
+* resolv-manager enhancements.
+
+  * Scan code for bugs, edge cases and security.
+  * Fix: Privileges management
+  * Fix: Add signal handler
+  * Fix: Handle /etc/resolv.conf being a symlink
+  * Fix: Race with external /etc/resolv.conf writers (dhcp, network manager etc)
+         This fixes a race bug where the non-wireguard resolv.conf is not
+         actually replaced by the wireguard version after some other process has modified it.
+  * Fix: Improve error checks and handling
+  * /etc/sudoers.d/100-wireguard now provided. It permits users in linux group *wg-client* 
+    to start and stop wireguard.
+  * **Change Needed**: 
+    
+    Wireguard users *must* now be added to the wg-client group after installing the new package:
+
+        gpasswd -a <USERNAME> wg-client
+
+    As usual, users needs to logout and login to gain new group access.
+    Members of *wg-client* group are permitted to manager wireguard tunnels whose
+    interface name starts with the letter *w*.
+
+  * If there are any system wireguard tunnels running on same machine as users
+    with *wg-client* priviliges, please ensure that those system tunnels use interface
+    names that do not start with *w*. 
+  
+  * Fix: Monitor wireguard exit - inotify is filesystem only, so cannot be used for
+    kernel files like /sys/class/net/. Use rtnetlink instead.
+
+  * resolv-manager now started by wireguard post-up/post-down. This simplifies
+    things and removes some code from the wg-client application. 
+
+  * Remove capabilities on resolv-manager executable. These are no longer needed since it is
+    now started by wireguard. resolv-manager drops all capabilites save the 2 it needs 
+    to manage the resolv.conf files (cap_chown,cap_dac_override=ep)
+
+
 **8.1.0**
 
 * Bug fix for remote listening port.

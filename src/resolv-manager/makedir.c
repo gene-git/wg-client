@@ -1,71 +1,67 @@
 /*
- * SPDX-License-SPDX-License-Identifier: GPL-2.0-or-later
+ * SPDX-License-Identifier: GPL-2.0-or-later
  * SPDX-FileCopyrightText: © 2023-present Gene C <arch@sapience.com>
  */
 #include "resolv_manager.h"
 #include <errno.h>
-#include <fcntl.h>
 #include <limits.h>
-#include <stdio.h>
 #include <string.h>
-#include <sys/errno.h>
 #include <sys/stat.h>
-#include <unistd.h>
+#include <sys/types.h>
 
+
+static int mkdir_one(const char *path, mode_t perms) {
+    if (mkdir(path, perms) != 0 && errno != EEXIST) {
+        return -1;
+    }
+    return 0;
+}
 
 /*
  * Create directory (and intermediates) if it doesnt exist.
- * Create perms 0750
+ * Create perms 0755 (subject to umask)
  */
 int makedir_if_needed(const char *path) {
 
-    char temp_path[PATH_MAX];       // NOLINT(misc-include-cleaner)
-    size_t length = strlen(path);
+    char temp_path[PATH_MAX];
     const mode_t dir_perms = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
 
-    if (!path || access(path, F_OK) == 0) {
-        return 0;
+    if (!path || *path == '\0') {
+        return -1;
     }
 
-    if (length >= PATH_MAX || strlcpy(temp_path, path, PATH_MAX) >= PATH_MAX) {
+    struct stat stbuf = {};
+    if (stat(path, &stbuf) == 0) {
+        return S_ISDIR(stbuf.st_mode) ? 0 : -1;
+    }
+
+    if (strlcpy(temp_path, path, sizeof(temp_path)) >= sizeof(temp_path)) {
         return -1;
     }
 
     /*
-     * Keep track of each slash - walk through the path.
-     * Write null over each one slash to create any intermediate paths
-     * - skip leading slash.
+     * Walk the path - write null over each slash to create any
+     * intermediate directories (skip leading slash).
      */
-    char *slash = strchr(temp_path, '/');
-    if (slash == temp_path) {
-        slash = strchr(slash + 1U, '/');
-    }
+    char *slash = strchr(temp_path + 1, '/');
 
-    /*
-     * Walk the path creating any missing directories.
-     */
     while (slash) {
         *slash = '\0';
 
-        if (access(temp_path, F_OK) != 0) {
-            if (mkdir(temp_path, dir_perms) != 0 && errno != EEXIST) {  // NOLINT(misc-include-cleaner)
-                return -1;
-            }
+        if (mkdir_one(temp_path, dir_perms) != 0) {
+            return -1;
         }
 
         *slash = '/';
-        slash = strchr(slash + 1U, '/');
+        slash = strchr(slash + 1, '/');
     }
 
     /*
-     * Handle any trailing slash
+     * Final component (no trailing slash case)
      */
-    if (access(temp_path, F_OK) != 0) {
-        if (mkdir(temp_path, dir_perms) != 0 && errno != EEXIST) {  // NOLINT(misc-include-cleaner)
-            return -1;
-        }
+    if (mkdir_one(temp_path, dir_perms) != 0) {
+        return -1;
     }
 
     return 0;
 }
-

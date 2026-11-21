@@ -64,7 +64,8 @@ my_cflags = [
 buildtype = get_option('buildtype')
 
 if optimized
-  my_cflags += ['-D_FORTIFY_SOURCE=3']
+  # distro CFLAGS (e.g. makepkg) may already define it - avoid redefinition warning
+  my_cflags += ['-U_FORTIFY_SOURCE', '-D_FORTIFY_SOURCE=3']
 endif
 
 if get_option('analyzer')
@@ -113,15 +114,17 @@ subdir('src/wg_client')
 #
 # Executables
 #
-# Install must: 
+# resolv-manager is run as root by the wireguard PostUp / PostDown scripts
+# (/etc/wg-client/post-up.sh, post-down.sh). It needs no file capabilities:
+# the monitor drops to nobody keeping only CAP_CHOWN and CAP_DAC_OVERRIDE.
 #
-#   /usr/bin/setcap cap_chown,cap_dac_override=ep /usr/lib/wg-client/resolv-manager
-#
-# We do this in pacman's wg-client.install post_install/post_upgrade
+# Group wg-client (sysusers.d) is used by the (manually installed) sudoers
+# rule allowing members to run "wg-quick up/down <iface>".
 #
 
 resolv_manager = executable('resolv-manager',
   sources: [
+    'src/resolv-manager/caps.c',
     'src/resolv-manager/change_privileges.c',
     'src/resolv-manager/config.c',
     'src/resolv-manager/copy_file.c',
@@ -142,10 +145,9 @@ resolv_manager = executable('resolv-manager',
     'src/resolv-manager/user_info.c',
     ],
   dependencies: [dep_cap, dep_crypto],
-  c_args: my_cflags,
-  link_args: my_ldflags,
+  # my_cflags / my_ldflags already applied project-wide above
   install: true,
-  install_dir: d_lib / 'wg-client'
+  install_dir: d_lib / 'wg-client',
 )
 
 configure_file(
@@ -231,6 +233,28 @@ install_data(
   install_dir: d_share / 'licenses/wg-client',
   install_tag: 'license'
 )
+
+# sysusers.d - group wg-client
+# (always /usr/lib/sysusers.d - not libdir, which can be multiarch on some distros)
+
+install_data(
+  [
+    'src/data/sysusers.d/wg-client.conf',
+  ],
+  install_dir: get_option('prefix') / 'lib/sysusers.d',
+)
+
+#
+# etc/sudoers.d/
+#
+install_data(
+  [
+    'src/data/sudoers.d/99-wireguard',
+  ],
+  install_dir: d_etc / 'sudoers.d',
+  install_mode: 'r--r-----',
+)
+
 
 # /etc/wg-client
 

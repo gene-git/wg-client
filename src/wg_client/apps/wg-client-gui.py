@@ -12,6 +12,7 @@ from wg_client.gui import MainGui
 os.environ["QT_NO_XDG_DESKTOP_PORTAL"] = "1"
 os.environ["QT_LOGGING_RULES"] = "qt.qpa.wayland.textinput.warning=false;qt.qpa.services.warning=false"
 
+
 def main():
     """
     Application to start stop vpn
@@ -20,9 +21,12 @@ def main():
     The special <interface> 'test-dummy' makes program run in test mode
 
     Since wg-quick must be run as root user must have sudoers :
-    create /etc/sudoers.d/wg-runner
-        <user>   ALL=NOPASSWD: SETENV: /usr/bin/wg-quick
-    where <user> is the user who will be using the tool
+    wg-client provides /etc/sudoers.d/99-wireguard which gives wireguard
+    access to members of wg-client group to tunnels with interface names
+    starting with the letter "w".
+    Add each user to group wg-client (gpasswd -a <user> wg-client).
+    The wireguard config PostUp (post-up.sh) starts the resolv-manager monitor.
+    Exact commands only - wg-quick with arbitrary arguments is equivalent to root.
 
     """
     myname = sys.argv[0]

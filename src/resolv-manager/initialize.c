@@ -1,17 +1,32 @@
 /*
- * SPDX-License-SPDX-License-Identifier: GPL-2.0-or-later
+ * SPDX-License-Identifier: GPL-2.0-or-later
  * SPDX-FileCopyrightText: © 2023-present Gene C <arch@sapience.com>
  */
 #include "resolv_manager.h"
-#include <fcntl.h>
-#include <libgen.h> // Required for dirname() and basename()
+#include <ctype.h>
 #include <limits.h>
+#include <net/if.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sysexits.h>
-#include <unistd.h>
 
+
+enum {
+    ASCII_LAST_PRINTABLE = 0x7e,
+};
+
+/*
+ * realpath() of path as a malloc'd string, or nullptr
+ */
+static char *real_path_dup(const char *path) {
+    char buf[PATH_MAX] = {};
+
+    if (!realpath(path, buf)) {
+        (void)fprintf(stderr, "Error: directory not found: %s\n", path);
+        return nullptr;
+    }
+    return strdup(buf);
+}
 
 /*
  * Directories /etc, /sys/class/net
@@ -19,144 +34,68 @@
  */
 static bool init_standard_dirs(Config *conf) {
     Options *opts = &conf->opts;
-    char buf[PATH_MAX] = {};
-    char *ptr = nullptr;
-    char *sys_net_path = nullptr;
-    char *etc_path = nullptr;
 
-    /*
-     * In test mode prepend with "./"
-     */
-    if (opts->testing) {
-        sys_net_path = "./sys/class/net";
-        etc_path = "./etc";
+    const char *sys_net_path = opts->testing ? "./sys/class/net" : "/sys/class/net";
+    const char *etc_path = opts->testing ? "./etc" : "/etc";
 
-    } else {
-        sys_net_path = "/sys/class/net";
-        etc_path = "/etc";
-    }
-
-    /*
-     * /sys/class/net
-     */
-    if (!realpath(sys_net_path, buf)) {
+    conf->sys_net.path = real_path_dup(sys_net_path);
+    if (!conf->sys_net.path) {
         return false;
     }
-    
-    ptr = strdup(buf);
-    if (!ptr) {
-        return false;
-    }
-    conf->sys_net.path = ptr;
 
-    /*
-     * /etc
-     */
-    if (!realpath(etc_path, buf)) {
-        return false;
-    } 
-
-    ptr = strdup(buf);
-    if (!ptr) {
-        return false;
-    }
-    conf->etc.path = ptr;
-
-    return true;
+    conf->etc.path = real_path_dup(etc_path);
+    return conf->etc.path != nullptr;
 }
 
 /*
- * Semaphore file to watch
+ * Interface name must be a plausible kernel interface name:
+ * 1..IFNAMSIZ-1 chars, no '/', no whitespace / control chars, not "." or "..".
  */
-static bool init_semaphore(Config *conf) {
-    Options *opts = &conf->opts;
-    char dir[PATH_MAX] = {};
-    char *ptr = nullptr;
-    char *dir_path = nullptr;
-    char *base_path = nullptr;
-    bool status = true;
+static bool valid_iface_name(const char *name) {
+    size_t len = strnlen(name, IFNAMSIZ);
 
-    if (!opts->semaphore) {
-        return true;
+    if (len == 0 || len >= IFNAMSIZ) {
+        return false;
     }
-
-    /*
-     * Separate dir and file
-     */
-    dir_path = strdup(opts->semaphore);
-    base_path = strdup(opts->semaphore);
-    if (!dir_path || !base_path) {
-        status = false;
-        goto cleanup;
+    if (strcmp(name, ".") == 0 || strcmp(name, "..") == 0) {
+        return false;
     }
-
-    char *dir_raw = dirname(dir_path);
-    char *base = basename(base_path);
-
-    if (!realpath(dir_raw, dir)) {
-        status = false;
-        goto cleanup;
+    for (size_t i = 0; i < len; i++) {
+        unsigned char chr = (unsigned char)name[i];
+        if (chr == '/' || chr == ':' || isspace(chr) || iscntrl(chr) || chr > ASCII_LAST_PRINTABLE) {
+            return false;
+        }
     }
-
-    /*
-     * We're only going to watch this not open it.
-     */
-    conf->sem.fd = -1;
-
-    ptr = strdup(dir);
-    if (!ptr) {
-        goto cleanup;
-    }
-    conf->sem.path = ptr;
-
-    ptr = strdup(base);
-    if (!ptr) {
-        goto cleanup;
-    }
-    conf->semaphore.name = ptr;
-
-cleanup:
-    if (dir_path) {
-        free((void *)dir_path);
-    }
-    if (base_path) {
-        free((void *)base_path);
-    }
-
-    return status;
+    return true;
 }
 
+static const char *task_name(Task task) {
+    switch (task) {
+        case INSTALL_WG:
+            return "Install WG";
+
+        case INSTALL_STANDARD:
+            return "Install Standard";
+
+        case MONITOR:
+            return "Monitor";
+
+        case NOTHING:
+        default:
+            return " - ";
+    }
+}
 
 static void log_welcome_message(Config *conf) {
     Options *opts = &conf->opts;
 
-    const char *iface_name = opts->iface_name ? opts->iface_name : " - ";
-    const char *daemon = (int)(opts->daemon) ? "yes" : "no";
-
-    const char *task = nullptr;
-
-    switch (opts->task) {
-        case INSTALL_WG:
-            task = "Install WG";
-            break;
-
-        case INSTALL_STANDARD:
-            task = "Install Standard";
-            break;
-
-        case MONITOR:
-            task = "Monitor";
-            break;
-
-        default:
-            task = " - ";
-            break;
-    }
+    const char *iface_name = conf->iface.name ? conf->iface.name : " - ";
+    const char *daemon = opts->daemon ? "yes" : "no";
 
     log_msg(opts, "--------------");
     log_msg(opts, "resolv-manager initialized");
     log_msg(opts, "  %15s : %s", "iface-name", iface_name);
-    log_msg(opts, "  %15s : %s", "task", task);
+    log_msg(opts, "  %15s : %s", "task", task_name(opts->task));
     log_msg(opts, "  %15s : %s", "daemon", daemon);
     log_msg(opts, "  %15s : %s:%s", "real", conf->user_real.user, conf->user_real.group);
     log_msg(opts, "  %15s : %s:%s", "effective", conf->user_effective.user, conf->user_effective.group);
@@ -164,49 +103,54 @@ static void log_welcome_message(Config *conf) {
 
 
 /*
- * Initialize options and config. 
+ * Initialize options and config.
+ * Returns:
+ *   0  ok
+ *   1  nothing more to do (e.g. help) - exit success
+ *  -1  error
  */
-bool initialize(int argc, char **argv, Config *conf) {
+int initialize(int argc, char **argv, Config *conf) {
 
     if (!conf) {
-        return false;
+        return -1;
     }
+
+    /*
+     * fds first - so config_clean() is always safe
+     */
+    conf->sys_net.fd = -1;
+    conf->etc.fd = -1;
 
     /*
      * command line
      */
-    if (parse_options(argc, argv, &conf->opts) != 0) {
-        return false;
+    int ret = parse_options(argc, argv, &conf->opts);
+    if (ret != 0) {
+        return (ret > 0) ? 1 : -1;
+    }
+
+    /*
+     * Interface name
+     */
+    conf->iface.name = conf->opts.iface_name ? conf->opts.iface_name : "wg0";
+    if (!valid_iface_name(conf->iface.name)) {
+        (void)fprintf(stderr, "Error: invalid interface name\n");
+        return -1;
     }
 
     /*
      * Directories /etc, /sys/class/net
      */
     if (!init_standard_dirs(conf)) {
-        return false;
-    }
-
-    if (conf->opts.semaphore) {
-        if (!init_semaphore(conf)) {
-            return false;
-        }
+        return -1;
     }
 
     /*
-     * static files names (not freed by config_clean()
+     * static files names (not freed by config_clean())
      */
-    if (conf->opts.iface_name) {
-        conf->iface.name = conf->opts.iface_name;
-    } else {
-        conf->iface.name = "wg0";
-    }
-
     conf->resolv.name = "resolv.conf";
     conf->wg.name = "resolv.conf.wg";
     conf->save.name = "resolv.conf.saved";
-
-    conf->sys_net.fd = -1;
-    conf->etc.fd = -1;
 
     conf->perms.user_run = "nobody";
     conf->perms.group_run = "nobody";
@@ -215,7 +159,7 @@ bool initialize(int argc, char **argv, Config *conf) {
      * File tag to mark wireguard resolv.conf
      */
     conf->tag_wg = "# === TAG: wireguard ===\n";
-    conf->tag_wg_size = (size_t)strlen(conf->tag_wg);
+    conf->tag_wg_size = strlen(conf->tag_wg);
 
     /*
      * Get real/effectve user info
@@ -224,11 +168,12 @@ bool initialize(int argc, char **argv, Config *conf) {
 
     /*
      * Set up logging
-     * Ok if fails (likely permission problem)
+     * Ok if fails (likely permission problem) - falls back to stdout
      */
-    log_init(&conf->opts);
+    if (log_init(&conf->opts) != 0) {
+        (void)fprintf(stderr, "Warning: logging to stdout\n");
+    }
     log_welcome_message(conf);
 
-    return true;
+    return 0;
 }
-

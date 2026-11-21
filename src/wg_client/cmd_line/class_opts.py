@@ -6,6 +6,8 @@ Command line options handling
 # pylint: disable=too-few-public-methods
 # pylint: disable=too-many-statements
 import os
+import re
+import sys
 from typing import Any
 import argparse
 
@@ -18,7 +20,7 @@ def _parse_ssh_pfx(ssh_pfx: str) -> list[str]:
     """
     Parse:
        'n'      -> [n]
-       'n,m'    -> [n, m]
+       'n-m'    -> [n, m]
     """
     pfx_range: list[str] = []
     if not ssh_pfx:
@@ -27,28 +29,73 @@ def _parse_ssh_pfx(ssh_pfx: str) -> list[str]:
     return pfx_range
 
 
+# Keys allowed in the config file
+_CONFIG_KEYS: tuple[str, ...] = ('iface', 'ssh_server', 'ssh_pfx')
+
+# Same rule wg-quick uses to tell an interface name from a config file path.
+_IFACE_RE = re.compile(r'[a-zA-Z0-9_=+.-]{1,15}')
+
+
+def is_valid_iface_name(iface: str) -> bool:
+    """
+    True if iface is a plain interface name (never a path).
+    wg-quick treats anything else as a path to a config file - and
+    PostUp in such a file would be run as root.
+    """
+    if not isinstance(iface, str):
+        return False
+    return _IFACE_RE.fullmatch(iface) is not None
+
+
+def _dev_mode() -> bool:
+    """
+    Development / test mode requested on command line.
+    Checked before argparse because the config supplies argparse defaults.
+    """
+    args = sys.argv[1:]
+    return '--test' in args or 'test-dummy' in args
+
+
 def read_config(opts: WgClientOpts) -> bool:
     """
     Reads file with defaults for:
      iface = 'wgc'
      ssh_server = "xxx.example.org"
      ssh_pfx = "n" or "n-m"
+
+    Only /etc/wg-client/config is used - a config in the current directory
+    (./etc/wg-client/config) is only honored in test mode, since the iface
+    it provides is passed to "sudo wg-quick".
+    Only known keys are accepted.
     """
     okay = True
     conf: dict[str, Any] = {}
+    file = ''
 
-    conf_dirs = ['./etc/wg-client', '/etc/wg-client']
+    conf_dirs = ['/etc/wg-client']
+    if _dev_mode():
+        conf_dirs.insert(0, './etc/wg-client')
+
     for conf_dir in conf_dirs:
         file = os.path.join(conf_dir, 'config')
         conf = read_toml_file(file)
         if conf:
-            for (key, val) in conf.items():
-                setattr(opts, key, val)
             break
 
     if not conf:
         print(f'Error loading config {file}')
         return not okay
+
+    for (key, val) in conf.items():
+        if key not in _CONFIG_KEYS:
+            print(f'Warning: config {file}: ignoring unknown key "{key}"')
+            continue
+        if not isinstance(val, str):
+            print(f'Error: config {file}: "{key}" must be a string')
+            okay = False
+            continue
+        setattr(opts, key, val)
+
     return okay
 
 
@@ -70,10 +117,6 @@ def get_avail_options(defaults: dict[str, str]) -> list[_Opt]:
 
     ohelp = 'Turn wireguard off'
     opt = ('--wg-dn', {'help': ohelp, 'action': 'store_true'})
-    opts.append(opt)
-
-    ohelp = 'Try (re)start resolv-manager daemon - development option'
-    opt = ('--resolv-manager-start', {'help': ohelp, 'action': 'store_true'})
     opts.append(opt)
 
     ohelp = 'Run ssh over vpn to create remote listener'
@@ -148,8 +191,6 @@ class WgClientOpts:
         self.ssh_start: bool = False
         self.ssh_stop: bool = False
 
-        self.resolv_manager_start: bool = False
-
         self.show_iface: bool = False
         self.show_ssh_server: bool = False
         self.show_ssh_running: bool = False
@@ -195,3 +236,7 @@ class WgClientOpts:
                 setattr(self, key, val)
 
         self.pfx_range = _parse_ssh_pfx(self.ssh_pfx)
+
+        if not is_valid_iface_name(self.iface):
+            print(f'Error: invalid wireguard interface name: {self.iface!r}')
+            self.okay = False

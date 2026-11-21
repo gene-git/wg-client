@@ -10,6 +10,7 @@ wg-client Documentation
     README
     Config
     Options
+    Update
     Appendix
 
 Man Pages

@@ -78,7 +78,7 @@ def is_resolv_manager_running(log: Callable[[str], None]) -> bool:
     """
     resolv_manager_running = False
 
-    pargs = ['/usr/bin/wg-client', '--show-resolv-manager-running']
+    pargs = ['/usr/bin/wg-client', '--show-resolv-manager']
     (ret, out, err) = run_prog(pargs)
     if ret == 0:
         answer = out.strip()

@@ -1,15 +1,14 @@
 /*
- * SPDX-License-SPDX-License-Identifier: GPL-2.0-or-later
+ * SPDX-License-Identifier: GPL-2.0-or-later
  * SPDX-FileCopyrightText: © 2023-present Gene C <arch@sapience.com>
  *
- * If runnning as root drop privileges to nobody.
- * Retain the required capabilities
+ * If running as root drop privileges to the unprivileged run user (nobody).
+ * Retain only CAP_CHOWN and CAP_DAC_OVERRIDE (permitted only - they
+ * are raised to effective just when needed via caps_raise()).
  */
 #include "resolv_manager.h"
+#include <errno.h>
 #include <grp.h>
-#include <pwd.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <sys/capability.h>
 #include <sys/prctl.h>
 #include <sys/types.h>
@@ -17,79 +16,80 @@
 
 
 /*
- * Restore the 2 required capabilities to the effective set
- * since setresuid cleared them.
- * Only restore these caps: CAP_DAC_OVERRIDE, CAP_CHOWN
- * Even if process has additional caps.
+ * Remove everything but the allowed caps from the bounding set.
+ * Requires CAP_SETPCAP (i.e. must be done while still root).
+ * Not fatal - permitted set is restricted later regardless.
  */
-static int restore_caps() {
+static void drop_bounding_set(Config *conf) {
+    int max_bits = (int)cap_max_bits();
 
-    cap_t caps = cap_get_proc();
-    if (!caps) {
-        (void)fprintf(stderr, "Error: cap_get_proc failed.\n");
-        return -1;
-    }
-
-    cap_value_t cap_allowed_list[] = { CAP_DAC_OVERRIDE, CAP_CHOWN };
-    int num_allowed_caps = sizeof(cap_allowed_list) / sizeof(cap_allowed_list[0]);
-
-    cap_flag_value_t is_permitted = {};
-
-    for (int i = 0; i < num_allowed_caps; i++) {
-        cap_value_t cap_num = cap_allowed_list[i];
-
-        if (cap_get_flag(caps, cap_num, CAP_PERMITTED, &is_permitted) == 0) {
-            if (is_permitted == CAP_SET) {
-                if (cap_set_flag(caps, CAP_EFFECTIVE, 1, &cap_num, CAP_SET) != 0) {
-                    (void)fprintf(stderr, "Error: cap_set_flag failed for capability %d\n", (int)cap_num);
-                    cap_free(caps);
-                    return -1;
-                }
-            }
+    for (int cap = 0; cap < max_bits; cap++) {
+        if (cap == CAP_CHOWN || cap == CAP_DAC_OVERRIDE) {
+            continue;
+        }
+        if (cap_drop_bound((cap_value_t)cap) != 0 && errno != EINVAL) {
+            log_msg(&conf->opts, " Warning - failed to drop cap %d from bounding set", cap);
         }
     }
-
-    /*
-     * Restore all the existing caps to the process
-     */
-    if (cap_set_proc(caps) != 0) {
-        (void)fprintf(stderr, "Error: cap_set_proc failed to raise effective caps.\n");
-        (void)cap_free(caps);
-        return -1;
-    }
-
-    if (cap_free(caps) != 0) {
-        (void)fprintf(stderr, "Warning: cap_free error.\n");
-    }
-
-    return 0;
 }
 
 /*
  * Lookup uid/gid from username/groupname
- * If user/group are null then return the real uid/gid.
+ * Failure to find either is an error: we must never silently remain root.
  */
-static bool lookup_uid_gid(const char *user, const char *group, uid_t *uid, gid_t *gid) {
+static bool lookup_uid_gid(Config *conf, const char *user, const char *group, uid_t *uid, gid_t *gid) {
 
-    if (group && !gid_from_group_name(group, gid)) {
-        *gid = getgid();
+    if (!user || !group) {
+        return false;
     }
 
-    if (user && !uid_from_user_name(user, uid)) {
-        *uid = getuid();
+    if (!gid_from_group_name(group, gid)) {
+        log_msg(&conf->opts, " Error - unknown group %s", group);
+        return false;
+    }
+
+    if (!uid_from_user_name(user, uid)) {
+        log_msg(&conf->opts, " Error - unknown user %s", user);
+        return false;
+    }
+
+    if (*uid == 0 || *gid == 0) {
+        log_msg(&conf->opts, " Error - run user/group %s:%s resolves to root", user, group);
+        return false;
     }
 
     return true;
 }
 
-int change_privileges(Config *conf) {
+/*
+ * Verify real, effective and saved uid/gid are all uid/gid
+ */
+static bool ids_are(uid_t uid, gid_t gid) {
+    uid_t ruid = 0;
+    uid_t euid = 0;
+    uid_t suid = 0;
+    gid_t rgid = 0;
+    gid_t egid = 0;
+    gid_t sgid = 0;
 
-    Perms *perms = {};
+    if (getresuid(&ruid, &euid, &suid) != 0 || getresgid(&rgid, &egid, &sgid) != 0) {
+        return false;
+    }
+    if (ruid != uid || euid != uid || suid != uid) {
+        return false;
+    }
+    if (rgid != gid || egid != gid || sgid != gid) {
+        return false;
+    }
+    return true;
+}
+
+int change_privileges(Config *conf) {
 
     if (!conf) {
         return -1;
     }
-    perms = &conf->perms;
+    Perms *perms = &conf->perms;
 
     /*
      * Only applies if running as root.
@@ -99,69 +99,69 @@ int change_privileges(Config *conf) {
         return 0;
     }
 
-    /*
-     * Get unprivileged uid/gid
-     */
-    if (!perms->user_run && !perms->group_run) {
-        return 0; 
-    }
+    uid_t uid_run = 0;
+    gid_t gid_run = 0;
 
-    uid_t uid_run = getuid();
-    gid_t gid_run = getgid();
-
-    if (!lookup_uid_gid(perms->user_run, perms->group_run, &uid_run, &gid_run)) {
+    if (!lookup_uid_gid(conf, perms->user_run, perms->group_run, &uid_run, &gid_run)) {
         return -1;
     }
 
     /*
-     * preserve (file) capabilities
+     * Shrink bounding set while we still have CAP_SETPCAP
+     */
+    drop_bounding_set(conf);
+
+    /*
+     * preserve permitted capabilities across setresuid()
      */
     if (prctl(PR_SET_KEEPCAPS, 1L, 0L, 0L, 0L) != 0) {
-        (void)fprintf(stderr, "Error: failed to keep caps using PR_SET_KEEPCAPS.\n");
+        log_msg(&conf->opts, " Error - failed to keep caps using PR_SET_KEEPCAPS");
         return -1;
     }
 
     /*
      * Clear any supplemental groups
      */
-    if (perms->euid == 0 && getgroups(0, nullptr) > 0 && setgroups(0, nullptr) != 0) {
-        (void)fprintf(stderr, "Error: clearing supplemental groups.\n");
+    if (setgroups(0, nullptr) != 0) {
+        log_msg(&conf->opts, " Error - clearing supplemental groups");
         return -1;
     }
 
     /*
-     * Drop to unpriv user/group 
-     * - only attempt to change uid/gid if provided user/group
+     * Drop to unpriv group then user.
      */
-    if (perms->group_run) {
-        if (setresgid(gid_run, gid_run, gid_run) != 0) {
-            (void)fprintf(stderr, "Error: setting gid: %u\n", (unsigned int)gid_run);
-            return -1;
-        }
+    if (setresgid(gid_run, gid_run, gid_run) != 0) {
+        log_msg(&conf->opts, " Error - setting gid: %u", (unsigned int)gid_run);
+        return -1;
     }
 
-    if (perms->user_run) {
-        if (setresuid(uid_run, uid_run, uid_run) != 0) {
-            (void)fprintf(stderr, "Error: setting uid: %u\n", (unsigned int)uid_run);
-            return -1;
-        }
+    if (setresuid(uid_run, uid_run, uid_run) != 0) {
+        log_msg(&conf->opts, " Error - setting uid: %u", (unsigned int)uid_run);
+        return -1;
     }
 
-    log_msg(&conf->opts, " Success - privs dropped to %u:%u", 
+    if (!ids_are(uid_run, gid_run)) {
+        log_msg(&conf->opts, " Error - uid/gid not changed as expected");
+        return -1;
+    }
+
+    if (prctl(PR_SET_KEEPCAPS, 0L, 0L, 0L, 0L) != 0) {
+        log_msg(&conf->opts, " Error - failed to clear PR_SET_KEEPCAPS");
+        return -1;
+    }
+
+    /*
+     * Permitted <- {CAP_CHOWN, CAP_DAC_OVERRIDE}
+     * Effective / inheritable / ambient cleared. no_new_privs set.
+     */
+    if (caps_restrict() != 0) {
+        log_msg(&conf->opts, " Error - failed to restrict capabilities");
+        return -1;
+    }
+
+    perms->euid = geteuid();
+    log_msg(&conf->opts, " Success - privs dropped to %u:%u (caps: chown, dac_override)",
             (unsigned int)uid_run, (unsigned int)gid_run);
-
-    /*
-     * Restore required capabilities to the effective set
-     * because setresuid cleared them.
-     * Only restore these caps: CAP_DAC_OVERRIDE, CAP_CHOWN
-     * Even if process has additional caps.
-     */
-    if (restore_caps() < 0) {
-        log_msg(&conf->opts, " Error - caps not restored");
-        return -1;
-    }
-    log_msg(&conf->opts, " Success - caps restored");
 
     return 0;
 }
-

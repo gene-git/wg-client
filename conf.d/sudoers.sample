@@ -29,11 +29,12 @@
 #
 # For sudoers.d/xxx
 
-#
+# -------------------------------------------------------------------------------------
 # wireguard
-# change the users in WGUSERS  or create a wgusers group and use %wgusers instead
-#
-#User_Alias WGUSERS = bob, sally, alice,
-#WGUSERS   ALL = (root) NOPASSWD: /usr/bin/wg-quick
-
+# ===> change the users in WGUSERS  or create a wgusers group and use %wgusers instead
+# ===> If your wireguard interface is not wgc, then modify.
+# wireguard
+User_Alias  WGUSERS = gene,alice
+Cmnd_Alias  WGQUICK = /usr/bin/wg-quick up wgc, /usr/bin/wg-quick down wgc
+WGUSERS   ALL = (root) NOPASSWD: WGQUICK
 

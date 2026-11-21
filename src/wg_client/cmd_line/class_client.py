@@ -5,15 +5,15 @@ Class for Start, Stop Wireguard client on linux
  - handles wg-quick up/dn
  - ssh to establish listener
 
- If not root, then we use sudo when rnning wg-quick.
- when this is called from GUI then user must have suoders to run with no password.
- e.g.
- /etc/sudoers.d/wg-quick
- username   ALL=NOPASSWD: SETENV: /usr/bin/wg-quick
+ If not root, then we use sudo when running wg-quick.
+ wg-client provides /etc/sudoers.d/99-wireguard which gives wireguard
+ access to members of wg-client group to tunnels with interface names
+ starting with the letter "w".
+
+ Members of group wg-client can then run wg-quick up/down.
 """
 # pylint: disable=too-many-instance-attributes,too-many-branches
 import os
-import time
 from typing import Callable
 
 from wg_client.proc import MyProc
@@ -22,6 +22,7 @@ from wg_client.proc import who_logged_in
 from wg_client.utils import cLog
 from wg_client.utils import version
 from wg_client.resolv import ResolvManager
+from wg_client.resolv import stop_legacy_monitor
 
 from wg_client.net import iface_to_ips
 
@@ -59,6 +60,10 @@ class WgClient():
         self.test: bool = False
 
         self.opts = WgClientOpts()
+        if not self.opts.okay:
+            self.okay = False
+            return
+
         self.iface: str = self.opts.iface
         if self.opts.test or self.iface == 'test-dummy':
             self.test = True
@@ -96,56 +101,27 @@ class WgClient():
     def wg_up(self):
         """
         wg-quick up
-         - parse output for our wg IP
+         - PostUp (post-up.sh) installs the wireguard resolv.conf and
+           starts the resolv-manager monitor daemon.
         """
-        pargs = wg_quick_cmd(self.test, self.euid, 'up', self.iface)
         cLog.msg('wg-up requested')
-        self.runit(pargs)
 
-        self.resolv_manager_start()
+        # an old (semaphore) resolv-manager would block PostUp - ask it to quit
+        stop_legacy_monitor(log=cLog.msg)
+
+        pargs = wg_quick_cmd(self.test, self.euid, 'up', self.iface)
+        ret = self.runit(pargs)
+        if ret != 0:
+            # PostUp failing makes wg-quick remove the interface again
+            txt = f'Error: wg-quick up {self.iface} failed (exit {ret})'
+            cLog.msg(txt)
+            print(txt)
 
     def is_resolv_manager_running(self) -> bool:
         """
         Returns True if is running.
         """
         return self.resolv_manager.is_running()
-
-    def resolv_manager_start(self):
-        """
-        Runs resolv manager daemon which
-        monitors /etc/resolv.conf and restores wireguard version
-        It exits as soon as the wg iface goes away.
-        Wait till wireguard is up before startin the monitor.
-        """
-        cLog.msg('starting resolv-manager')
-
-        #
-        # Can take time for wireguard to start.
-        # Then the PostUp script uses resolv-manager to install /etc/resolv.conf.wg
-        # into /etc/resolv.conf
-        #
-        # - wait till wireguard is up
-        # - manager delay start until can get a lock (avoids duplicate monitors)
-        #
-        timeout = 0.5
-        max_time = 10.0
-        timer = timeout
-        wg_running = False
-        while timer <= max_time:
-            time.sleep(timer)
-            if is_wg_running(self.iface):
-                wg_running = True
-                break
-            timer += timeout
-
-        if wg_running:
-            cLog.msg(' wg is up -> starting resolv manager')
-            self.resolv_manager.start(self.iface)
-        else:
-            cLog.msg(' wg not running - skipping resolv-manager')
-
-        # can check if resolv_manager started
-        # running = self.resolv_manager.is_running()
 
     def get_wg_ip(self):
         """
@@ -164,21 +140,27 @@ class WgClient():
 
     def wg_dn(self):
         """
-        wg-quick dn
-         - before shutting dwon wg make sure the resolv_manager daemon is killed
+        wg-quick down
         """
         cLog.msg('wg-dn requested')
 
         # kill ssh listener if running
         self.stop_ssh_listener()
 
-        # ask resolv-manager to quit
-        self.resolv_manager.stop()
+        # an old (semaphore) resolv-manager would not notice the interface
+        # going away and would block PostDown - ask it to quit
+        stop_legacy_monitor(log=cLog.msg)
 
         # shut down wireguard
+        #  - the resolv-manager monitor sees the interface go away,
+        #    restores the standard resolv.conf and exits.
         cLog.msg(' shutting down wireguard')
         pargs = wg_quick_cmd(self.test, self.euid, 'down', self.iface)
-        self.runit(pargs)
+        ret = self.runit(pargs)
+        if ret != 0:
+            txt = f'Error: wg-quick down {self.iface} failed (exit {ret})'
+            cLog.msg(txt)
+            print(txt)
 
     def ssh_init(self):
         '''
@@ -257,16 +239,19 @@ class WgClient():
         self.ssh_init()
         self.ssh_mgr.start()
 
-    def runit(self, pargs: list[str], pid_saver: Callable[[int], None] | None = None):
+    def runit(self, pargs: list[str], pid_saver: Callable[[int], None] | None = None) -> int:
         """
-        run a program via subprocess.run
+        run a program via subprocess.Popen
             - used for wg-quick up/down
-            - returns stdout
+            - returns exit code (-1 if it could not be run)
         """
         if not pargs:
-            return
+            return -1
         self.run_proc = MyProc(self.mysignals)
-        (_ret, _outs, _errs) = self.run_proc.popen(pargs, log=cLog.msg, pid_saver=pid_saver)
+        (ret, _outs, _errs) = self.run_proc.popen(pargs, log=cLog.msg, pid_saver=pid_saver)
+        if ret is None:
+            return -1
+        return ret
 
     def do_all(self):
         """
@@ -302,12 +287,6 @@ class WgClient():
 
         if self.opts.wg_dn:
             self.wg_dn()
-
-        #
-        # resolv_manager (must be after iface is available)
-        #
-        if self.opts.resolv_manager_start:
-            self.resolv_manager_start()
 
         #
         # ssh

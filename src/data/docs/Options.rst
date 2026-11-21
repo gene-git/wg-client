@@ -51,7 +51,7 @@ These are all the options available in wg-client::
 
 
 
-Uaing ssh
+Using ssh
 ^^^^^^^^^
 
 When asking wg-client to start ssh, it runs ssh to the remote host inside the vpn tunnel,
