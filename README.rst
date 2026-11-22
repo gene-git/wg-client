@@ -4,10 +4,10 @@
 wg-client 
 =========
 
-**Migration required from pre 8.x versions**
+**Changes needed when updating to 9.x**
 
-If you are updating from pre 8.x versions please see the
-Appendix to user newer versions :ref:`migration`.
+If you are updating from pre 9.x versions please see the
+chapter in the manual :ref:`updating`.
 
 Overview
 ========
@@ -66,10 +66,47 @@ Key features
 
 * python code is checked with mypy
 
-===============
 Getting Started
 ===============
 
+Root is required to start wireguard itself. This is achieved using *sudo* 
+and granting root privilileges to run *wg-quick up/down* without a password for members of 
+the *wg-client* group.
+
+Therefore, all wg-client users must be added the *wg-client* group. This is done as root::
+
+    gpasswd -a <user> wg-client
+
+wg-client provides */etc/sudoers.d/99-wireguard*. 
+
+
+Sudoers
+-------
+  
+wg-client uses *wg-quick* from wireguard-tools to start and stop wireguard.
+Doing so requires root priviliges. As a result, any user approved to run wireguard must 
+be granted permission.  wg-client provides::
+
+    /etc/sudoers.d/99-wireguard
+
+This permits members of the *wg-client* to use *wg-quick* to start and stop
+wireguard for interfaces names that begin with *w* without a password.
+
+By restricting wg-client users to interface names that start with *w*, allows
+other system tunnels to use a different name and prevent wg-client users
+from touching those.
+
+sudo parses the files in */etc/sudoers.d/* in lexical order, with the last file
+parsed being used.
+Please ensure that any sudoers file that grants *wheel* access, that needs 
+a password, is parsed before *99-wireguard*. For example *010-wheel*.
+
+This ensures that things work correctly for any user in *wg-quick* group 
+that is also a member of *wheel* group.
+
+While this can also be achieved with *doas* or *run0*, the current code invokes
+*sudo*. We plan to support *doas* and *run0* in the future.
+ 
 DNS Notes
 =========
 
@@ -183,70 +220,6 @@ The gui should be left running while the vpn is in use. Pressing quit in the gui
 and shutdown the ssh listener as well.
 
 
-Sudoers
-=======
-  
-To start and stop wireguard wg-client uses *wg-quick* (from wireguard-tools).
-Doing so requires root priviliges. As a result, any user approved to run wireguard must 
-be granted permission.  Any non-root user will need a NOPASSWD sudoers entry. 
-
-You can keep all local sudoers in a single file or in separate files.
-If in single file, make this one come after any group wheel ones.
-This is to ensure this one is chosen becuase sudo uses the last
-matching entry.
-
-Simply add this sample line adjusting WGUSERS to list whatever user(s) are 
-permitted to run wireguard. If more than one use comma separated list as shown below.
-
-.. code-block:: bash
-
-    User_Alias WGUSERS = alice, bob, sally
-    WGUSERS   ALL = (root) NOPASSWD: /usr/bin/wg-quick
-    WGUSERS   ALL = (root) NOPASSWD: /usr/lib/wg-client/wg-fix-dns
-   
-If using separete files, then care is need to ensure this entry comes after any
-wheel group entries. Where WGUSERS is 1 or more usernames or a group such as
-*%wgusers*.
-
-Then, 
-
-.. code-block:: bash
-
-    visudu /etc/sudoers.d/99-wireguard
-    
-Edit *WGUSERS* as above.
-
-visudo enforces the correct permissions which should be '0440'. If permissions
-are too loose, sudo will ignore the file.
-
-Why the prefix number?  Because sudo uses the **last** matching entry and
-we need to be sure the NOPASSWD wg-quick entry comes after any group wheel lines.
-
-For example if there are 2 files in */etc/sudoers.d* - say wg-quick and wheel,
-where the wheel entry requires a password for members of group wheel.
-
-Now if user listed in wg-quick is also a member of *wheel* group, since wg-quick
-is first and wheel is second (files are treated in lexical order) the *wheel* one
-will prevail and user will be prompted for a password when running *sudo /usr/bin/wg-quick*.
-Not what we want. To fix this use numbers to prefix the sudoers filenames. So in this
-example it would be::
-
-   /etc/sudoers.d/010-wheel
-   /etc/sudoers.d/99-wireguard
-
-thereby ensuring that wg-client entries follow the wheel ones.
-
-For convenience this is also noted in the sample file::
-
-    /etc/wg-client/samples/sudoers.sample
-
-.. code-block:: bash
-
-    chmod 440 /etc/sudoers.d/wg-client
-
-This can also be achieved with doas or run0.
-
-
 Non-User Wireguard Tunnels
 ==========================
 
@@ -261,5 +234,5 @@ Renaming an interface means renaming /etc/wireguard/<name>.conf and, if used, th
 Coding
 ======
 
-Claude as been very helpful in analyzing and improving the code especially  
-around security as well as error and edge-case handling.
+Claude as been very helpful in analyzing and improving the code, especially  
+around potential security issues but also for handling errors and edge-cases.

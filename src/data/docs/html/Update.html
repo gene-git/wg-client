@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>6. Updating to Version 9.x from 8.x &mdash; wg-client 9.1.1
+  <title>5. Updating to Version 9.x from 8.x &mdash; wg-client 9.1.2
  documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
@@ -15,14 +15,14 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=debe1a4c"></script>
+      <script src="_static/documentation_options.js?v=e9469026"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="7. Appendix" href="Appendix.html" />
-    <link rel="prev" title="4. Options" href="Options.html" /> 
+    <link rel="prev" title="3. Options" href="Options.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -47,11 +47,14 @@
               <p class="caption" role="heading"><span class="caption-text">Wireguard Client Tool Manual:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="README.html">1. wg-client</a></li>
-<li class="toctree-l1"><a class="reference internal" href="README.html#getting-started">2. Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Config.html">3. Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Options.html">4. Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Options.html#log-files">5. Log files</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">6. Updating to Version 9.x from 8.x</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Config.html">2. Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Options.html">3. Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Options.html#log-files">4. Log files</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">5. Updating to Version 9.x from 8.x</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#live-remote-update">5.1. Live Remote Update</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#updating-to-8-x-from-7-x">6. Updating to 8.x from 7.x</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Appendix.html">7. Appendix</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">wg-client man pages</span></p>
@@ -73,7 +76,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active"><span class="section-number">6. </span>Updating to Version 9.x from 8.x</li>
+      <li class="breadcrumb-item active"><span class="section-number">5. </span>Updating to Version 9.x from 8.x</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/Update.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -84,8 +87,28 @@
            <div itemprop="articleBody">
              
   <section id="updating-to-version-9-x-from-8-x">
-<h1><span class="section-number">6. </span>Updating to Version 9.x from 8.x<a class="headerlink" href="#updating-to-version-9-x-from-8-x" title="Link to this heading"></a></h1>
+<span id="updating"></span><h1><span class="section-number">5. </span>Updating to Version 9.x from 8.x<a class="headerlink" href="#updating-to-version-9-x-from-8-x" title="Link to this heading"></a></h1>
 <p>Updating is straightforward and can even be done while a road warrier is using wg-client.</p>
+<p>wg-client will keep working without any change. However, we recommend making the following
+changes after installing the 9.x version.</p>
+<ul class="simple">
+<li><p>Add any wg-client users to the <em>wg-client</em> group</p>
+<ul>
+<li><p>gpasswd -a &lt;user&gt; wg-client</p></li>
+</ul>
+</li>
+<li><p>Remove any older sudoers file:</p>
+<ul>
+<li><p>Version 9.x and later provides /etc/sudoers.d/99-wireguard</p></li>
+</ul>
+</li>
+</ul>
+<section id="live-remote-update">
+<h2><span class="section-number">5.1. </span>Live Remote Update<a class="headerlink" href="#live-remote-update" title="Link to this heading"></a></h2>
+<p>A remote user can have wg-client updated and everything should continue working normally.
+The recommended changes to sudoers and adding user(s) to the new wg-client group can be
+done when convenient. For a remote user they can also be done live over the wireguard tunnel.</p>
+<p>his is for convenience and not a reuquirement:</p>
 <ul>
 <li><p>ssh in to the machine. If don’t have local access.
 Have the user press the ‘start ssh’ button which opens an ssh listening port on the wireguard server.</p></li>
@@ -115,12 +138,41 @@ is more secure.</p>
 </li>
 </ul>
 </section>
+</section>
+<section id="updating-to-8-x-from-7-x">
+<h1><span class="section-number">6. </span>Updating to 8.x from 7.x<a class="headerlink" href="#updating-to-8-x-from-7-x" title="Link to this heading"></a></h1>
+<p>Older versions (pre 8.x) need a small change becasue <em>resolv-manager</em> has been re-written
+in C and now runs a background daemon managing /etc/resolv.conf.</p>
+<p>This is what is needed:</p>
+<ul>
+<li><p>Create /etc/wg-client/wireguard-resolv.conf
+This should be the DNS settings to be used while wireguard is running.
+Standard resolv.conf format (nameserver x.x.x.x)</p></li>
+<li><p>confirm that /etc/wg-client/config exists and sets thw wireguard i
+interface. For example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>iface = wg0
+</pre></div>
+</div>
+</li>
+<li><p>edit the wireguard client config and update the PostUp and PostDn.
+For example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[Interface]
+PrivateKey = ...
+Address = ...
+Postup = /etc/wg-client/post-up.sh
+PostDown = /etc/wg-client/post-down.sh
+</pre></div>
+</div>
+</li>
+</ul>
+<p>Thats should be all that’s required.</p>
+</section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="Options.html" class="btn btn-neutral float-left" title="4. Options" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Options.html" class="btn btn-neutral float-left" title="3. Options" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="Appendix.html" class="btn btn-neutral float-right" title="7. Appendix" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

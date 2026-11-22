@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>1. resolv-manager &mdash; wg-client 9.1.1
+  <title>1. resolv-manager &mdash; wg-client 9.1.2
  documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
@@ -15,7 +15,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=debe1a4c"></script>
+      <script src="../_static/documentation_options.js?v=e9469026"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/js/theme.js"></script>
@@ -46,11 +46,11 @@
               <p class="caption" role="heading"><span class="caption-text">Wireguard Client Tool Manual:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../README.html">1. wg-client</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../README.html#getting-started">2. Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Config.html">3. Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Options.html">4. Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Options.html#log-files">5. Log files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Update.html">6. Updating to Version 9.x from 8.x</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Config.html">2. Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Options.html">3. Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Options.html#log-files">4. Log files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Update.html">5. Updating to Version 9.x from 8.x</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Update.html#updating-to-8-x-from-7-x">6. Updating to 8.x from 7.x</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Appendix.html">7. Appendix</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">wg-client man pages</span></p>
@@ -105,22 +105,36 @@
 </section>
 <section id="description">
 <h3><span class="section-number">1.1.2. </span>DESCRIPTION<a class="headerlink" href="#description" title="Link to this heading"></a></h3>
-<p>Part of the wg-client package. When wireguard VPN is running DNS is typically
-used via the VPN tunnel. When wireguard is started an appropriate /etc/resolv.conf
+<p>Part of the wg-client package. A wireguard VPN most often has DNS provided
+via the VPN tunnel. When wireguard is started an appropriate /etc/resolv.conf
 should be installed and when it is stopped the standard version should be restored.</p>
-<p>This is simple to do using PostUp and PostDown in the wireguard config file.
-For example if the config file is /etc/wireguard/wgc.conf, so the wireguard interface
-is wgc then it would have:</p>
+<p>Ensure that the <em>resolv.conf</em> file that is to be used while the tunnel is up
+is available in the file:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>/etc/wg-client/wireguard-resolv.conf
+</pre></div>
+</div>
+<p>wireguard starts resolv-manager by having it’s PostUp config set to <em>post-up.sh</em>.
+<em>post-up.sh</em> uses the above file and takes the wireguuard interface name from /etc/wg-client/config.</p>
+<p>They can also be provided as arguments.</p>
+<p>For example if the wireguiard config file is /etc/wireguard/wgc.conf, the wireguard interface
+name is then <em>wgc</em>.  It then could have:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[interface]
 ...
 PostUp    = /etc/wg-client/post-up.sh wgc /etc/wg-client/wireguard-resolv.conf
 PostDown  = /etc/wg-client/post-down.sh
 </pre></div>
 </div>
-<p>Where the file /etc/wg-client/wireguard-resolv.conf is the resolv.conf to use
+<p>or:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[interface]
+...
+PostUp    = /etc/wg-client/post-up.sh
+PostDown  = /etc/wg-client/post-down.sh
+</pre></div>
+</div>
+<p>Where the file /etc/wg-client/wireguard-resolv.conf is used for resolv.conf
 while the VPN is running.</p>
 <p>With no arguments post-up.sh reads the wireguard interface from /etc/wg-client/config
-and uses /etc/wg-client/wireguard-resolv.conf for the VPN resolv.conf.</p>
+and uses /etc/wg-client/wireguard-resolv.conf for the VPN resolv.conf file.</p>
 <p>post-up.sh (run as root by wg-quick) starts resolv-manager in <em>monitor</em> mode:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>resolv-manager -i wgc -t monitor -d -l /var/log/wg-client -f /etc/wg-client/wireguard-resolv.conf
 </pre></div>

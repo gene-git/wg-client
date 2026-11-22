@@ -6,21 +6,27 @@ Tags
 
 .. code-block:: text
 
-	3.7.1 (2024-01-07) -> 9.1.1 (2026-11-21)
-	101 commits.
+	3.7.1 (2024-01-07) -> 9.1.2 (2026-11-22)
+	102 commits.
 
 Commits
 =======
 
 
-* 2026-11-21  : **9.1.1**
+* 2026-11-22  : **9.1.2**
+
+.. code-block:: text
+
+              - 9.1.2 : Manual and man page updates (no code change)
+
+* 2026-11-21  : **9.1.1, origin/master**
 
 .. code-block:: text
 
               - **9.1.1**
                 * Doc change: add thank you to `Claude (Anthropic) <https://claude.ai>`_
 
-* 2026-11-21  : **9.0.0, origin/master**
+* 2026-11-21  : **9.0.0**
 
 .. code-block:: text
 

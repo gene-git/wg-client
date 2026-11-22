@@ -1,6 +1,10 @@
 Recent Changes
 ==============
 
+**9.1.2**
+
+* Manual and man page updates (no code change).
+
 **9.1.1**
 
 * Doc change: add thank you to `Claude (Anthropic) <https://claude.ai>`_

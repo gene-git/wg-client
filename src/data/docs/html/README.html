@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>1. wg-client &mdash; wg-client 9.1.1
+  <title>1. wg-client &mdash; wg-client 9.1.2
  documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
@@ -15,13 +15,13 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=debe1a4c"></script>
+      <script src="_static/documentation_options.js?v=e9469026"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="3. Configuration" href="Config.html" />
+    <link rel="next" title="2. Configuration" href="Config.html" />
     <link rel="prev" title="wg-client Documentation" href="index.html" /> 
 </head>
 
@@ -53,27 +53,28 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#why-i-made-wg-client">1.2. Why I made wg-client</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#key-features">1.3. Key features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-started">1.4. Getting Started</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#sudoers">1.4.1. Sudoers</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="#getting-started">2. Getting Started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#dns-notes">2.1. DNS Notes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#wg-client-application">2.2. wg-client application</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#usage">2.2.1. Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dns-notes">1.5. DNS Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wg-client-application">1.6. wg-client application</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#usage">1.6.1. Usage</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#wg-client-gui-application">2.3. wg-client-gui application</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#gui-usage">2.3.1. GUI Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wg-client-gui-application">1.7. wg-client-gui application</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#gui-usage">1.7.1. GUI Usage</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#sudoers">2.4. Sudoers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#non-user-wireguard-tunnels">2.5. Non-User Wireguard Tunnels</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#coding">2.6. Coding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#non-user-wireguard-tunnels">1.8. Non-User Wireguard Tunnels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#coding">1.9. Coding</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Config.html">3. Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Options.html">4. Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Options.html#log-files">5. Log files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Update.html">6. Updating to Version 9.x from 8.x</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Config.html">2. Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Options.html">3. Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Options.html#log-files">4. Log files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Update.html">5. Updating to Version 9.x from 8.x</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Update.html#updating-to-8-x-from-7-x">6. Updating to 8.x from 7.x</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Appendix.html">7. Appendix</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">wg-client man pages</span></p>
@@ -107,9 +108,9 @@
              
   <section id="wg-client">
 <h1><span class="section-number">1. </span>wg-client<a class="headerlink" href="#wg-client" title="Link to this heading"></a></h1>
-<p><strong>Migration required from pre 8.x versions</strong></p>
-<p>If you are updating from pre 8.x versions please see the
-Appendix to user newer versions <a class="reference internal" href="Appendix.html#migration"><span class="std std-ref">Migration from Pre 8.x</span></a>.</p>
+<p><strong>Changes needed when updating to 9.x</strong></p>
+<p>If you are updating from pre 9.x versions please see the
+chapter in the manual <a class="reference internal" href="Update.html#updating"><span class="std std-ref">Updating to Version 9.x from 8.x</span></a>.</p>
 <section id="overview">
 <h2><span class="section-number">1.1. </span>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
 <p>wg-client makes it simple for any user to start and stop a wireguard client on Linux.
@@ -156,11 +157,41 @@ Code has been checked and is clean using:
 <li><p>python code is checked with mypy</p></li>
 </ul>
 </section>
-</section>
 <section id="getting-started">
-<h1><span class="section-number">2. </span>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading"></a></h1>
+<h2><span class="section-number">1.4. </span>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading"></a></h2>
+<p>Root is required to start wireguard itself. This is achieved using <em>sudo</em>
+and granting root privilileges to run <em>wg-quick up/down</em> without a password for members of
+the <em>wg-client</em> group.</p>
+<p>Therefore, all wg-client users must be added the <em>wg-client</em> group. This is done as root:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>gpasswd -a &lt;user&gt; wg-client
+</pre></div>
+</div>
+<p>wg-client provides <em>/etc/sudoers.d/99-wireguard</em>.</p>
+<section id="sudoers">
+<h3><span class="section-number">1.4.1. </span>Sudoers<a class="headerlink" href="#sudoers" title="Link to this heading"></a></h3>
+<p>wg-client uses <em>wg-quick</em> from wireguard-tools to start and stop wireguard.
+Doing so requires root priviliges. As a result, any user approved to run wireguard must
+be granted permission.  wg-client provides:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>/etc/sudoers.d/99-wireguard
+</pre></div>
+</div>
+<p>This permits members of the <em>wg-client</em> to use <em>wg-quick</em> to start and stop
+wireguard for interfaces names that begin with <em>w</em> without a password.</p>
+<p>By restricting wg-client users to interface names that start with <em>w</em>, allows
+other system tunnels to use a different name and prevent wg-client users
+from touching those.</p>
+<p>sudo parses the files in <em>/etc/sudoers.d/</em> in lexical order, with the last file
+parsed being used.
+Please ensure that any sudoers file that grants <em>wheel</em> access, that needs
+a password, is parsed before <em>99-wireguard</em>. For example <em>010-wheel</em>.</p>
+<p>This ensures that things work correctly for any user in <em>wg-quick</em> group
+that is also a member of <em>wheel</em> group.</p>
+<p>While this can also be achieved with <em>doas</em> or <em>run0</em>, the current code invokes
+<em>sudo</em>. We plan to support <em>doas</em> and <em>run0</em> in the future.</p>
+</section>
+</section>
 <section id="dns-notes">
-<h2><span class="section-number">2.1. </span>DNS Notes<a class="headerlink" href="#dns-notes" title="Link to this heading"></a></h2>
+<h2><span class="section-number">1.5. </span>DNS Notes<a class="headerlink" href="#dns-notes" title="Link to this heading"></a></h2>
 <p>When using any VPN client, it is standard practice to ensure all
 DNS traffic is routed through the VPN tunnel in order to trusted DNS servers.
 While this isn’t a hard requirement, and is not strictly applicable with split
@@ -218,9 +249,9 @@ standard resolv file when wireguard is shut down.</p>
 </div>
 </section>
 <section id="wg-client-application">
-<h2><span class="section-number">2.2. </span>wg-client application<a class="headerlink" href="#wg-client-application" title="Link to this heading"></a></h2>
+<h2><span class="section-number">1.6. </span>wg-client application<a class="headerlink" href="#wg-client-application" title="Link to this heading"></a></h2>
 <section id="usage">
-<h3><span class="section-number">2.2.1. </span>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h3>
+<h3><span class="section-number">1.6.1. </span>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h3>
 <p>wg-client is a command line program and can be run in any terminal.
 It has two primary options, one to start wireguard and one to stop it.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wg-client<span class="w"> </span>--wg-up
@@ -235,9 +266,9 @@ section <a class="reference internal" href="Options.html#options-sect"><span cla
 </section>
 </section>
 <section id="wg-client-gui-application">
-<h2><span class="section-number">2.3. </span>wg-client-gui application<a class="headerlink" href="#wg-client-gui-application" title="Link to this heading"></a></h2>
+<h2><span class="section-number">1.7. </span>wg-client-gui application<a class="headerlink" href="#wg-client-gui-application" title="Link to this heading"></a></h2>
 <section id="gui-usage">
-<h3><span class="section-number">2.3.1. </span>GUI Usage<a class="headerlink" href="#gui-usage" title="Link to this heading"></a></h3>
+<h3><span class="section-number">1.7.1. </span>GUI Usage<a class="headerlink" href="#gui-usage" title="Link to this heading"></a></h3>
 <p>The gui app can be run using the wg-client.desktop file and can be added
 to launchers in the usual way. For example in gnome simply search applications for wg-cliient
 and right click to pin the launcher. The gui is built on PyQt6 which in relies on Qt6.</p>
@@ -247,57 +278,8 @@ on the host configured in the config file.</p>
 and shutdown the ssh listener as well.</p>
 </section>
 </section>
-<section id="sudoers">
-<h2><span class="section-number">2.4. </span>Sudoers<a class="headerlink" href="#sudoers" title="Link to this heading"></a></h2>
-<p>To start and stop wireguard wg-client uses <em>wg-quick</em> (from wireguard-tools).
-Doing so requires root priviliges. As a result, any user approved to run wireguard must
-be granted permission.  Any non-root user will need a NOPASSWD sudoers entry.</p>
-<p>You can keep all local sudoers in a single file or in separate files.
-If in single file, make this one come after any group wheel ones.
-This is to ensure this one is chosen becuase sudo uses the last
-matching entry.</p>
-<p>Simply add this sample line adjusting WGUSERS to list whatever user(s) are
-permitted to run wireguard. If more than one use comma separated list as shown below.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>User_Alias<span class="w"> </span><span class="nv">WGUSERS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>alice,<span class="w"> </span>bob,<span class="w"> </span>sally
-WGUSERS<span class="w">   </span><span class="nv">ALL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">(</span>root<span class="o">)</span><span class="w"> </span>NOPASSWD:<span class="w"> </span>/usr/bin/wg-quick
-WGUSERS<span class="w">   </span><span class="nv">ALL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">(</span>root<span class="o">)</span><span class="w"> </span>NOPASSWD:<span class="w"> </span>/usr/lib/wg-client/wg-fix-dns
-</pre></div>
-</div>
-<p>If using separete files, then care is need to ensure this entry comes after any
-wheel group entries. Where WGUSERS is 1 or more usernames or a group such as
-<em>%wgusers</em>.</p>
-<p>Then,</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>visudu<span class="w"> </span>/etc/sudoers.d/99-wireguard
-</pre></div>
-</div>
-<p>Edit <em>WGUSERS</em> as above.</p>
-<p>visudo enforces the correct permissions which should be ‘0440’. If permissions
-are too loose, sudo will ignore the file.</p>
-<p>Why the prefix number?  Because sudo uses the <strong>last</strong> matching entry and
-we need to be sure the NOPASSWD wg-quick entry comes after any group wheel lines.</p>
-<p>For example if there are 2 files in <em>/etc/sudoers.d</em> - say wg-quick and wheel,
-where the wheel entry requires a password for members of group wheel.</p>
-<p>Now if user listed in wg-quick is also a member of <em>wheel</em> group, since wg-quick
-is first and wheel is second (files are treated in lexical order) the <em>wheel</em> one
-will prevail and user will be prompted for a password when running <em>sudo /usr/bin/wg-quick</em>.
-Not what we want. To fix this use numbers to prefix the sudoers filenames. So in this
-example it would be:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>/etc/sudoers.d/010-wheel
-/etc/sudoers.d/99-wireguard
-</pre></div>
-</div>
-<p>thereby ensuring that wg-client entries follow the wheel ones.</p>
-<p>For convenience this is also noted in the sample file:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>/etc/wg-client/samples/sudoers.sample
-</pre></div>
-</div>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>chmod<span class="w"> </span><span class="m">440</span><span class="w"> </span>/etc/sudoers.d/wg-client
-</pre></div>
-</div>
-<p>This can also be achieved with doas or run0.</p>
-</section>
 <section id="non-user-wireguard-tunnels">
-<h2><span class="section-number">2.5. </span>Non-User Wireguard Tunnels<a class="headerlink" href="#non-user-wireguard-tunnels" title="Link to this heading"></a></h2>
+<h2><span class="section-number">1.8. </span>Non-User Wireguard Tunnels<a class="headerlink" href="#non-user-wireguard-tunnels" title="Link to this heading"></a></h2>
 <p><strong>imporant</strong></p>
 <p>Members of group wg-client can bring up and down any WireGuard interface whose name starts with
 <em>w</em> (e.g. wgc, wg0, wg-home) and has a config in /etc/wireguard. Interfaces that users must not control,
@@ -305,9 +287,9 @@ such as server or site-to-site tunnels, should use a name that does not start wi
 <p>Renaming an interface means renaming /etc/wireguard/&lt;name&gt;.conf and, if used, the wg-quick&#64;&lt;name&gt; systemd unit.</p>
 </section>
 <section id="coding">
-<h2><span class="section-number">2.6. </span>Coding<a class="headerlink" href="#coding" title="Link to this heading"></a></h2>
-<p>Claude as been very helpful in analyzing and improving the code especially
-around security as well as error and edge-case handling.</p>
+<h2><span class="section-number">1.9. </span>Coding<a class="headerlink" href="#coding" title="Link to this heading"></a></h2>
+<p>Claude as been very helpful in analyzing and improving the code, especially
+around potential security issues but also for handling errors and edge-cases.</p>
 </section>
 </section>
 
@@ -316,7 +298,7 @@ around security as well as error and edge-case handling.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="index.html" class="btn btn-neutral float-left" title="wg-client Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="Config.html" class="btn btn-neutral float-right" title="3. Configuration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="Config.html" class="btn btn-neutral float-right" title="2. Configuration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

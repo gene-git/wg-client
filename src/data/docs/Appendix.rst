@@ -5,37 +5,6 @@
 Appendix
 ========
 
-.. _migration:
-
-Migration from Pre 8.x
-======================
-
-Older versions (pre 8.x) need a small change becasue *resolv-manager* has been re-written
-in C and now runs a background daemon managing /etc/resolv.conf. 
-
-This is what is needed:
-
-* Create /etc/wg-client/wireguard-resolv.conf
-  This should be the DNS settings to be used while wireguard is running.
-  Standard resolv.conf format (nameserver x.x.x.x)
-
-* confirm that /etc/wg-client/config exists and sets thw wireguard i
-  interface. For example::
-
-    iface = wg0
-
-* edit the wireguard client config and update the PostUp and PostDn.
-  For example::
-
-    [Interface]
-    PrivateKey = ...
-    Address = ...
-    Postup = /etc/wg-client/post-up.sh
-    PostDown = /etc/wg-client/post-down.sh
-
-Thats should be all that's required.
-
-
 Installation
 ============
 

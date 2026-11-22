@@ -15,24 +15,41 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-Part of the wg-client package. When wireguard VPN is running DNS is typically
-used via the VPN tunnel. When wireguard is started an appropriate /etc/resolv.conf
+Part of the wg-client package. A wireguard VPN most often has DNS provided 
+via the VPN tunnel. When wireguard is started an appropriate /etc/resolv.conf
 should be installed and when it is stopped the standard version should be restored.
 
-This is simple to do using PostUp and PostDown in the wireguard config file.
-For example if the config file is /etc/wireguard/wgc.conf, so the wireguard interface 
-is wgc then it would have::
+Ensure that the *resolv.conf* file that is to be used while the tunnel is up
+is available in the file::
+
+    /etc/wg-client/wireguard-resolv.conf
+
+wireguard starts resolv-manager by having it's PostUp config set to *post-up.sh*.
+*post-up.sh* uses the above file and takes the wireguuard interface name from /etc/wg-client/config.
+
+They can also be provided as arguments.
+
+For example if the wireguiard config file is /etc/wireguard/wgc.conf, the wireguard interface 
+name is then *wgc*.  It then could have::
+
 
     [interface]
     ...
     PostUp    = /etc/wg-client/post-up.sh wgc /etc/wg-client/wireguard-resolv.conf
     PostDown  = /etc/wg-client/post-down.sh
 
-Where the file /etc/wg-client/wireguard-resolv.conf is the resolv.conf to use
+or::
+
+    [interface]
+    ...
+    PostUp    = /etc/wg-client/post-up.sh
+    PostDown  = /etc/wg-client/post-down.sh
+
+Where the file /etc/wg-client/wireguard-resolv.conf is used for resolv.conf 
 while the VPN is running.
 
 With no arguments post-up.sh reads the wireguard interface from /etc/wg-client/config
-and uses /etc/wg-client/wireguard-resolv.conf for the VPN resolv.conf.
+and uses /etc/wg-client/wireguard-resolv.conf for the VPN resolv.conf file.
 
 post-up.sh (run as root by wg-quick) starts resolv-manager in *monitor* mode::
 
