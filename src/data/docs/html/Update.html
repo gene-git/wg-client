@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>6. Updating to Version 9.x from 8.x &mdash; wg-client 9.0.0
+  <title>6. Updating to Version 9.x from 8.x &mdash; wg-client 9.1.1
  documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
@@ -15,7 +15,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=0b13d40c"></script>
+      <script src="_static/documentation_options.js?v=debe1a4c"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
@@ -85,15 +85,10 @@
              
   <section id="updating-to-version-9-x-from-8-x">
 <h1><span class="section-number">6. </span>Updating to Version 9.x from 8.x<a class="headerlink" href="#updating-to-version-9-x-from-8-x" title="Link to this heading"></a></h1>
-<p>Updating is straightforward and can even be done while road warrier is using wg-client.</p>
-<p>The older code used a semaphore file in wg-client to tell resolv-manager to shutdown.
-While this is no longer used, since it is now done by wireguard itself,
-the new wg-client code will remove the legacy semaphore file which tells the monitor
-to shut itself down. So it is safe to update live.</p>
+<p>Updating is straightforward and can even be done while a road warrier is using wg-client.</p>
 <ul>
-<li><p>ssh in to the machine if don’t have local access.</p>
-<p>Have the user press the ‘start ssh’ button which opens an ssh listening port on the wireguard server.</p>
-</li>
+<li><p>ssh in to the machine. If don’t have local access.
+Have the user press the ‘start ssh’ button which opens an ssh listening port on the wireguard server.</p></li>
 <li><p>Install the new wg-client package.</p></li>
 <li><p>Add the wg-client user(s) to the <em>wg-client</em> group (required step):</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>gpasswd -a &lt;user&gt; wg-client for each one.
@@ -109,8 +104,12 @@ legacy monitor is cleaned up automatically.</p>
 so you can log back in.</p>
 </li>
 <li><p>When you’re next in over SSH, check for the new monitor which runs as nobody (instead of as user).
-i.e. <em>pgrep -af resolv-manager</em> and check user has group access via <em>id &lt;user&gt;</em> which should
-list <em>wg-client</em></p>
+and check that the user has group <em>wg-client</em>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>pgrep -af resolv-manager
+ps -fp $(pgrep -f resolv-maager)
+id &lt;username&gt;
+</pre></div>
+</div>
 <p>If the new resolv-manager is running, then delete the older sudoers.d/ file. The new approach
 is more secure.</p>
 </li>

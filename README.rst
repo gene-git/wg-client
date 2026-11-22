@@ -257,3 +257,9 @@ Members of group wg-client can bring up and down any WireGuard interface whose n
 such as server or site-to-site tunnels, should use a name that does not start with w (e.g. site0, srv-link).
 
 Renaming an interface means renaming /etc/wireguard/<name>.conf and, if used, the wg-quick@<name> systemd unit.
+
+Coding
+======
+
+Claude as been very helpful in analyzing and improving the code especially  
+around security as well as error and edge-case handling.

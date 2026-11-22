@@ -48,6 +48,63 @@ static bool init_standard_dirs(Config *conf) {
 }
 
 /*
+ * Split path into directory and file name (no dirname()/basename():
+ * they may modify their argument and are not thread safe).
+ *   "/a/b/c" -> "/a/b", "c"     "c" -> ".", "c"     "/c" -> "/", "c"
+ * Returns false if there is no file name (empty, trailing '/', ".", "..").
+ * *dir is malloc'd (caller frees); *base points into path.
+ */
+static bool split_path(const char *path, char **dir, const char **base) {
+    const char *slash = strrchr(path, '/');
+
+    *dir = nullptr;
+    *base = slash ? slash + 1 : path;
+
+    if (**base == '\0' || strcmp(*base, ".") == 0 || strcmp(*base, "..") == 0) {
+        return false;
+    }
+
+    if (!slash) {
+        *dir = strdup(".");
+    } else if (slash == path) {
+        *dir = strdup("/");
+    } else {
+        *dir = strndup(path, (size_t)(slash - path));
+    }
+    return *dir != nullptr;
+}
+
+/*
+ * -f <file>: wireguard resolv.conf source
+ * Directory resolved to an absolute path now (the daemon changes to "/"),
+ * file name kept separately so the monitor can watch the directory.
+ */
+static bool init_wg_source(Config *conf) {
+    const char *file = conf->opts.file;
+    char *dir = nullptr;
+    const char *base = nullptr;
+
+    if (!file) {
+        return true;
+    }
+
+    if (!split_path(file, &dir, &base)) {
+        (void)fprintf(stderr, "Error: not a file: %s\n", file);
+        free(dir);
+        return false;
+    }
+
+    conf->wg_src.path = real_path_dup(dir);
+    free(dir);
+    if (!conf->wg_src.path) {
+        return false;
+    }
+
+    conf->wg_src_name = strdup(base);
+    return conf->wg_src_name != nullptr;
+}
+
+/*
  * Interface name must be a plausible kernel interface name:
  * 1..IFNAMSIZ-1 chars, no '/', no whitespace / control chars, not "." or "..".
  */
@@ -120,6 +177,7 @@ int initialize(int argc, char **argv, Config *conf) {
      */
     conf->sys_net.fd = -1;
     conf->etc.fd = -1;
+    conf->wg_src.fd = -1;
 
     /*
      * command line
@@ -142,6 +200,13 @@ int initialize(int argc, char **argv, Config *conf) {
      * Directories /etc, /sys/class/net
      */
     if (!init_standard_dirs(conf)) {
+        return -1;
+    }
+
+    /*
+     * -f source of the wireguard resolv.conf
+     */
+    if (!init_wg_source(conf)) {
         return -1;
     }
 

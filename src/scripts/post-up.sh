@@ -52,15 +52,16 @@ if [[ ! -f "$wg_resolv" ]] ; then
 fi
 
 #
-# Run resolv-manager (as root - wg-quick runs PostUp as root)
-#  1) save the wireguard resolv.conf (tagged) and install it.
-#     Any failure here is returned to wg-quick, which then brings the tunnel down.
-#  2) start the monitor daemon: keeps the wireguard resolv.conf installed and
-#     restores the standard one when the interface goes away (wg-quick down)
-#     or on SIGTERM. It drops to nobody keeping only CAP_CHOWN/CAP_DAC_OVERRIDE.
+# Run resolv-manager monitor (as root - wg-quick runs PostUp as root)
+#  - saves the wireguard resolv.conf (tagged) as /etc/resolv.conf.wg and installs it.
+#    This happens before it backgrounds itself: any failure is returned to
+#    wg-quick, which then brings the tunnel down.
+#  - then runs as a daemon: keeps the wireguard resolv.conf installed, applies
+#    changes made to $wg_resolv, and restores the standard one when the
+#    interface goes away (wg-quick down) or on SIGTERM.
+#    It drops to nobody keeping only CAP_CHOWN/CAP_DAC_OVERRIDE.
 #
 rm_bin=/usr/lib/wg-client/resolv-manager
 logdir=/var/log/wg-client
 
-"$rm_bin" -i "$iface" -t wireguard -l "$logdir" -f "$wg_resolv" || exit 1
-exec "$rm_bin" -i "$iface" -t monitor -d -l "$logdir"
+exec "$rm_bin" -i "$iface" -t monitor -d -l "$logdir" -f "$wg_resolv"

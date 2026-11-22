@@ -1,6 +1,23 @@
 Recent Changes
 ==============
 
+**9.1.1**
+
+* Doc change: add thank you to `Claude (Anthropic) <https://claude.ai>`_
+
+**9.1.0**
+
+* resolv-manager:
+
+  * Add a file watch of the vpn DNS file: /etc/wg-client/wireguard-resolv.conf
+    If there is a change (root made a manual change while resolv-manager running)
+    then use the newly updated dns file.
+
+* post-up.sh simplified.
+
+  * Since resolv-manager -t monitor now handles installing / tagging the 
+    vpn resolv.conf file same as -t wireguard.
+
 **9.0.0**
 
 **Changes required**

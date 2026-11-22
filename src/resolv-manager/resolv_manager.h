@@ -110,6 +110,14 @@ typedef struct config {
     FileTarget save;
     FileTarget resolv;
 
+    /*
+     * -f <file>: source of the wireguard resolv.conf
+     * (e.g. /etc/wg-client/wireguard-resolv.conf) - directory and name.
+     * The monitor watches it and applies changes.
+     */
+    DirTarget wg_src;
+    char *wg_src_name;
+
     const char *tag_wg;
     size_t tag_wg_size;
 
@@ -223,7 +231,7 @@ bool uid_from_user_name(const char *user, uid_t *uid);
 bool user_name_from_uid(uid_t uid, char *user_name, size_t user_name_size);
 bool get_user_info(UserInfo *real, UserInfo *effective);
 
-int save_wg_resolv(Config *conf, const char *src_file);
+int save_wg_resolv(Config *conf);
 int save_standard_resolv(Config *conf);
 int save_standard_from(Config *conf, const char *src_name);
 int install_wg_resolv(Config *conf);

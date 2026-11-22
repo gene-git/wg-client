@@ -137,7 +137,7 @@ static int prepare(Config *conf, Locking *locking) {
     /*
      * Save any provided wireguard resolv.conf file
      */
-    if (conf->opts.file && save_wg_resolv(conf, conf->opts.file) != 0) {
+    if (conf->wg_src.path && save_wg_resolv(conf) != 0) {
         return EX_IOERR;
     }
 
@@ -147,6 +147,17 @@ static int prepare(Config *conf, Locking *locking) {
      */
     if (conf->opts.task != INSTALL_STANDARD && !check_wireguard_ready(conf)) {
         return EX_TEMPFAIL;
+    }
+
+    /*
+     * Monitor: install now - before daemonizing - so a failure is
+     * reported to the caller (wg-quick PostUp fails and the tunnel is
+     * taken down) rather than only logged by the background process.
+     * The monitor installs again (a no-op unless something changed)
+     * once its watches are in place.
+     */
+    if (conf->opts.task == MONITOR && install_wg_resolv(conf) != 0) {
+        return EX_IOERR;
     }
     return EX_OK;
 }
@@ -185,11 +196,13 @@ static int run(Config *conf) {
 
 /*
  * 3 tasks:
- *  - monitor  (started from PostUp as a daemon)
- *      - install_wg_resolv()
+ *  - monitor  (started from PostUp as a daemon, with -f)
+ *      - save -f file as resolv.conf.wg (tagged), install_wg_resolv()
+ *        (both before daemonizing: errors go back to wg-quick)
  *      - wait for any changes
  *        - if resolv.conf changes then do install_wg_resolv()
  *        - if resolv.conf.wg changes then do install_wg_resolv()
+ *        - if the -f file changes then save it as resolv.conf.wg and install it
  *        - if resolv.conf.wg removed, interface removed (wg-quick down),
  *          or SIGTERM/SIGINT/SIGHUP/SIGQUIT - install_standard_resolv() then exit
  *

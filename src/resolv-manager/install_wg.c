@@ -6,38 +6,9 @@
 #include "resolv_manager.h"
 #include <errno.h>
 #include <fcntl.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
-
-/*
- * Split path into directory and file name (no dirname()/basename():
- * they may modify their argument and are not thread safe).
- *   "/a/b/c" -> "/a/b", "c"     "c" -> ".", "c"     "/c" -> "/", "c"
- * Returns false if there is no file name (empty, trailing '/', ".", "..").
- * *dir is malloc'd (caller frees); *base points into path.
- */
-static bool split_path(const char *path, char **dir, const char **base) {
-    const char *slash = strrchr(path, '/');
-
-    *dir = nullptr;
-    *base = slash ? slash + 1 : path;
-
-    if (**base == '\0' || strcmp(*base, ".") == 0 || strcmp(*base, "..") == 0) {
-        return false;
-    }
-
-    if (!slash) {
-        *dir = strdup(".");
-    } else if (slash == path) {
-        *dir = strdup("/");
-    } else {
-        *dir = strndup(path, (size_t)(slash - path));
-    }
-    return *dir != nullptr;
-}
 
 /*
  * Is dir_fd/name the same file as etc/resolv.conf.wg ?
@@ -56,46 +27,46 @@ static bool is_wg_file(Config *conf, int dir_fd, const char *name) {
 }
 
 /*
- * Copy the file : src_file to etc/resolv.conf.wg
+ * Copy the -f source file (conf->wg_src) to etc/resolv.conf.wg
  * - this is a wireguard file so tag it.
- * - src_file is provided by root (PostUp)
+ * - the source is provided by root (PostUp) - opened with caps raised so the
+ *   monitor (running as nobody) can re-read it when it changes.
+ * - an empty source is refused (typically caught mid-edit): the current
+ *   resolv.conf.wg is kept.
  */
-int save_wg_resolv(Config *conf, const char *src_file) {
+int save_wg_resolv(Config *conf) {
     int status = 0;
-    char *dir = nullptr;
-    const char *base = nullptr;
 
     if (!conf) {
         return -1;
     }
-    if (!src_file) {
+    if (!conf->wg_src.path || !conf->wg_src_name) {
         return 0;
     }
     Options *opts = &conf->opts;
 
-    log_msg(opts, " Saving new wg resolv file from %s", src_file);
+    log_msg(opts, " Saving new wg resolv file from %s/%s", conf->wg_src.path, conf->wg_src_name);
 
-    if (!split_path(src_file, &dir, &base)) {
-        log_msg(opts, "  error: not a file: %s", src_file);
-        free(dir);
+    if (caps_raise() != 0) {
         return -1;
     }
+    int fd_dir = open(conf->wg_src.path, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+    int saved_errno = errno;
+    (void)caps_lower();
 
-    int fd_dir = open(dir, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
     if (fd_dir < 0) {
-        log_msg(opts, "  error opening directory %s from %s: %s", dir, src_file, errno_str(errno));
-        free(dir);
+        log_msg(opts, "  error opening directory %s: %s", conf->wg_src.path, errno_str(saved_errno));
         return -1;
     }
 
-    if (is_wg_file(conf, fd_dir, base)) {
+    if (is_wg_file(conf, fd_dir, conf->wg_src_name)) {
         log_msg(opts, "  source is %s - nothing to do", conf->wg.name);
 
     } else {
         CopyFile copy = {};
 
         copy.src_dir_fd = fd_dir;
-        copy.src_name = base;
+        copy.src_name = conf->wg_src_name;
 
         copy.dst_dir_fd = conf->etc.fd;
         copy.dst_name = conf->wg.name;
@@ -106,18 +77,35 @@ int save_wg_resolv(Config *conf, const char *src_file) {
         copy.tag_add = true;
         copy.tag = conf->tag_wg;
         copy.tag_size = conf->tag_wg_size;
+        copy.forbid_empty = true;
 
         CopyResult result = copy_file_at(&copy);
-        if (result == COPY_DONE) {
-            log_msg(opts, " Saved %s", conf->wg.name);
-        } else {
-            log_msg(opts, "  error copy %s to %s: %s", src_file, conf->wg.name,
-                    result == COPY_NO_SOURCE ? "no such file" : errno_str(errno));
-            status = -1;
+        switch (result) {
+            case COPY_DONE:
+                log_msg(opts, " Saved %s", conf->wg.name);
+                break;
+
+            case COPY_NO_SOURCE:
+                log_msg(opts, "  error: %s/%s not found", conf->wg_src.path, conf->wg_src_name);
+                status = -1;
+                break;
+
+            case COPY_EMPTY_SOURCE:
+                log_msg(opts, "  error: %s/%s is empty", conf->wg_src.path, conf->wg_src_name);
+                status = -1;
+                break;
+
+            case COPY_SKIPPED_TAG:
+            case COPY_UNCHANGED:
+            case COPY_ERROR:
+            default:
+                log_msg(opts, "  error copy %s/%s to %s: %s", conf->wg_src.path, conf->wg_src_name,
+                        conf->wg.name, errno_str(errno));
+                status = -1;
+                break;
         }
     }
 
-    free(dir);
     (void)close(fd_dir);
     return status;
 }

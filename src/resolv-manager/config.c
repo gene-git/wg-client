@@ -30,9 +30,14 @@ void config_clean(Config *conf) {
      * directories:
      * - /sys/class/net
      * - /etc/
+     * - directory of -f file
      */
     close_dir(&conf->sys_net);
     close_dir(&conf->etc);
+    close_dir(&conf->wg_src);
+
+    free(conf->wg_src_name);
+    conf->wg_src_name = nullptr;
 
     log_close(&conf->opts);
 }

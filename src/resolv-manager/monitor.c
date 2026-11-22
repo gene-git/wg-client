@@ -4,6 +4,8 @@
  *
  * Monitor (started from wireguard PostUp):
  *  - inotify on /etc         : resolv.conf / resolv.conf.wg changes
+ *  - inotify on dir of -f    : changes to the wireguard resolv.conf source
+ *                              (e.g. /etc/wg-client/wireguard-resolv.conf)
  *  - inotify on sys/class/net: interface (only works in testing mode - kernel
  *                              changes to sysfs generate no inotify events)
  *  - rtnetlink RTMGRP_LINK   : interface removal (wg-quick down) / creation
@@ -78,6 +80,7 @@ typedef struct {
 
     int     wd_etc;
     int     wd_sys;
+    int     wd_src;
 
     sigset_t old_mask;
     bool    sigmask_set;
@@ -88,6 +91,7 @@ typedef struct {
      * set by event handlers, acted on after each batch
      */
     bool    need_install;
+    bool    need_src_save;
     bool    need_resync;
     bool    exit_now;
     bool    error;
@@ -261,6 +265,25 @@ static int setup_inotify(Monitor *mon, Config *conf) {
         log_msg(opts, " inotify watch %s failed: %s", conf->etc.path, errno_str(saved_errno));
         return -1;
     }
+
+    /*
+     * -f source directory (root provided - caps raised).
+     * IN_MASK_ADD: it may be /etc itself (same watch).
+     * Not fatal - only live updates of the source are lost.
+     */
+    if (conf->wg_src.path) {
+        if (caps_raise() != 0) {
+            return -1;
+        }
+        mon->wd_src = inotify_add_watch(mon->ifd, conf->wg_src.path, MASK_CHANGED | MASK_GONE | IN_MASK_ADD);
+        saved_errno = errno;
+        (void)caps_lower();
+
+        if (mon->wd_src < 0) {
+            log_msg(opts, " Warning: inotify watch %s failed: %s - changes to %s not applied until restart",
+                    conf->wg_src.path, errno_str(saved_errno), conf->wg_src_name);
+        }
+    }
     return 0;
 }
 
@@ -289,14 +312,37 @@ static void handle_etc_event(Monitor *mon, Config *conf, const struct inotify_ev
     }
 
     if (strcmp(event->name, conf->wg.name) == 0) {
+        /*
+         * Removed or renamed away: may be an editor saving it (rename the
+         * original to a backup, then write the new file). Decided after the
+         * settle delay: if it exists then, install it - else restore and exit.
+         */
         if ((event->mask & MASK_GONE) != 0U) {
-            log_msg(opts, "  [etc] %s removed -> restore and exit", conf->wg.name);
-            mon->exit_now = true;
+            log_msg(opts, "  [etc] %s removed or renamed - checking after settle", conf->wg.name);
+            mon->need_install = true;
 
         } else if ((event->mask & MASK_CHANGED) != 0U) {
             log_msg(opts, "  [etc] %s changed", conf->wg.name);
             mon->need_install = true;
         }
+    }
+}
+
+/*
+ * Events for the -f source directory
+ * Changed, replaced, removed or renamed: decided after the settle delay
+ * (editors may rename the original away before writing the new file).
+ */
+static void handle_src_event(Monitor *mon, Config *conf, const struct inotify_event *event) {
+
+    if (strcmp(event->name, conf->wg_src_name) != 0) {
+        return;
+    }
+
+    if ((event->mask & (MASK_CHANGED | MASK_GONE)) != 0U) {
+        log_msg(&conf->opts, "  [src] %s/%s changed", conf->wg_src.path, conf->wg_src_name);
+        mon->need_src_save = true;
+        mon->need_install = true;
     }
 }
 
@@ -330,6 +376,13 @@ static void handle_inotify_event(Monitor *mon, Config *conf, const struct inotif
         log_msg(&conf->opts, " inotify queue overflow - resync");
         mon->need_resync = true;
         return;
+    }
+
+    /*
+     * wd_src may equal wd_etc (-f file in /etc) - check both
+     */
+    if (mon->wd_src >= 0 && event->wd == mon->wd_src && event->len > 0) {
+        handle_src_event(mon, conf, event);
     }
 
     if (event->wd == mon->wd_etc) {
@@ -529,6 +582,9 @@ static void resync(Monitor *mon, Config *conf) {
     }
 
     mon->need_install = true;
+    if (conf->wg_src.path) {
+        mon->need_src_save = true;
+    }
 }
 
 /*
@@ -629,6 +685,24 @@ static void monitor_act(Monitor *mon, Config *conf) {
 
     if (mon->install_pending && now_ms() >= mon->install_at_ms) {
         mon->install_pending = false;
+
+        /*
+         * -f source changed: re-save it as resolv.conf.wg (tagged).
+         * On failure (missing, empty) keep the current resolv.conf.wg.
+         */
+        if (mon->need_src_save) {
+            mon->need_src_save = false;
+            if (save_wg_resolv(conf) != 0) {
+                log_msg(&conf->opts, "  Warning: keeping current %s", conf->wg.name);
+            }
+        }
+
+        if (!etc_file_exists(conf, conf->wg.name)) {
+            log_msg(&conf->opts, "  [etc] %s gone -> restore and exit", conf->wg.name);
+            mon->exit_now = true;
+            return;
+        }
+
         if (install_wg_resolv(conf) != 0) {
             log_msg(&conf->opts, "  Warning: install_wg_resolv failed - will retry on next change");
         }
@@ -652,6 +726,7 @@ int monitor_loop(Config *conf) {
     mon.sigfd = -1;
     mon.wd_etc = -1;
     mon.wd_sys = -1;
+    mon.wd_src = -1;
 
     if (monitor_setup(&mon, conf) != 0) {
         mon.error = true;

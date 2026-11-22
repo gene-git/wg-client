@@ -24,7 +24,8 @@ static void print_help(const char *prog_name) {
     printf("Optional Parameters:\n");
     printf("  -i, --iface <iface>    Wireguard interface name (Default: wg0)\n");
     printf("  -d, --daemon           Run as background daemon (monitor mode)\n");
-    printf("  -f, --file <file>      Wireguard resolv.conf to save as /etc/resolv.conf.wg\n");
+    printf("  -f, --file <file>      Wireguard resolv.conf - saved (tagged) as /etc/resolv.conf.wg\n");
+    printf("                         With monitor, changes to this file are applied while running\n");
     printf("  -l, --logdir <path>    Path of log directory\n");
     printf("  -n, --numlogs <num>    Maximum number of log files (Default: 4, Max: 20)\n");
     printf("  -T, --testing          testing mode (development)\n");

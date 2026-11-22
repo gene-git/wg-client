@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>1. wg-client &mdash; wg-client 9.0.0
+  <title>1. wg-client &mdash; wg-client 9.1.1
  documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
@@ -15,7 +15,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=0b13d40c"></script>
+      <script src="_static/documentation_options.js?v=debe1a4c"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
@@ -67,6 +67,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#sudoers">2.4. Sudoers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#non-user-wireguard-tunnels">2.5. Non-User Wireguard Tunnels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#coding">2.6. Coding</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Config.html">3. Configuration</a></li>
@@ -302,6 +303,11 @@ example it would be:</p>
 <em>w</em> (e.g. wgc, wg0, wg-home) and has a config in /etc/wireguard. Interfaces that users must not control,
 such as server or site-to-site tunnels, should use a name that does not start with w (e.g. site0, srv-link).</p>
 <p>Renaming an interface means renaming /etc/wireguard/&lt;name&gt;.conf and, if used, the wg-quick&#64;&lt;name&gt; systemd unit.</p>
+</section>
+<section id="coding">
+<h2><span class="section-number">2.6. </span>Coding<a class="headerlink" href="#coding" title="Link to this heading"></a></h2>
+<p>Claude as been very helpful in analyzing and improving the code especially
+around security as well as error and edge-case handling.</p>
 </section>
 </section>
 
