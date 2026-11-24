@@ -6,20 +6,26 @@ Tags
 
 .. code-block:: text
 
-	3.7.1 (2024-01-07) -> 9.1.2 (2026-11-22)
-	102 commits.
+	3.7.1 (2024-01-07) -> 9.1.3 (2026-11-24)
+	103 commits.
 
 Commits
 =======
 
 
-* 2026-11-22  : **9.1.2**
+* 2026-11-24  : **9.1.3**
+
+.. code-block:: text
+
+              - 9.1.3 - Update README
+
+* 2026-11-22  : **9.1.2, origin/master**
 
 .. code-block:: text
 
               - 9.1.2 : Manual and man page updates (no code change)
 
-* 2026-11-21  : **9.1.1, origin/master**
+* 2026-11-21  : **9.1.1**
 
 .. code-block:: text
 

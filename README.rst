@@ -17,14 +17,14 @@ The command line program, *wg-client*, provides all the functionality.
 A GUI tool makes it super convenient. The GUI tool runs the command line client
 and thus offeres exactly the same functionality in a user friendly application.
 
-A companion package, `wg-tool`_ is for adminstering the server side of things.
+A companion package, `wg-tool`_ is for adminstration the server side of things.
 
-wg-client also has an option to invoke ssh to create a remote listening port 
+wg-client also has an option to run ssh and create a remote listening port 
 connected back to local (client end) ssh daemon.
 
-This can be useful to facilitate remote ssh back to client computer 
+This is useful to facilitate remote ssh back to client computer 
 if it's needed.  For example; it can be used to provide access to a git repo
-on the client, or for remote backups of laptop, or even for admin to login to client
+on the client, or for remote backups of laptop, or for admin to login to client
 should the need arise.
 
 All git tags are signed with arch@sapience.com key which is available via WKD
@@ -111,7 +111,7 @@ DNS Notes
 =========
 
 When using any VPN client, it is standard practice to ensure all 
-DNS traffic is routed through the VPN tunnel in order to trusted DNS servers.
+DNS traffic is routed through the VPN tunnel to trusted DNS servers.
 While this isn't a hard requirement, and is not strictly applicable with split 
 routing, it is always desirable from a security standpoint.
 
@@ -119,36 +119,51 @@ There is a little gotcha to be aware of.
 The system may, at times, modify */etc/resolv.conf* removing the safety of the 
 VPN provided DNS servers to different ones. This also breaks LAN related services.
 
-Consequently, it is important to be identify if this happens and deal with it.
-It is handled is by saving any newly resolv.conf file and then restoring the 
-correct one that should be used with wireguard. The resolv.conf that was just 
-saved is the the right file to use when the VPN is turned off but not while it
-is runninf. By saving a copy, it can be restored when the wireguard VPN shuts down.
+Consequently, it is important to identify if this happens and deal with it.
+It is handled is by saving a copy of any new resolv.conf file and then restoring the 
+one that should be used while wireguard is running. When wireguard shuts down 
+the standard resolv.conf is restored from the saved copy.
 
 What causes this to happen?
-It can happen for different reasons. It can happen if the WiFi network changes, after a 
-sleep resume cycle or when a DHCP lease is renewed. 
+It can happen for various reasons. It happens if the WiFi network changes, after a 
+sleep resume cycle or when a DHCP lease is renewed. It can also happen when WiFi briefly
+drops which may occurr after too many missed beacons for example. In other words, it
+is quite common.
 
-While wireguard itself uses UDP and is mostly indifferent to such network changes, 
-nonetheless it is quite important to keep DNS properly managed.
+Wireguard itself uses UDP and is mostly indifferent to such network changes, 
+nonetheless it is important to keep DNS properly managed.
 
-Taking care of all of this is eactly what *resolv-manager* does.
+Taking care of this automatically and robustly is what *resolv-manager* does.
 
-To ensure that DNS resolver files are all managed correctly requires
-a copy of the standard resolv.conf file saved to */etc/resolv.conf.saved*
-and the wireguard version to */etc/resolv.conf.wg*.  
+resolv-manager ensures that DNS resolver file being used is the appropriate 
+one whether wireguard is running or not. This is done by keeping up to date copies
+if both resolv.conf file; one for wireguard running and one standard one.
 
-With those in place *resolv-manager* will keep track of any changes.
-It will save any updated standard */etc/rsolv.conf* file and put back 
-the appropriate one for wireguard.
+When resolv-manager starts it makes a copy of the resolv.conf file to be used
+while wireuguard is running and adds a *tag* to that file that identifies it as
+the one to be used with the VPN up. It also saves a copy of the standard resolv.conf
+so it can be restored when wireguard shuts down. These are saved to::
 
-After creating /etc/wg-client/wireguard-resolv.conf with the 
-the DNS nameservers provided by the wireguard server end, then
-set the wireguard configuration file (for example */etc/wireguard/wgc.conf*) 
-to use PostUp and PosDown.  
+    /etc/resolv.conf.wg
+    /etc/resolv.conf.saved
 
+With those in place *resolv-manager* then tracks of any changes in */etc/resolv.conf*.
+If that file changes, as discussed above, It saves that updated version of */etc/rsolv.conf* 
+and puts back the file that is used while wireguard is up.
 
-.. code-block:: text
+The one to use while wireguard is up is provided in::
+
+    /etc/wg-client/wireguard-resolv.conf
+
+Be sure that this has the appropriate DNS server information.
+
+resolv-manager watches this file as well, and if it changes then it is tagged, saved to
+*/etc/resolv.conf.wg* and installed to */etc/resolv.conf*.  This feature gives admins
+a simple way to modify the wireguard DNS servers live while the tunnel is up. Convenient 
+if not likely to be used very often.
+
+resolv-manger is started from /etc/wg-client/post-up.sh.  The wireguard config 
+therefore needs this for it's PostUp config (e.g. */etc/wireguard/wgc.conf*)::
 
     [Interface]
     PrivateKey = ...
@@ -157,26 +172,27 @@ to use PostUp and PosDown.
     PostDown   = /etc/wg-client/post-down.sh
     ...
 
-In addition the wg-client config file, */etc/wg-client/config*, must
-set the wireguard interface that is used. For example with a line::
+resolv-manager monitors for wireguard being shut down, and restores the
+standard resolv.conf. This is also done, if needed, in /etc/wg-client/post-down.sh.
+This is simply a safety net in case, for some reason, resolv-manager is killed in 
+a way that it does not restore the standard resolv file.
+
+The helper scripts *post-up.sh* and *post-down.sh* are provided by wg-client.
+
+In addition wg-client'w own config file::
+
+    /etc/wg-client/config
+    
+must have the wireguard interface being used. For example with a line::
 
     iface = wgc
 
-Users with permission to use wireguard must be members of the
-*wg-client* group. This group is given sudo permission that allows */usr/bin/wg-quick* to 
-be appropriately run.
+Users permitted to use wireguard must be members of the *wg-client* group. 
+This group is given sudo permission allowing */usr/bin/wg-quick* to 
+be run to start/stop wireguard but only for interface names that start with
+the letter *w* (e.g. wgc or wg0).
 
-Wireguard interfaces that users may use must have interface names that start with
-the letter *w*. 
-
-The helper scripts *post-up.sh* and *post-down.sh* are part of wg-client.
-
-The scripts also run resolv-manager to monitor /etc/resolv.conf while thw vpn is active to 
-ensure that the correct resolv.conf is used so that DNS is resolved using
-the DNS needed while the tunnel is up. It also restores the
-standard resolv file when wireguard is shut down.
-
-More information about resolv-manager can be found in the man page::
+More information about resolv-manager is available in the man page::
 
     man wg-client-resolv-manageer
 
@@ -223,7 +239,7 @@ and shutdown the ssh listener as well.
 Non-User Wireguard Tunnels
 ==========================
 
-**imporant**
+**important**
 
 Members of group wg-client can bring up and down any WireGuard interface whose name starts with 
 *w* (e.g. wgc, wg0, wg-home) and has a config in /etc/wireguard. Interfaces that users must not control, 
